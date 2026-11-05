@@ -1,0 +1,31 @@
+{
+  "version": "9.0.2",
+  "source": {
+    "commit": "6882969ce9fd2aa6aa1d0008b2bfe1c838aac11d",
+    "url": "https://codeload.github.com/FFmpeg/FFmpeg/tar.gz/6882969ce9fd2aa6aa1d0008b2bfe1c838aac11d",
+    "sha256": "9dc825750d71d51a9c8d45516ad3ffdf05e74f029a66f8c3efaf431ed7331701"
+  },
+  "buildRecipes": {
+    "url": "https://github.com/BtbN/FFmpeg-Builds/tree/autobuild-2026-10-27-18-38"
+  },
+  "targets": {
+    "win32-x64": {
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-27-18-38/ffmpeg-n9.0.2-36-g6882969ce9-win64-lgpl-shared-9.0.zip",
+      "sha256": "f70e43c4f5670fbbf2dc4eb667b0d6b3743d68386f766c08bb2e0ec3edece398",
+      "archive": "ffmpeg-n9.0.2-36-g6882969ce9-win64-lgpl-shared-9.0.zip",
+      "license": "LGPL-3.0-or-later"
+    },
+    "linux-x64": {
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-10-27-18-38/ffmpeg-n9.0.2-36-g6882969ce9-linux64-lgpl-9.0.tar.xz",
+      "sha256": "e8fc4c4ad4dd432bd3c09f07d223a5656a1025ef95667151fbb4a7ed41a0e76e",
+      "archive": "ffmpeg-n9.0.2-36-g6882969ce9-linux64-lgpl-9.0.tar.xz",
+      "license": "LGPL-3.0-or-later"
+    },
+    "darwin-x64": {
+      "buildFromSource": true
+    },
+    "darwin-arm64": {
+      "buildFromSource": true
+    }
+  }
+}

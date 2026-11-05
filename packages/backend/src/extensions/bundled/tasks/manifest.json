@@ -1,0 +1,30 @@
+{
+  "id": "wing-tasks",
+  "name": "任务",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "todo",
+      "description": "管理当前会话的待办清单（add 添加 / list 列出 / update 更新状态或文本 / remove 删除）。复杂任务建议先 add 拆解步骤，完成一步 update 一步，让用户实时看到进度。",
+      "category": "productivity",
+      "dangerous": false
+    },
+    {
+      "name": "notify",
+      "description": "在 Wing 内显示通知（info/warn/error）。只有用户明确需要系统弹窗时才传 system=true；默认不抢占桌面。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "background_task_submit",
+      "description": "提交超长后台任务（后台异步执行，不阻塞当前对话）。当任务预计耗时超过10分钟时使用：如批量生成多个视频（每个15秒视频约需7-8分钟）、批量生成大量图片、长时间资料搜集整理与长报告撰写等。\n提交后立即返回任务ID，你应随即告知用户\"任务已转后台执行，完成后结果会自动出现在对话中\"。\n关键要求：prompt 必须完整自包含（后台AI看不到当前对话历史），需写明任务全部背景、目标、分步指令、验收标准与产物要求（例如生成视频时的主题/画风/时长/分辨率/数量、生成后是否需要拼接等）。\n任务进度实时推送，用户可随时取消；完成后结果（含视频/图片附件）自动回流当前会话并弹通知。",
+      "category": "automation",
+      "dangerous": false
+    }
+  ]
+}

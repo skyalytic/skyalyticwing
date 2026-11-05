@@ -1,0 +1,11 @@
+{
+  "name": "@skyalyticwing/skill-documentation",
+  "version": "1.0.0",
+  "description": "Documentation generation skill for SkyalyticWing",
+  "main": "dist/index.js",
+  "type": "module",
+  "skyalyticwing": {
+    "skill": true,
+    "triggers": ["generate_docs", "create_documentation", "document_code"]
+  }
+}

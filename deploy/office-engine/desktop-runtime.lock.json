@@ -1,0 +1,9 @@
+{
+  "version": "1.24.0",
+  "publisher": "SUSE / Rancher Desktop",
+  "source": "https://github.com/rancher-sandbox/rancher-desktop/tree/v1.24.0",
+  "license": "Apache-2.0",
+  "win32-x64": {"url":"https://github.com/rancher-sandbox/rancher-desktop/releases/download/v1.24.0/Rancher.Desktop.Setup.1.24.0.msi","sha256":"5fc4e795a1c3bf72a2dac9144d55daab181f30d1a3049d96a4c025985769960b","file":"rancher-desktop-1.24.0.msi"},
+  "darwin-x64": {"url":"https://github.com/rancher-sandbox/rancher-desktop/releases/download/v1.24.0/Rancher.Desktop-1.24.0-mac.x86_64.zip","sha256":"5c8ab7faa2fff2fb473a8e973d464c84b496d63d4339522102503b58de42a4a9","file":"rancher-desktop-1.24.0-x64.zip"},
+  "darwin-arm64": {"url":"https://github.com/rancher-sandbox/rancher-desktop/releases/download/v1.24.0/Rancher.Desktop-1.24.0-mac.aarch64.zip","sha256":"ea842cda699031b2703ce201cdb6cc808f3f15ee2319833f5eb6024b6a33dde7","file":"rancher-desktop-1.24.0-arm64.zip"}
+}

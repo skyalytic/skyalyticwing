@@ -1,0 +1,66 @@
+{
+  "id": "wing-memory",
+  "name": "记忆与技能",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "memory_search",
+      "description": "搜索长期记忆(MEMORY.md)和每日笔记(memory/*.md)。回答关于之前工作、决策、偏好、待办等问题前，必须先搜索记忆。",
+      "category": "memory",
+      "dangerous": false
+    },
+    {
+      "name": "memory_get",
+      "description": "读取记忆文件内容（MEMORY.md 或 memory/YYYY-MM-DD.md），支持行号分页。",
+      "category": "memory",
+      "dangerous": false
+    },
+    {
+      "name": "memory_save",
+      "description": "保存信息到记忆系统。重要信息用 longterm（MEMORY.md 长期记忆），临时观察用 today（今日笔记）。",
+      "category": "memory",
+      "dangerous": false
+    },
+    {
+      "name": "knowledge_search",
+      "description": "搜索知识库（向量检索 + 关键词回退）。当问题需要知识库中的信息（产品文档、FAQ、客服知识）时使用，返回最相关条目。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "knowledge_add",
+      "description": "向知识库添加新条目（FAQ、文档片段、产品信息等）。同时写入知识库与向量索引以便语义检索。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "skill_list",
+      "description": "列出所有可用技能及其描述。",
+      "category": "skill",
+      "dangerous": false
+    },
+    {
+      "name": "skill_create",
+      "description": "创建新技能。技能是AI可调用的操作指南（SKILL.md），创建后在相关场景下自动使用。用户说\"帮我创建一个XXX技能\"时使用。",
+      "category": "skill",
+      "dangerous": false
+    },
+    {
+      "name": "skill_execute",
+      "description": "获取指定技能的详细步骤（SKILL.md 内容）。此工具只返回步骤，不会自动执行——你需要按照步骤用 bash/file_read 等工具直接完成。",
+      "category": "skill",
+      "dangerous": false
+    },
+    {
+      "name": "update_plan",
+      "description": "更新当前结构化工作计划，用于多步骤复杂任务跟踪进度。每步有 pending/in_progress/completed 三种状态，最多一个 in_progress。简单任务不需要使用。",
+      "category": "system",
+      "dangerous": false
+    }
+  ]
+}

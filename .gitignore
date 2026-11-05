@@ -1,0 +1,85 @@
+node_modules/
+dist/
+dist-desktop/
+*.log
+.env
+.env.local
+.env.*.local
+.env.*
+!.env.example
+!.env.*.example
+!.env.sample
+data/
+*.db
+*.sqlite
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+coverage/
+.nyc_output/
+.idea/
+.vscode/
+*.tsbuildinfo
+# Extension compiler output
+# 扩展的 dist/ 和 src/ 下的 .js/.js.map/.d.ts/.d.ts.map 是 tsc 编译输出，应从 git 排除。
+extensions/*/dist/
+extensions/*/src/*.js
+extensions/*/src/*.js.map
+extensions/*/src/*.d.ts
+extensions/*/src/*.d.ts.map
+
+# Build artifacts
+/build/
+/packages/backend/deploy/
+src-tauri/binaries/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/windows/runtime/
+
+# Signing keys & certificates (NEVER commit)
+.tauri/
+*.key
+*.key.pub
+*.pem
+*.p12
+*.pfx
+*.cer
+*.crt
+
+# Backup & sync files
+*.tar.gz
+*.rar
+*.zip
+*.7z
+.sync-*
+
+# Test screenshots & temp files
+test_*.png
+test_*.jpg
+*.tmp
+
+# Runtime state
+sessions.json
+*.sig
+
+# Local provider credentials and acceptance test state (may contain copied credentials)
+API.txt
+短信sms.txt
+/.test-runtime-data/
+/.test-data/
+/.test-*.err
+/.test-*.out
+/.playwright-mcp/
+/.pnpm-store/
+/.turbo/
+
+/e2e/test-results/
+/e2e/playwright-report/
+src-tauri/tauri.edition-runtime.json
+
+.pnpm-store/
+.source-check/
+
+# Local repository instructions are not published.
+AGENTS.md

@@ -1,0 +1,43 @@
+{
+  "organization": { "id": "demo-company", "name": "星河科技 · 组织管理预览", "status": "active", "seatLimit": 50 },
+  "actorId": "owner", "revision": 0,
+  "seats": [
+    { "userId": "owner", "name": "企业所有者", "phone": "13900000001", "role": "owner", "status": "active", "revision": 1 },
+    { "userId": "lead", "name": "林晓", "phone": "13900000002", "role": "member", "status": "active", "revision": 1 },
+    { "userId": "designer", "name": "陈悦", "phone": "13900000003", "role": "member", "status": "active", "revision": 1 },
+    { "userId": "research", "name": "周知", "phone": "13900000004", "role": "member", "status": "active", "revision": 1 },
+    { "userId": "engineer", "name": "沈言", "phone": "13900000005", "role": "member", "status": "active", "revision": 1 },
+    { "userId": "marketing", "name": "吴桐", "phone": "13900000006", "role": "member", "status": "active", "revision": 1 },
+    { "userId": "viewer", "name": "合作顾问", "phone": "13900000007", "role": "viewer", "status": "active", "revision": 1 }
+  ],
+  "state": {
+    "restricted": true,
+    "departments": [
+      { "id": "product", "name": "产品与设计中心", "parentId": null },
+      { "id": "design", "name": "体验设计部", "parentId": "product" },
+      { "id": "research", "name": "用户研究组", "parentId": "design" },
+      { "id": "engineering", "name": "技术研发中心", "parentId": null },
+      { "id": "platform", "name": "平台工程部", "parentId": "engineering" },
+      { "id": "growth", "name": "市场与运营中心", "parentId": null }
+    ],
+    "members": [
+      { "userId": "lead", "departmentId": "product", "manager": true },
+      { "userId": "designer", "departmentId": "design", "manager": false },
+      { "userId": "research", "departmentId": "research", "manager": false },
+      { "userId": "engineer", "departmentId": "platform", "manager": false },
+      { "userId": "marketing", "departmentId": "growth", "manager": false },
+      { "userId": "viewer", "departmentId": "growth", "manager": false }
+    ],
+    "resources": [
+      { "id": "report", "type": "skill", "key": "weekly-report", "name": "工作周报", "enabled": true },
+      { "id": "design-tool", "type": "plugin", "key": "design-review", "name": "设计评审助手", "enabled": true },
+      { "id": "knowledge", "type": "mcp", "key": "company-knowledge", "name": "企业知识库", "enabled": true },
+      { "id": "research-tool", "type": "skill", "key": "research-summary", "name": "用户访谈整理", "enabled": true }
+    ],
+    "grants": [
+      { "resourceId": "report", "subjectType": "department", "subjectId": "product" },
+      { "resourceId": "design-tool", "subjectType": "department", "subjectId": "design" },
+      { "resourceId": "research-tool", "subjectType": "member", "subjectId": "research" }
+    ]
+  }
+}

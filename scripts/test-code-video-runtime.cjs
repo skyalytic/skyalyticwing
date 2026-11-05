@@ -1,0 +1,50 @@
+// Local procedural rendering only. Never calls any model or starts a server.
+const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {execFileSync}=require('node:child_process');
+const root=path.resolve(__dirname,'..');
+const directory=fs.mkdtempSync(path.join(root,'build/code-video-integration-'));
+const backend=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'packages/backend');
+const binary=path.join(backend,process.argv[2]?'vendor/ffmpeg/bin':'deploy/vendor/ffmpeg/bin');
+const native=name=>path.join(binary,name+(process.platform==='win32'?'.exe':''));
+const {createCodeVideoTool}=require(path.join(backend,'dist/modules/tools/executor/built-in/code-video.js'));
+const {createVideoInspectionTool}=require(path.join(backend,'dist/modules/tools/executor/built-in/video-compose.js'));
+const {AgentLoopService}=require(path.join(backend,'dist/modules/ai/agent/agent-loop.service.js'));
+const {deduplicateLocalMedia}=require(path.join(backend,'dist/modules/core/utils/media-attachments.util.js'));
+const security={isPathAllowed:p=>{const relative=path.relative(directory,p);return !relative.startsWith('..')&&!path.isAbsolute(relative)}};
+const config={getAll:()=>({automation:{media:{video:{ffmpeg:{ffmpegPath:native('ffmpeg'),ffprobePath:native('ffprobe')}}}}})};
+const context={sessionId:'code-video-native-check',workspace:directory,config:{},log(){},broadcast(){}};
+const tool=createCodeVideoTool(security,config),checks=[];
+const draw='({time,width,height}) => `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}"><rect width="100%" height="100%" fill="#10243b"/><text x="32" y="65" font-family="Microsoft YaHei,sans-serif" font-size="26" fill="white">Wing 代码视频 · 中文字幕</text><text x="32" y="100" font-size="15" fill="#86dfbf">Local rendering / no video model</text><circle cx="${48+time*170}" cy="175" r="22" fill="#86dfbf"/></svg>`';
+fs.writeFileSync(path.join(directory,'draw.js'),draw);
+const args={script_path:'draw.js',output:'code-video.mp4',duration_seconds:2,width:640,height:360,fps:24};
+(async()=>{
+ execFileSync(native('ffmpeg'),['-v','error','-n','-f','lavfi','-i','sine=frequency=440:duration=0.5','-c:a','pcm_s16le',path.join(directory,'tone.wav')],{windowsHide:true});
+ const result=await tool.execute({...args,audio_path:'tone.wav'},context);
+ assert.equal(result.success,true,JSON.stringify(result));assert.equal(result.data.videoModelCalls,0);
+ const metadata=JSON.parse(execFileSync(native('ffprobe'),['-v','error','-count_frames','-show_format','-show_streams','-of','json',result.data.file],{encoding:'utf8',windowsHide:true}));
+ assert.equal(Number(metadata.streams.find(s=>s.codec_type==='video').nb_read_frames),48);assert(metadata.streams.some(s=>s.codec_type==='audio'));assert.equal(Number(metadata.format.duration),2);
+ execFileSync(native('ffmpeg'),['-v','error','-i',result.data.file,'-f','null','-'],{windowsHide:true});
+ execFileSync(native('ffmpeg'),['-v','error','-n','-ss','1','-i',result.data.file,'-frames:v','1',path.join(directory,'decoded-frame.png')],{windowsHide:true});
+ checks.push('real registered implementation writes H.264 MP4: 48 frames, Chinese SVG text and padded local audio; full decode passes');
+ const inspection=await createVideoInspectionTool(security,config).execute({path:result.data.file},context);assert.equal(inspection.success,true);
+ const attachments=[];const collector={logger:{warn(){}}};
+ AgentLoopService.prototype.collectInlineMedia.call(collector,result,attachments);
+ AgentLoopService.prototype.collectInlineMedia.call(collector,result,attachments);
+ const deduped=await deduplicateLocalMedia(attachments,p=>security.isPathAllowed(p));
+ assert.equal(deduped.length,1);assert.equal(deduped[0].type,'video');assert.match(deduped[0].url,/^\/api\/files\/serve/);
+ checks.push('inspection and actual chat attachment collection return one playable video attachment');
+ const before=fs.readFileSync(result.data.file);
+ assert.equal((await tool.execute(args,context)).success,false);assert.deepEqual(fs.readFileSync(result.data.file),before);checks.push('existing output is not overwritten');
+ fs.writeFileSync(path.join(directory,'invalid.js'),'() => process.env');
+ const invalid=await tool.execute({...args,script_path:'invalid.js',output:'invalid.mp4'},context);assert.equal(invalid.success,false);assert(!fs.existsSync(path.join(directory,'invalid.mp4')));checks.push('drawing code cannot access process environment; failed render publishes no output');
+ fs.writeFileSync(path.join(directory,'loop.js'),'() => { while(true) {} }');
+ const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),1500);const started=Date.now();
+ const cancelled=await tool.execute({...args,script_path:'loop.js',output:'cancelled.mp4'},{...context,signal:controller.signal});clearTimeout(timer);
+ assert.equal(cancelled.success,false);assert(Date.now()-started<15000);assert(!fs.existsSync(path.join(directory,'cancelled.mp4')));assert(!fs.readdirSync(directory).some(n=>n.startsWith('.wing-code-video-')));
+ checks.push('stop terminates an infinite drawing script and child encoder, removes owned partial files');
+ fs.writeFileSync(path.join(directory,'result.json'),JSON.stringify({passed:true,checks,file:result.data.file,videoModelCalls:0,attachment:deduped[0]},null,2));
+ console.log(JSON.stringify({passed:true,checks,directory,file:result.data.file},null,2));
+ // Importing the full agent graph creates application-level timers; this isolated
+ // CLI has already awaited all owned rendering processes and can now exit.
+ process.exit(0);
+})().catch(error=>{console.error(error);process.exit(1)});

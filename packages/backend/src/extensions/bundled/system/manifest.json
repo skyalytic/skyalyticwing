@@ -1,0 +1,60 @@
+{
+  "id": "wing-system",
+  "name": "系统",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "system_info",
+      "description": "获取系统运行信息（平台/架构/主机名/内存/PID/运行时间/数据目录等），用于诊断系统状态。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "usage_stats",
+      "description": "查看API用量统计（今日/本月请求数、token消耗、各供应商占比），用于监控使用情况。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "queue_status",
+      "description": "查看消息队列状态（队列长度/处理中/最近消息），用于调试消息处理问题。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "remote_nodes",
+      "description": "列出远程节点信息（ID/地址/状态/负载/能力），用于分布式任务管理。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "env_get",
+      "description": "读取环境变量值（受安全策略限制，路径注入类与凭据类敏感变量不可读取）。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "env_set",
+      "description": "设置环境变量值（仅当前进程内生效，重启后失效；敏感变量不可设置）。用于临时调整运行时行为。",
+      "category": "system",
+      "dangerous": true
+    },
+    {
+      "name": "process_list",
+      "description": "列出当前系统运行中的进程（Windows: Get-Process；Unix: ps aux）。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "process_kill",
+      "description": "终止指定PID的进程（危险操作）。不能终止自身进程。",
+      "category": "system",
+      "dangerous": true
+    }
+  ]
+}

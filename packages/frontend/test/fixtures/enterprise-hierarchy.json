@@ -1,0 +1,24 @@
+{
+  "departments": [
+    {"id":"center1","name":"中心1","parentId":null},
+    {"id":"department1","name":"部门1","parentId":"center1"},
+    {"id":"group1","name":"小组1","parentId":"department1"},
+    {"id":"squad1","name":"小队1","parentId":"group1"},
+    {"id":"squad2","name":"小队2","parentId":"group1"},
+    {"id":"group2","name":"小组2","parentId":"department1"},
+    {"id":"department2","name":"部门2","parentId":"center1"},
+    {"id":"center2","name":"中心2","parentId":null}
+  ],
+  "members": [
+    {"userId":"center-lead","departmentId":"center1","manager":true},
+    {"userId":"department-lead","departmentId":"department1","manager":true},
+    {"userId":"group-lead","departmentId":"group1","manager":true},
+    {"userId":"squad-lead","departmentId":"squad1","manager":true},
+    {"userId":"squad2-lead","departmentId":"squad2","manager":true},
+    {"userId":"squad-employee","departmentId":"squad1","manager":false},
+    {"userId":"squad2-employee","departmentId":"squad2","manager":false},
+    {"userId":"group2-lead","departmentId":"group2","manager":true},
+    {"userId":"department2-lead","departmentId":"department2","manager":true},
+    {"userId":"center2-lead","departmentId":"center2","manager":true}
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "name": "@skyalyticwing/channels",
+  "version": "2.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "SkyalyticWing Channel Plugins",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./telegram": {
+      "import": "./dist/telegram/index.js",
+      "types": "./dist/telegram/index.d.ts"
+    },
+    "./discord": {
+      "import": "./dist/discord/index.js",
+      "types": "./dist/discord/index.d.ts"
+    },
+    "./slack": {
+      "import": "./dist/slack/index.js",
+      "types": "./dist/slack/index.d.ts"
+    },
+    "./cli": {
+      "import": "./dist/cli/index.js",
+      "types": "./dist/cli/index.d.ts"
+    },
+    "./feishu": {
+      "import": "./dist/feishu/index.js",
+      "types": "./dist/feishu/index.d.ts"
+    },
+    "./dingtalk": {
+      "import": "./dist/dingtalk/index.js",
+      "types": "./dist/dingtalk/index.d.ts"
+    },
+    "./email": {
+      "import": "./dist/email/index.js",
+      "types": "./dist/email/index.d.ts"
+    },
+    "./webchat": {
+      "import": "./dist/webchat/index.js",
+      "types": "./dist/webchat/index.d.ts"
+    },
+    "./qq": {
+      "import": "./dist/qq/index.js",
+      "types": "./dist/qq/index.d.ts"
+    },
+    "./wecom": {
+      "import": "./dist/wecom/index.js",
+      "types": "./dist/wecom/index.d.ts"
+    },
+    "./weixin": {
+      "import": "./dist/weixin/index.js",
+      "types": "./dist/weixin/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@skyalyticwing/sdk": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "tsdown": "^0.21.0"
+  }
+}

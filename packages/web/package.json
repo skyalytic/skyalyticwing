@@ -1,0 +1,29 @@
+{
+  "name": "@skyalyticwing/web",
+  "version": "2.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "SkyalyticWing Data Assets (skills, plugins, tools, binaries)",
+  "private": true,
+  "files": [
+    "skills/",
+    "plugins/",
+    "tools/",
+    "bin/",
+    "binaries/",
+    "workspace/",
+    "data/",
+    ".agents/",
+    "SkyInput.cs",
+    "SkyPost.cs",
+    "WinMgmt.cs",
+    "WinRestoreHelper.cs",
+    "WinDiag.cs",
+    "manage-window.ps1",
+    "restore-window.ps1",
+    "restore-win.ps1",
+    "enum-windows.ps1",
+    "diag-windows.ps1",
+    "winocr.ps1",
+    "logo.png"
+  ]
+}

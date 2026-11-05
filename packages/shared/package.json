@@ -1,0 +1,61 @@
+{
+  "name": "@skyalyticwing/shared",
+  "version": "2.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "SkyalyticWing Shared - Common utilities, types, and error definitions",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.cts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./logger": {
+      "types": "./dist/logger/index.d.cts",
+      "import": "./dist/logger/index.mjs",
+      "require": "./dist/logger/index.cjs"
+    },
+    "./errors": {
+      "types": "./dist/errors/index.d.cts",
+      "import": "./dist/errors/index.mjs",
+      "require": "./dist/errors/index.cjs"
+    },
+    "./utils": {
+      "types": "./dist/utils/index.d.cts",
+      "import": "./dist/utils/index.mjs",
+      "require": "./dist/utils/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types/index.d.cts",
+      "import": "./dist/types/index.mjs",
+      "require": "./dist/types/index.cjs"
+    },
+    "./constants": {
+      "types": "./dist/constants/index.d.cts",
+      "import": "./dist/constants/index.mjs",
+      "require": "./dist/constants/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "pino": "^9.0.0",
+    "zod": "^3.23.0",
+    "uuid": "^10.0.0",
+    "date-fns": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "tsdown": "^0.21.0"
+  }
+}

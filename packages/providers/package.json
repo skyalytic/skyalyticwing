@@ -1,0 +1,98 @@
+{
+  "name": "@skyalyticwing/providers",
+  "version": "2.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "SkyalyticWing Model Providers",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./anthropic": {
+      "import": "./dist/anthropic/index.js",
+      "types": "./dist/anthropic/index.d.ts"
+    },
+    "./openai": {
+      "import": "./dist/openai/index.js",
+      "types": "./dist/openai/index.d.ts"
+    },
+    "./azure": {
+      "import": "./dist/azure/index.js",
+      "types": "./dist/azure/index.d.ts"
+    },
+    "./google": {
+      "import": "./dist/google/index.js",
+      "types": "./dist/google/index.d.ts"
+    },
+    "./bedrock": {
+      "import": "./dist/bedrock/index.js",
+      "types": "./dist/bedrock/index.d.ts"
+    },
+    "./ollama": {
+      "import": "./dist/ollama/index.js",
+      "types": "./dist/ollama/index.d.ts"
+    },
+    "./deepseek": {
+      "import": "./dist/deepseek/index.js",
+      "types": "./dist/deepseek/index.d.ts"
+    },
+    "./qwen": {
+      "import": "./dist/qwen/index.js",
+      "types": "./dist/qwen/index.d.ts"
+    },
+    "./mistral": {
+      "import": "./dist/mistral/index.js",
+      "types": "./dist/mistral/index.d.ts"
+    },
+    "./kimi": {
+      "import": "./dist/kimi/index.js",
+      "types": "./dist/kimi/index.d.ts"
+    },
+    "./zhipu": {
+      "import": "./dist/zhipu/index.js",
+      "types": "./dist/zhipu/index.d.ts"
+    },
+    "./wenxin": {
+      "import": "./dist/wenxin/index.js",
+      "types": "./dist/wenxin/index.d.ts"
+    },
+    "./volcengine": {
+      "import": "./dist/volcengine/index.js",
+      "types": "./dist/volcengine/index.d.ts"
+    },
+    "./minimax": {
+      "import": "./dist/minimax/index.js",
+      "types": "./dist/minimax/index.d.ts"
+    },
+    "./xai": {
+      "import": "./dist/xai/index.js",
+      "types": "./dist/xai/index.d.ts"
+    },
+    "./spark": {
+      "import": "./dist/spark/index.js",
+      "types": "./dist/spark/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\""
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@skyalyticwing/sdk": "workspace:*",
+    "openai": "^4.70.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "3.25.2"
+  },
+  "devDependencies": {
+    "tsdown": "^0.21.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
+}

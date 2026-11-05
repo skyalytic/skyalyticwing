@@ -1,0 +1,81 @@
+[
+  {
+    "id": "stable-unique",
+    "prompt": "实现 export function solve(input)，去除字符串数组重复项，保持第一次出现顺序，不修改输入。",
+    "tests": [
+      { "input": ["b", "a", "b", "c", "a"], "expected": ["b", "a", "c"] },
+      { "input": [], "expected": [] },
+      { "input": ["__proto__", "x", "__proto__"], "expected": ["__proto__", "x"] }
+    ]
+  },
+  {
+    "id": "merge-intervals",
+    "prompt": "实现 export function solve(input)，合并闭区间数组中重叠或端点相接的区间，结果按起点排序，不修改输入。",
+    "tests": [
+      {
+        "input": [
+          [5, 7],
+          [1, 3],
+          [3, 4]
+        ],
+        "expected": [
+          [1, 4],
+          [5, 7]
+        ]
+      },
+      { "input": [], "expected": [] },
+      {
+        "input": [
+          [1, 10],
+          [2, 3]
+        ],
+        "expected": [[1, 10]]
+      }
+    ]
+  },
+  {
+    "id": "unicode-reverse",
+    "prompt": "实现 export function solve(input)，按 Unicode 码点反转字符串（不是 UTF-16 code unit）。",
+    "tests": [
+      { "input": "A😀中", "expected": "中😀A" },
+      { "input": "", "expected": "" },
+      { "input": "abc", "expected": "cba" }
+    ]
+  },
+  {
+    "id": "csv-line",
+    "prompt": "实现 export function solve(input)，解析单行 CSV 返回字段数组，支持双引号字段中的逗号以及用两个双引号表示一个双引号，保留空字段。输入保证合法。",
+    "tests": [
+      { "input": "a,\"b,c\",d", "expected": ["a", "b,c", "d"] },
+      { "input": "\"say \"\"hi\"\"\",", "expected": ["say \"hi\"", ""] },
+      { "input": ",,", "expected": ["", "", ""] }
+    ]
+  },
+  {
+    "id": "topological-order",
+    "prompt": "实现 export function solve(input)，input={nodes,edges}，edges=[from,to] 表示 from 必须先于 to。返回字典序最小的拓扑序，有环返回 null。",
+    "tests": [
+      { "input": { "nodes": ["c", "a", "b"], "edges": [["a", "c"]] }, "expected": ["a", "b", "c"] },
+      {
+        "input": {
+          "nodes": ["a", "b"],
+          "edges": [
+            ["a", "b"],
+            ["b", "a"]
+          ]
+        },
+        "expected": null
+      },
+      { "input": { "nodes": [], "edges": [] }, "expected": [] }
+    ]
+  },
+  {
+    "id": "path-normalize",
+    "prompt": "实现 export function solve(input)，对绝对 POSIX 路径做词法规范化：合并重复 /，移除 .，.. 回退一级且不能越过根。输出去掉末尾 /，根除外。",
+    "tests": [
+      { "input": "/a//b/../c/", "expected": "/a/c" },
+      { "input": "/../../a", "expected": "/a" },
+      { "input": "/./", "expected": "/" }
+    ]
+  }
+]

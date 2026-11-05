@@ -1,0 +1,115 @@
+{
+  "name": "@skyalyticwing/tools",
+  "version": "2.1.0",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "description": "SkyalyticWing Built-in Tools",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./bash": {
+      "import": "./dist/bash/index.js",
+      "types": "./dist/bash/index.d.ts"
+    },
+    "./file-read": {
+      "import": "./dist/file-read/index.js",
+      "types": "./dist/file-read/index.d.ts"
+    },
+    "./file-write": {
+      "import": "./dist/file-write/index.js",
+      "types": "./dist/file-write/index.d.ts"
+    },
+    "./file-edit": {
+      "import": "./dist/file-edit/index.js",
+      "types": "./dist/file-edit/index.d.ts"
+    },
+    "./file-delete": {
+      "import": "./dist/file-delete/index.js",
+      "types": "./dist/file-delete/index.d.ts"
+    },
+    "./directory-list": {
+      "import": "./dist/directory-list/index.js",
+      "types": "./dist/directory-list/index.d.ts"
+    },
+    "./glob": {
+      "import": "./dist/glob/index.js",
+      "types": "./dist/glob/index.d.ts"
+    },
+    "./grep": {
+      "import": "./dist/grep/index.js",
+      "types": "./dist/grep/index.d.ts"
+    },
+    "./powershell": {
+      "import": "./dist/powershell/index.js",
+      "types": "./dist/powershell/index.d.ts"
+    },
+    "./python": {
+      "import": "./dist/python/index.js",
+      "types": "./dist/python/index.d.ts"
+    },
+    "./node": {
+      "import": "./dist/node/index.js",
+      "types": "./dist/node/index.d.ts"
+    },
+    "./api-call": {
+      "import": "./dist/api-call/index.js",
+      "types": "./dist/api-call/index.d.ts"
+    },
+    "./web-search": {
+      "import": "./dist/web-search/index.js",
+      "types": "./dist/web-search/index.d.ts"
+    },
+    "./web-fetch": {
+      "import": "./dist/web-fetch/index.js",
+      "types": "./dist/web-fetch/index.d.ts"
+    },
+    "./code-lint": {
+      "import": "./dist/code-lint/index.js",
+      "types": "./dist/code-lint/index.d.ts"
+    },
+    "./code-format": {
+      "import": "./dist/code-format/index.js",
+      "types": "./dist/code-format/index.d.ts"
+    },
+    "./code-test": {
+      "import": "./dist/code-test/index.js",
+      "types": "./dist/code-test/index.d.ts"
+    },
+    "./git-operation": {
+      "import": "./dist/git-operation/index.js",
+      "types": "./dist/git-operation/index.d.ts"
+    },
+    "./ask-user": {
+      "import": "./dist/ask-user/index.js",
+      "types": "./dist/ask-user/index.d.ts"
+    },
+    "./notify": {
+      "import": "./dist/notify/index.js",
+      "types": "./dist/notify/index.d.ts"
+    },
+    "./browser-open": {
+      "import": "./dist/browser-open/index.js",
+      "types": "./dist/browser-open/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@skyalyticwing/sdk": "workspace:*",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0",
+    "tsdown": "^0.21.0"
+  }
+}

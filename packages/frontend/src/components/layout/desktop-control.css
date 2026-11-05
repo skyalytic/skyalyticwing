@@ -1,0 +1,12 @@
+.sky-desktop-control { display:flex; align-items:center; gap:10px; min-height:52px; padding:8px 12px; box-sizing:border-box; background:#132b3c; color:#fff; border:1px solid #2db7cd; border-radius:14px; font-size:12px; box-shadow:0 6px 22px #07162233; }
+.sky-desktop-control__indicator { color:#42c5de; display:flex; }
+.sky-desktop-control__body { flex:1; min-width:0; cursor:grab; }
+.sky-desktop-control__heading strong { font-size:12px; font-weight:600; }
+.sky-desktop-control__actions { display:flex; gap:6px; }
+.sky-desktop-control__button { border:0; border-radius:8px; padding:7px 9px; color:#fff; background:#234c5e; cursor:pointer; white-space:nowrap; font:inherit; }
+.sky-desktop-control__button:hover { background:#306278; }
+.sky-desktop-control__button:focus-visible { outline:2px solid #42c5de; outline-offset:2px; }
+.sky-desktop-control__button:disabled { opacity:.5; }
+.sky-desktop-control__warning { margin:3px 0 0; color:#ffd9a1; }
+.sky-desktop-control.is-paused { border-color:#8a9cab; }
+.sky-screen-edge { width:100vw; height:100vh; background:linear-gradient(var(--edge-angle,180deg),#28c0e699,#102d4a00); pointer-events:none; }

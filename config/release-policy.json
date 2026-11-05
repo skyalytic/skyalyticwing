@@ -1,0 +1,10 @@
+{
+  "version": "2.1.0",
+  "status": "source-development",
+  "publicReleaseAllowed": false,
+  "packagingAllowed": false,
+  "updateFeedAllowed": false,
+  "reason": "Remote publication requires maintainer configuration and verified signed artifacts. Local test packaging is available.",
+  "edition": "community",
+  "localTestPackagingAllowed": true
+}

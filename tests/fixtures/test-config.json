@@ -1,0 +1,12 @@
+{
+  "name": "test-project",
+  "version": "1.0.0",
+  "model": {
+    "default": "claude-sonnet-4",
+    "provider": "anthropic"
+  },
+  "permissions": {
+    "mode": "ask",
+    "rules": []
+  }
+}

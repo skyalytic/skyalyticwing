@@ -1,0 +1,60 @@
+{
+  "id": "wing-platform",
+  "name": "资源管理",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "subagent_spawn_swarm",
+      "description": "蜂群调度：并行派生多个子代理执行任务并汇总结果（受最大并发 5 与嵌套深度 3 限制）。父级默认为当前会话。全部完成后返回成功/失败计数与逐任务摘要。",
+      "category": "agent",
+      "dangerous": false
+    },
+    {
+      "name": "provider_config",
+      "description": "LLM 提供商配置管理：list=列出全部提供商（含 configured 状态与模型）；save=更新配置（apiKey/baseUrl/models，baseUrl 经 SSRF 校验）；test=连通性测试（实际调用一次 LLM）；models=列出可用模型。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "code_execution",
+      "description": "沙箱代码执行：命令先经命令守卫校验，Docker 可用时在隔离容器执行（内存/CPU/文件系统限制），否则降级进程级白名单沙箱。沙箱服务不可用时降级直接执行（命令守卫仍生效）。",
+      "category": "shell",
+      "dangerous": true
+    },
+    {
+      "name": "session_create",
+      "description": "显式创建新会话（返回会话 ID/标题/时间戳），持久化到 sessions.json。",
+      "category": "session",
+      "dangerous": false
+    },
+    {
+      "name": "session_status",
+      "description": "查看会话状态：sessionId 指定时返回该会话信息（标题/消息数/时间戳），否则返回最近会话列表。",
+      "category": "session",
+      "dangerous": false
+    },
+    {
+      "name": "plugin_list",
+      "description": "列出全部已安装插件（名称/版本/启用与加载状态/提供的工具），不含插件配置。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "plugin_toggle",
+      "description": "启用/禁用插件（按 ID 或名称）。禁用后插件工具不再注册。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "sandbox_status",
+      "description": "查看沙箱执行系统状态（模式/是否 Docker 可用/白名单与阻断规则计数）。",
+      "category": "system",
+      "dangerous": false
+    }
+  ]
+}

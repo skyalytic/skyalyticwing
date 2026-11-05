@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SkyalyticWing</title>
+  <style>
+    :root{font-family:"Segoe UI","Microsoft YaHei",sans-serif;color:#203747;background:#f7f9fc;color-scheme:light}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;flex-direction:column}
+    header{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 24px;border-bottom:1px solid #e3e9ef;font-size:14px}
+    .brand{display:flex;align-items:center;gap:10px;font-weight:600}.mark{color:#b89745;font-size:23px}
+    button{font:inherit;cursor:pointer;border:1px solid #ccd8e2;border-radius:8px;padding:10px 22px;background:#fff;color:inherit}
+    button:hover{background:#edf3f8}button:focus-visible{outline:2px solid #2776a5;outline-offset:3px}
+    #startup-close{border:0;background:transparent;font-size:23px;padding:2px 11px}
+    main{flex:1;display:grid;place-content:center;text-align:center;padding:36px 24px 80px}
+    .emblem{width:72px;height:72px;margin:0 auto 28px;display:grid;place-items:center;background:#eaf2f8;border-radius:22px;color:#306e95}
+    svg{width:40px;height:40px}h1{font-size:24px;font-weight:600;margin:0 0 16px;letter-spacing:.3px}
+    #startup-status{max-width:440px;margin:0 auto;color:#607487;font-size:14px;line-height:1.8;white-space:pre-line}
+    .progress{width:160px;height:4px;margin:28px auto 0;background:#dce7ef;border-radius:4px;overflow:hidden}
+    .progress:after{content:"";display:block;width:55%;height:100%;background:#347ca7;border-radius:4px;animation:progress 1.6s ease-in-out infinite}
+    @keyframes progress{0%{transform:translateX(-110%)}100%{transform:translateX(290%)}}
+    .actions{display:none;justify-content:center;gap:12px;margin-top:26px}.primary{background:#286f99;color:#fff;border-color:#286f99}.primary:hover{background:#215d80}
+    .startup-failed .progress{display:none}.startup-failed .actions{display:flex}
+    footer{text-align:center;color:#8b9aa8;font-size:12px;padding:20px}
+    @media(prefers-reduced-motion:reduce){.progress:after{animation:none;transform:translateX(40%)}}
+  </style>
+  <script src="desktop-startup.js" defer></script>
+</head>
+<body>
+  <header data-tauri-drag-region><div class="brand"><span class="mark" aria-hidden="true">◇</span>SkyalyticWing</div><button id="startup-close" aria-label="退出 Wing" title="退出 Wing">×</button></header>
+  <main>
+    <div class="emblem" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none"><path d="M7 34 13 10l28 4-15 25L7 34Zm6-24 13 29M7 34l34-20" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+    <h1 id="startup-heading">正在准备你的工作空间</h1>
+    <p id="startup-status" role="status" aria-live="polite">Wing 正在启动，准备完成后将自动进入工作台。</p>
+    <div class="progress" aria-hidden="true"></div>
+    <div class="actions"><button id="startup-retry" class="primary">重新启动</button><button id="startup-exit">退出 Wing</button></div>
+  </main>
+  <footer>SkyalyticWing · 让想法成为完成的工作</footer>
+</body>
+</html>

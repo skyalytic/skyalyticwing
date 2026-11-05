@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      # C-D4 fix: Pod 级 securityContext，强制非 root 运行。
+      # postgres:16-alpine 默认以 UID 70 的 postgres 用户运行，runAsNonRoot 兼容该用户。
+      securityContext:
+        runAsNonRoot: true
+        fsGroup: 70
+      # H-I2 fix: 使用最小权限 ServiceAccount，不挂载 SA token。SA 定义见 k8s/rbac.yaml。
+      serviceAccountName: skyalyticwing-db
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        # C-D4 fix: Container 级 securityContext，丢弃所有 Linux capabilities 并禁止提权。
+        # 注：postgres 需写 /var/lib/postgresql/data 与 /var/run/postgresql，故不启用 readOnlyRootFilesystem。
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: skyalyticwing
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: skyalyticwing-secrets
+              key: database-password
+        # M-I1 fix: 添加 resources.requests 和 resources.limits，
+        # 避免单个 Pod 占用过多节点资源导致集群不稳定。
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "1000m"
+            memory: "512Mi"
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc

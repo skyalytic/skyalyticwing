@@ -1,0 +1,54 @@
+{
+  "id": "wing-reach",
+  "name": "Agent Reach",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "web_read",
+      "description": "读取任意网页正文并转为 Markdown（基于 Jina Reader r.jina.ai，免配置）。适合读取文章、文档、博客；与 web-fetch 互补（web_read 返回正文 Markdown，web-fetch 返回原始内容）。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "rss_read",
+      "description": "读取 RSS 2.0 / Atom 订阅源，返回标题与条目列表（标题/链接/摘要/日期）。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "v2ex_hot",
+      "description": "获取 V2EX 热门主题 / 节点主题 / 主题详情 / 主题回复 / 用户信息。公开 API，无需认证。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "bilibili_search",
+      "description": "B 站视频搜索（公开搜索 API，自动获取匿名 cookie）。返回标题、UP 主、播放量、BV 号等。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "github_search",
+      "description": "GitHub 搜索：仓库 / 代码 / Issue（REST API）。未认证 60 次/小时，配置 general.githubToken 或环境变量 GITHUB_TOKEN 后 5000 次/小时。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "exa_search",
+      "description": "Exa AI 神经搜索（擅长英文技术文档与代码）。需配置 general.exaApiKey 或环境变量 EXA_API_KEY。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "weather",
+      "description": "查询天气。未配置 API Key 时使用 wttr.in 免费源；配置 general.openWeatherApiKey 后走 OpenWeatherMap。不指定地点时自动 IP 定位。",
+      "category": "web",
+      "dangerous": false
+    }
+  ]
+}

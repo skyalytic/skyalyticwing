@@ -1,0 +1,13 @@
+FROM node:22-bookworm-slim AS builder
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ pkg-config libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev git ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
+COPY . .
+RUN pnpm install --frozen-lockfile
+RUN pnpm build
+
+RUN mkdir -p /data/web && chown -R node:node /app /data
+ENV NODE_ENV=development PORT=910 SKYALYTICWING_HOST=0.0.0.0 SKYALYTICWING_DATA_DIR=/data SKYALYTICWING_WEB_DATA_DIR=/data/web
+USER node
+EXPOSE 910
+CMD ["pnpm", "--filter", "@skyalyticwing/backend", "dev"]

@@ -1,0 +1,72 @@
+{
+  "id": "wing-media",
+  "name": "媒体",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "image_generate",
+      "description": "AI图像生成（简版）。根据文字描述生成图片并保存到工作区，提供商自动派生自设置页已配置的模型供应商，默认使用默认生成模型（跟随默认对话模型厂商）。需要按模型特性选型（质量/速度/成本）时请改用 generate_image 工具（含完整模型目录与选型规则）。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "generate_image",
+      "description": "AI图像生成与编辑。根据描述生成图片；编辑时传 input_images，系统选择具备图片输入能力的已配置模型，缺少适配时可补用官方模型并扣 Wing 积分。\n可用生成模型及特性（清单只含当前已配置 API 的厂商，按用户需求对照各模型 traits 选型，model 参数直接传模型名自动路由到对应厂商）：\n媒体服务尚未就绪，不可提交生成任务\n选型规则（按 traits 判断，非固定型号）：用户要最高质量→选 traits 含\"旗舰/最强\"的；要快或便宜→选\"便宜/免费/速度\"的；批量生成控制成本→性价比款；带文字的海报→文字渲染强的。用户未指定且无明确倾向时：不传 model，用默认生成模型（设置页可选，未设置时跟随默认对话模型厂商）。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "generate_video",
+      "description": "视频模型生成（可能收费）。用户不要视频模型、仅用代码或本地制作时，不得调用本工具，改用 render_code_video；字幕、图表和程序动画优先代码渲染。按用户配置的 API、任务输入与所选模型路由。支持持久任务的提供商返回任务 ID；不能将图片发送给仅支持文生视频的模型。单次生成时长不等于成片时长；长片可规划分镜、分段生成，再用 concat_videos 拼接已有兼容片段。先确认费用与生成数量，不可直接批量提交昂贵任务，也不要声称所有工具都无法制作长片。\n可用生成模型及特性（清单只含当前已配置 API 的厂商，按用户需求对照各模型 traits 选型，model 参数直接传模型名自动路由到对应厂商）：\n媒体服务尚未就绪，不可提交生成任务\n选型规则（按 traits 判断，非固定型号）：用户要最高质量/正式成片→选 traits 含\"旗舰\"的；要快或低成本试稿→\"便宜/最快\"的；上代 pro 性价比也可选。用户未指定且无明确倾向时：不传 model，用默认生成模型（设置页可选，未设置时跟随默认对话模型厂商）。视频生成会立即返回持久任务 ID；用 get_video_task 查询或在对话中的生成记录查看下载。刷新或重启不会重提交；新版本使用新的 request_id。在模型设置中选择对应 API 协议并填写模型 ID，用户提供商不限万相。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "get_video_task",
+      "description": "查询已提交的视频任务，不会再次生成或计费。完成后显示本地文件路径。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "canvas",
+      "description": "Canvas画布操作。create/draw 将 HTML 或 SVG 保存为可编辑 HTML 设计稿，用户可在画布继续编辑。export 可真实导出 PNG/PDF/SVG；clear 必须指定 HTML/SVG 文件名，会将该文件改为空白画布。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "pdf",
+      "description": "PDF文档处理。读取PDF提取文字(read/extract_text)、获取文件信息(info)、由文本生成PDF(create)。当用户提到PDF文件时优先使用本工具。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "notebook_edit",
+      "description": "编辑Jupyter Notebook单元格（.ipynb）。支持替换/插入/删除代码或Markdown单元格。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "concat_videos",
+      "description": "用 Wing 内置 FFmpeg 按顺序拼接已有视频片段，输出一个 MP4；不调用生成模型、不计生成费用，用户无需另装 FFmpeg 或配置 PATH。可先用 inspect_video 检查内置工具和片段信息。输入须具有相同编码、分辨率、帧率和音轨布局。成片可长于单次生成时长（如 30 分钟），但拼接不保证跨镜头人物/场景连续性。长视频若需新生成片段，先说明分镜、数量和预计费用，获用户同意后再生成，不能因单次生成时长有限就声称无法制作长片。",
+      "category": "media",
+      "dangerous": true
+    },
+    {
+      "name": "inspect_video",
+      "description": "只读检查 Wing 内置 FFmpeg/ffprobe 是否可用；传入本地视频 path 时读取时长、分辨率、编码、音轨等技术信息。不生成视频、不修改文件、不调用模型。此工具不分析画面语义或识别对白。",
+      "category": "media",
+      "dangerous": false
+    },
+    {
+      "name": "render_code_video",
+      "description": "用代码制作视频，无需视频模型或生成 API。先用 file-write 写一个 UTF-8 JavaScript 文件，内容是同步函数表达式，例如 ({time,width,height}) => `<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"${width}\" height=\"${height}\"><circle cx=\"${40+time*50}\" cy=\"100\" r=\"20\" fill=\"red\"/></svg>`。函数每帧收到 frame、time（秒）、width、height、fps、duration，返回完整 SVG。支持 Math、字符串和纯 JavaScript 运算；没有 require/process/fetch/DOM，不能导入库或联网；图片须嵌入 PNG/JPEG/WebP base64 data URL。可制作字幕、歌词、图表、教学和程序动画。用本地素材做真实拍摄效果需先取得素材，不得把简单动画冒充真实场景。使用内置 FFmpeg 输出 MP4，可选已有音轨 audio_path，不调用配音服务。时长由 duration_seconds 指定，无视频模型单段时长限制。返回文件直接进入对话预览，不要重复发送同一文件。失败后修改脚本重试；停止会取消渲染。",
+      "category": "media",
+      "dangerous": true
+    }
+  ]
+}

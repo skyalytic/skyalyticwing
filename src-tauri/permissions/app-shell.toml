@@ -1,0 +1,7 @@
+[[permission]]
+identifier = "app-shell"
+description = "App management and embedded browser commands, granted only to the main shell webview."
+commands.allow = [
+  "desktop_surface", "get_server_status", "start_server", "stop_server", "check_for_updates", "update_prepared", "cancel_update", "update_healthy",
+  "install_update", "get_app_version", "native_browser_command", "native_browser_bounds", "native_office_view"
+]

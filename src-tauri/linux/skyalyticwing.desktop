@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=SkyalyticWing
+Comment=SkyalyticWing AI workspace
+Exec=/usr/bin/skyalyticwing
+Icon=skyalyticwing
+Terminal=false
+Categories=Office;Utility;

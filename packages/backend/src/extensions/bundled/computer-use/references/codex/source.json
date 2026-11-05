@@ -1,0 +1,11 @@
+{
+  "plugin": "openai-bundled/computer-use",
+  "version": "26.930.61225",
+  "source": "User-requested local installed skill reference; no native executable or SDK copied.",
+  "sha256": {
+    "skills/computer-use/SKILL.md": "8211e4b11a19a0dc4f0ace91096c74c5b36037ca4cb2c8988f0f535bb209e951",
+    "docs/guidance.md": "b171b26bc19f49226bb594bf3ed3f36666e5dd063a996c297986b2b461ac8efd",
+    "docs/api.md": "c36d005fb98ed79837a1a5d4605ebad036cec95864e5646f451425163d5c16af",
+    "docs/confirmations.md": "9c45b3eb20e4a7fb14860e50f635e200b321a52fef6d26f39f7b936bd44be11a"
+  }
+}

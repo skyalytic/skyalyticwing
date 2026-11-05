@@ -1,0 +1,159 @@
+# H-I3 fix: 添加 NetworkPolicy，实施 default-deny + 显式放行策略。
+# 原问题：k8s 全目录无 NetworkPolicy，Pod 间网络无隔离，
+# 任一 Pod 被攻破即可访问集群内所有其他 Pod（横向移动风险）。
+#
+# 策略：
+#   1. default-deny ingress/egress：默认拒绝所有进出流量
+#   2. gateway 放行：ingress 允许任意来源访问 18789（经 ingress controller 转发），
+#      egress 允许访问 postgres:5432、redis:6379 与 DNS（kube-system:53）
+#   3. postgres 放行：仅允许 app=skyalyticwing 的 Pod 访问 5432，egress 仅 DNS
+#   4. redis 放行：仅允许 app=skyalyticwing 的 Pod 访问 6379，egress 仅 DNS
+---
+# H-I3 fix: default-deny ingress —— 命名空间内所有 Pod 默认拒绝入站流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+---
+# H-I3 fix: default-deny egress —— 命名空间内所有 Pod 默认拒绝出站流量
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: default
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+---
+# H-I3 fix: gateway 放行策略
+# ingress: 允许任意来源访问 18789（由 ingress controller 转发外部流量）
+# egress: 允许访问 postgres:5432、redis:6379、kube-dns:53（UDP/TCP）
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: skyalyticwing-gateway
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: skyalyticwing
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 18789
+  egress:
+    # 允许访问 postgres
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    # 允许访问 redis
+    - to:
+        - podSelector:
+            matchLabels:
+              app: redis
+      ports:
+        - protocol: TCP
+          port: 6379
+    # 允许 DNS 解析（kube-dns 在 kube-system 命名空间，通过 namespaceSelector 匹配）
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # 允许访问外部 LLM API（出站 HTTPS 到集群外）
+    # 注：egress 到外部公网 IP 不能用 podSelector 限定，需放行 ipBlock 0.0.0.0/0 的 443
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              # 排除私网/环回/链路本地，防止 SSRF 到内网元数据或其他内部服务
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 169.254.0.0/16
+              - 127.0.0.0/8
+              - 100.64.0.0/10
+              - 0.0.0.0/8
+              - 224.0.0.0/4
+      ports:
+        - protocol: TCP
+          port: 443
+---
+# H-I3 fix: postgres 放行策略
+# ingress: 仅允许 app=skyalyticwing 访问 5432
+# egress: 仅 DNS（postgres 无需主动出站）
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: postgres-allow
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: skyalyticwing
+      ports:
+        - protocol: TCP
+          port: 5432
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+# H-I3 fix: redis 放行策略
+# ingress: 仅允许 app=skyalyticwing 访问 6379
+# egress: 仅 DNS
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: redis-allow
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app: redis
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: skyalyticwing
+      ports:
+        - protocol: TCP
+          port: 6379
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53

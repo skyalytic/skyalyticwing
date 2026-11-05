@@ -1,0 +1,48 @@
+{
+  "id": "wing-automation",
+  "name": "自动化",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "desktop",
+      "description": "Desktop diagnostics, screenshots and process utilities. Physical mouse/keyboard/window actions must use computer_use with a selected window and fresh observation. Launching an app does not authorize interacting with it.",
+      "category": "interactive",
+      "dangerous": true
+    },
+    {
+      "name": "desktop_screenshot",
+      "description": "截取屏幕/指定窗口/指定区域截图并保存为文件（PNG）。返回保存路径。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "desktop_windows",
+      "description": "窗口管理：列出系统窗口(list)、获取活动窗口(active)、聚焦/最小化/最大化/关闭指定窗口。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "browser",
+      "description": "控制浏览器（CDP 连接 Chrome/Edge）。操作：status/start/stop/tabs/open/navigate/snapshot/screenshot/act/extract/pdf/upload/dialog/console/close。先用 snapshot 获取元素引用(ref)，再用 act+ref 操作元素。pdf 导出页面为 PDF 文件；upload 向文件输入框上传本地白名单文件；dialog 查询/处理 JS 对话框；console 读取页面日志。execute(执行任意JS)因安全限制已禁用。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "send_file_to_user",
+      "description": "通过当前会话向用户发送文件/图片。先准备好文件路径，再用本工具发送（客户端会收到文件事件，可经 /api/files/serve 下载）。支持 png/jpg/gif/webp/pdf/doc/xls/ppt/txt/zip 等格式。",
+      "category": "session",
+      "dangerous": false
+    },
+    {
+      "name": "uia_diagnostics",
+      "description": "UIA（Windows UI Automation）桥接诊断。检查 windows-bridge.exe 是否可用、协议版本、helper 进程状态。computer_use 工具报\"bridge 不可用\"时先用本工具排查。",
+      "category": "automation",
+      "dangerous": false
+    }
+  ]
+}

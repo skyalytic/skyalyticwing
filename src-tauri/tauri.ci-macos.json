@@ -1,0 +1,13 @@
+{
+  "build": { "beforeBuildCommand": "", "frontendDist": ["../packages/frontend/public/desktop-startup.html", "../packages/frontend/public/desktop-startup.js"] },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "publisher": "杭州穹析科技有限公司",
+    "copyright": "Copyright © 2026 Skyalytic. All rights reserved.",
+    "icon": ["icons/icon.icns"],
+    "macOS": {
+      "signingIdentity": "-",
+      "minimumSystemVersion": "15.0"
+    }
+  }
+}

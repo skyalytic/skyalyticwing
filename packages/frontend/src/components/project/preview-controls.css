@@ -1,0 +1,18 @@
+.preview-frame { display:flex; flex:1; flex-direction:column; min-height:0; min-width:0; color:var(--text-primary); background:var(--bg-primary); }
+.preview-toolbar,.preview-zoom { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.preview-toolbar { padding:7px 8px; border-bottom:1px solid var(--border); flex-shrink:0; font-size:12px; }
+.preview-toolbar button,.file-actions button { padding:4px 7px; border:1px solid var(--border); border-radius:6px; background:var(--bg-secondary); color:var(--text-primary); cursor:pointer; }
+.preview-toolbar button:hover,.file-actions button:hover { background:var(--bg-hover); }
+.preview-toolbar button:disabled { opacity:.4; cursor:default; }
+.preview-zoom span { min-width:38px; text-align:center; font-variant-numeric:tabular-nums; }
+.preview-expand { margin-left:auto; }
+.preview-expanded { position:fixed; inset:0; margin:auto; width:calc(96vw / var(--ui-zoom, 1)); height:calc(92vh / var(--ui-zoom, 1)); max-width:none; max-height:none; padding:0; border:1px solid var(--border); border-radius:10px; z-index:2000; box-shadow:0 0 0 100vmax #0007; overflow:hidden; }
+.preview-expanded::backdrop { background:#0005; }
+body:has(.preview-expanded:not(:popover-open)) .sky-project-panel,body:has(.preview-expanded:not(:popover-open)) .sky-chat-workspace { container-type:normal; z-index:1100; }
+.preview-scroll { flex:1; min-height:0; min-width:0; overflow:auto; scrollbar-gutter:stable; overscroll-behavior:contain; background:var(--bg-secondary); }
+.preview-image-stage { display:grid; place-items:center; min-width:100%; min-height:100%; width:max-content; }
+.preview-image-stage img { display:block; max-width:none; flex-shrink:0; }
+.file-actions { display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:12px; }
+.file-action-menu { display:flex; flex-direction:column; padding:6px; gap:4px; margin:0; border:1px solid var(--border); border-radius:8px; background:var(--bg-primary); color:var(--text-primary); box-shadow:0 8px 24px #0003; max-width:min(280px,90vw); z-index:2100; }
+.file-action-menu button { text-align:left; padding:8px 12px; }
+.image-preview-trigger { display:block; border:0; padding:0; background:transparent; cursor:zoom-in; max-width:100%; }

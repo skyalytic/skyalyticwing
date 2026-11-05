@@ -1,0 +1,3 @@
+const fs=require('node:fs'),crypto=require('node:crypto');
+const lock=require('../deploy/office-engine/base-image.lock.json');
+(async()=>{const r=await fetch(lock.upstream,{signal:AbortSignal.timeout(180000)});if(!r.ok)throw Error('Download failed');const b=Buffer.from(await r.arrayBuffer());if(crypto.createHash('sha256').update(b).digest('hex')!==lock.sha256)throw Error('Source hash changed; review upstream before updating');fs.writeFileSync('build/ubuntu-noble-oci-amd64-20260930.tar.gz',b);console.log(JSON.stringify({bytes:b.length,verified:true}));})().catch(e=>{console.error(e.message);process.exitCode=1});

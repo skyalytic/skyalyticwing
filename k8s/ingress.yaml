@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: skyalyticwing
+  annotations:
+    nginx.ingress.kubernetes.io/websocket-services: skyalyticwing
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - skyalyticwing.example.com
+    secretName: skyalyticwing-tls
+  rules:
+  - host: skyalyticwing.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: skyalyticwing
+            port:
+              number: 18789

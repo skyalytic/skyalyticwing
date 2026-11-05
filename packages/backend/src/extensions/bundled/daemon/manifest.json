@@ -1,0 +1,66 @@
+{
+  "id": "wing-daemon",
+  "name": "后台服务",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "daemon_install",
+      "description": "将 SkyalyticWing 安装为系统守护服务（开机自启）。支持 macOS(launchd)/Linux(systemd)/Windows(schtasks)。",
+      "category": "system",
+      "dangerous": true
+    },
+    {
+      "name": "daemon_uninstall",
+      "description": "卸载系统守护服务。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "daemon_status",
+      "description": "查看系统守护服务状态（安装、运行、平台、管理器等）。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "pairing_generate",
+      "description": "生成设备配对码（6 位，默认 5 分钟有效）。用于验证新的消息发送者，防止未授权访问。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "pairing_list",
+      "description": "列出所有已配对的设备。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "security_audit",
+      "description": "运行安全审计：检查文件权限、配置安全、API 密钥暴露等，可选择自动修复发现的问题。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "sandbox_run",
+      "description": "在隔离沙箱中执行命令（Docker 或 SSH），用于运行不受信任的代码。auto 模式自动选择可用沙箱。",
+      "category": "system",
+      "dangerous": true
+    },
+    {
+      "name": "binding_add",
+      "description": "添加 Agent 路由绑定：将匹配指定渠道/账户/对端/群组/团队的消息路由到指定 Agent。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "binding_list",
+      "description": "列出所有 Agent 路由绑定。",
+      "category": "system",
+      "dangerous": false
+    }
+  ]
+}

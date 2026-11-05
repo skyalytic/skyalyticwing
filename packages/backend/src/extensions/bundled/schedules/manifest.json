@@ -1,0 +1,114 @@
+{
+  "id": "wing-schedules",
+  "name": "计划任务",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "cron_create",
+      "description": "创建定时任务。三种时间设置(三选一)：expression=周期cron表达式；executeAt=一次性ISO时间；delayMinutes=几分钟后执行(一次性)。重要：用户要\"现在/马上\"做的事直接用对应工具执行，不要建定时任务；只有明确说\"定时/计划/稍后/X分钟后\"才用本工具。长期任务（如\"跟踪一周股价\"\"持续监控直到完成\"）：taskType=ai 且传 goal（总目标）与可选 maxRounds，任务将 7×24 自动执行，每轮自动带上之前的进度与历史，AI 每轮通过 [STATUS]/[PROGRESS]/[NEXT]/[SCHEDULE] 协议自主续排，done 后自动收尾。例:{name:\"每日天气\",expression:\"0 9 * * *\",taskType:\"ai\",command:\"查询天气\"}；{name:\"股价跟踪\",expression:\"0 */2 * * *\",taskType:\"ai\",command:\"检查股价异动\",goal:\"跟踪本周股价并每周五汇总\",maxRounds:60}；{name:\"打开B站\",delayMinutes:5,taskType:\"browser\",command:\"打开https://bilibili.com\"}",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_update",
+      "description": "更新定时任务（名称/调度/命令/启停等，仅传需修改的字段）。从 cron_list 获取 jobId。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_delete",
+      "description": "删除指定定时任务（系统内置任务不可删除）。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_list",
+      "description": "列出所有定时任务及其状态（调度/启停/上次结果/下次执行时间）。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_toggle",
+      "description": "启用或禁用定时任务。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_run_now",
+      "description": "立即执行一次定时任务（不等下次计划时间）。返回任务执行结果摘要。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "cron_delivery",
+      "description": "设置定时任务的交付方式（none/announce频道通知/webhook回调）与失败告警配置。",
+      "category": "cron",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_list",
+      "description": "列出所有已配置的MCP服务器及其状态（ID/名称/命令/启停/运行状态）与回环服务状态。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_start",
+      "description": "启动一个MCP服务器以获取外部工具能力（spawn子进程并完成握手）。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_stop",
+      "description": "停止一个MCP服务器（终止子进程，配置保留）。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_call",
+      "description": "调用MCP服务器上的扩展工具。先用 mcp_list 查看服务器与状态（需已启动），工具名以服务器文档为准。",
+      "category": "mcp",
+      "dangerous": true
+    },
+    {
+      "name": "mcp_resources",
+      "description": "列出MCP服务器提供的可用资源（文件/数据等）。不传server则列出所有服务器的资源。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_resource_read",
+      "description": "读取MCP服务器上的特定资源（需服务器已启动）。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_loopback_start",
+      "description": "启动MCP Loopback服务器（监听127.0.0.1），允许外部MCP客户端（如Claude Desktop）通过HTTP连接本系统。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_loopback_status",
+      "description": "获取MCP Loopback服务器状态（运行状态/端口/脱敏token/Claude Desktop配置）。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_loopback_stop",
+      "description": "停止MCP Loopback服务器。",
+      "category": "mcp",
+      "dangerous": false
+    },
+    {
+      "name": "mcp_conversations_list",
+      "description": "列出所有MCP渠道对话（会话键/频道/消息数/最近消息时间），可按频道或关键词过滤。",
+      "category": "mcp",
+      "dangerous": false
+    }
+  ]
+}

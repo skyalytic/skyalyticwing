@@ -1,0 +1,111 @@
+gateway:
+  port: 19111
+  host: "127.0.0.1"
+  tls:
+    enabled: false
+    cert: ""
+    key: ""
+
+auth:
+  mode: "token"
+  session:
+    ttl: 3600
+    token: "CHANGE_ME_IN_PRODUCTION"
+
+database:
+  type: "sqlite"
+  path: "./data/skyalyticwing.db"
+
+redis:
+  enabled: false
+  url: "redis://localhost:6379"
+  prefix: "skyalyticwing:"
+
+vector:
+  type: "lancedb"
+  path: "./data/vectors"
+
+logging:
+  level: "info"
+  format: "json"
+  output: "stdout"
+
+channels:
+  - name: "cli"
+    enabled: true
+  - name: "telegram"
+    enabled: false
+    config:
+      botToken: ""
+  - name: "discord"
+    enabled: false
+    config:
+      botToken: ""
+      applicationId: ""
+  - name: "slack"
+    enabled: false
+    config:
+      botToken: ""
+      appToken: ""
+
+agents:
+  default:
+    id: "default"
+    name: "Default Agent"
+    model: "claude-sonnet-4"
+    provider: "anthropic"
+    maxTokens: 4096
+    temperature: 0.7
+    permissionMode: "ask"
+
+permissions:
+  defaultMode: "ask"
+  rules:
+    - type: "path"
+      pattern: "/workspace/**"
+      permission: "allow"
+    # M-I10 fix: 收窄命令白名单，避免 `git *`/`npm *`/`pnpm *` 通配符过宽
+    # 允许攻击者执行 `git push`、`npm publish`、`pnpm publish` 等高危命令。
+    # 仅允许只读/安全子命令；push/publish/install 等需审批的命令走 defaultMode: "ask"。
+    - type: "command"
+      pattern: "git status"
+      permission: "allow"
+    - type: "command"
+      pattern: "git log"
+      permission: "allow"
+    - type: "command"
+      pattern: "git diff"
+      permission: "allow"
+    - type: "command"
+      pattern: "git show"
+      permission: "allow"
+    - type: "command"
+      pattern: "git branch"
+      permission: "allow"
+    - type: "command"
+      pattern: "npm install"
+      permission: "allow"
+    - type: "command"
+      pattern: "npm run"
+      permission: "allow"
+    - type: "command"
+      pattern: "npm test"
+      permission: "allow"
+    - type: "command"
+      pattern: "pnpm install"
+      permission: "allow"
+    - type: "command"
+      pattern: "pnpm run"
+      permission: "allow"
+    - type: "command"
+      pattern: "pnpm test"
+      permission: "allow"
+
+voice:
+  enabled: false
+  stt:
+    provider: "whisper"
+    language: "en"
+  tts:
+    provider: "system"
+    voice: "default"

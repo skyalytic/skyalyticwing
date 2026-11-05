@@ -1,0 +1,88 @@
+{
+  "identifier": "default",
+  "description": "Capability for the main window",
+  "webviews": ["main"],
+  "remote": {
+      "urls": ["http://localhost:*", "http://localhost:*/*", "http://127.0.0.1:*", "http://127.0.0.1:*/*"]
+    },
+  "permissions": [
+    "app-shell",
+    "core:default",
+    "core:app:allow-version",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-set-title",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "skyalyticwing-node",
+          "sidecar": true,
+          "args": [
+            {"validator": "^[^\\s\\-].*\\.cjs$"},
+            {"validator": "^--\\w+"},
+            {"validator": "^\\d+$"}
+          ]
+        },
+        {
+          "name": "node",
+          "sidecar": true,
+          "args": [
+            {"validator": "^[^\\s\\-].*\\.cjs$"},
+            {"validator": "^--\\w+"},
+            {"validator": "^\\d+$"}
+          ]
+        },
+        {
+          "_comment": "H-G4 fix: 为 sidecar.rs 系统 node 回退路径(app.shell().command(node_path).spawn())添加非 sidecar scope。args 与 sidecar 一致校验，避免任意参数执行",
+          "name": "node",
+          "command": "node",
+          "args": [
+            {"validator": "^[^\\s\\-].*\\.cjs$"},
+            {"validator": "^--\\w+"},
+            {"validator": "^\\d+$"}
+          ]
+        }
+      ]
+    },
+    "shell:allow-open",
+    "shell:allow-stdin-write",
+    "shell:allow-kill",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download",
+    "updater:allow-install",
+    "updater:allow-download-and-install",
+    "autostart:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "process:default",
+    "process:allow-restart",
+    "process:allow-exit",
+    "dialog:default",
+    "dialog:allow-ask",
+    "dialog:allow-confirm",
+    "dialog:allow-message",
+    "fs:default",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
+    "fs:allow-exists",
+    "fs:allow-read-dir",
+    "fs:allow-mkdir",
+    "fs:allow-remove",
+    "fs:allow-rename",
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        "$APPDATA/**",
+        "$HOME/.skyalyticwing/**",
+        "$APPLOCALDATA/**"
+      ]
+    }
+  ]
+}

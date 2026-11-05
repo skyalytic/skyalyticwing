@@ -1,0 +1,24 @@
+{
+  "id": "wing-database",
+  "name": "数据库",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "database_query",
+      "description": "读取本地 SQLite 表结构或执行只读 SQL。最多返回 1000 行，支持参数绑定。",
+      "category": "file",
+      "dangerous": false
+    },
+    {
+      "name": "database_execute",
+      "description": "在授权的本地 SQLite 数据库执行一条写入 SQL 或创建数据库；自动备份，事务执行，禁止附加其他数据库。",
+      "category": "file",
+      "dangerous": true
+    }
+  ]
+}

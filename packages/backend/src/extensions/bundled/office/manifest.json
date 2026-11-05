@@ -1,0 +1,36 @@
+{
+  "id": "wing-office",
+  "name": "Office",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "office_read",
+      "description": "读取本地 Word、Excel、PPT 的文字/单元格结构与版本，用于分析和后续精确修改。返回不是原始二进制。",
+      "category": "file",
+      "dangerous": false
+    },
+    {
+      "name": "office_edit",
+      "description": "按 office_read 返回的原文件版本和元素 ID 修改 Word/PPT 文字或 Excel 单元格，保留其他格式并自动备份。版本冲突时先重新读取，不覆盖用户修改。",
+      "category": "file",
+      "dangerous": true
+    },
+    {
+      "name": "office_live",
+      "description": "操作用户已在内置 Office 中打开的文档，与手动编辑使用同一个实时引擎。可在光标处插入文字、修改表格单元格（坐标从 0 开始，value 支持公式）、新增幻灯片、格式设置或读取选中内容。操作后自动保存；不要同时用文件工具覆盖此文档。",
+      "category": "file",
+      "dangerous": true
+    },
+    {
+      "name": "doc_generate",
+      "description": "生成文档（docx/xlsx/pptx/pdf）。基于标题 + 分节内容（heading/content/rows 表格）构建，输出路径须经路径白名单校验。生成库不可用时降级输出 Markdown。pdf 由 pdfkit 生成（A4 自动分页），自动探测系统字体（微软雅黑/黑体等）支持中文，含中文但缺少可用中文字体时明确失败并提示安装字体。",
+      "category": "file",
+      "dangerous": false
+    }
+  ]
+}

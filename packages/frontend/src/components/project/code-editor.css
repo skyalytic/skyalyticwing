@@ -1,0 +1,19 @@
+.sky-code-editor { display:flex; flex-direction:column; flex:1; min-height:0; min-width:0; overflow:hidden; background:var(--bg-primary); color:var(--text-primary); }
+.sky-code-editor-tools,.sky-code-editor-status { display:flex; flex-wrap:wrap; align-items:center; gap:8px 16px; padding:6px 10px; font-size:11px; background:var(--bg-secondary); color:var(--text-secondary); flex-shrink:0; }
+.sky-code-editor-tools { border-bottom:1px solid var(--border); }
+.sky-code-editor-tools>span { margin-right:auto; }
+.sky-code-editor-tools button { padding:3px 6px; border:1px solid transparent; border-radius:4px; background:transparent; color:inherit; cursor:pointer; }
+.sky-code-editor-tools button:hover,.sky-code-editor-tools button[aria-pressed=true] { background:var(--bg-hover); color:var(--text-primary); border-color:var(--border); }
+.sky-code-editor-tools button:focus-visible { outline:2px solid var(--accent); }
+.sky-code-editor-status { border-top:1px solid var(--border); }
+.sky-code-editor-host { flex:1; min-width:0; min-height:0; overflow:hidden; }
+.sky-code-editor-host .cm-editor { height:100%; }
+.sky-code-editor-host .cm-editor.cm-focused { outline:none; }
+.sky-code-editor-host .cm-search { display:flex; flex-wrap:wrap; gap:5px; padding:8px 26px 8px 8px !important; }
+.sky-code-editor-host .cm-search label { display:inline-flex; align-items:center; gap:4px; }
+.sky-code-editor-host .cm-textfield { min-width:80px; max-width:100%; color:var(--text-primary); background:var(--bg-primary); border:1px solid var(--border); border-radius:4px; }
+.sky-code-editor-host .cm-button { color:var(--text-primary); background:var(--bg-tertiary); border:1px solid var(--border); border-radius:4px; }
+.sky-file-toolbar { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:7px 10px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg-secondary); }
+.sky-file-toolbar .sky-file-name { flex:1; min-width:80px; }
+.sky-file-save-status { font-size:11px; color:var(--text-secondary); }
+.sky-file-save-error { color:var(--danger,#c44444); }

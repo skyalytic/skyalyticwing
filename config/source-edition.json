@@ -1,0 +1,15 @@
+{
+  "edition": "community",
+  "label": "个人版（社区版）",
+  "accountType": "personal",
+  "productName": "skyalyticwing",
+  "linuxProductName": "SkyalyticWing Community",
+  "binaryName": "SkyalyticWingCommunity",
+  "identifier": "com.skyalyticwing.community",
+  "dataDirectory": "SkyalyticWingCommunity",
+  "port": 19111,
+  "cliCommand": "skyalyticwing",
+  "cliAliases": ["wing-community"],
+  "updateEndpoint": "https://claw.skyalytic.com/downloads/community/latest.json",
+  "sourceDirectory": "个人版"
+}

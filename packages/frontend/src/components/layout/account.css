@@ -1,0 +1,283 @@
+/* Shared styling for the official account pages and workbench. */
+.sky-workbench nav,
+.sky-workbench main > header {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+.sky-workbench .sidebar-item {
+  border-radius: 8px;
+  margin: 2px 8px;
+  padding: 9px 10px;
+}
+.sky-workbench .sidebar-item.active {
+  background: #6baacb20;
+  border-right: 0;
+}
+.sky-workbench .sidebar-item span {
+  font-size: 13px;
+}
+.sky-workbench main {
+  background: var(--bg-primary);
+}
+.sky-workbench .input-field,
+.sky-workbench .form-input {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.sky-dashboard * {
+  box-sizing: border-box;
+}
+.sky-dashboard h1 {
+  font-size: 32px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.5px;
+  margin: 10px 0 16px;
+}
+.sky-dashboard h2 {
+  font-size: 22px;
+  line-height: 1.4;
+  font-weight: 600;
+  margin: 12px 0;
+}
+.sky-dashboard p {
+  margin: 10px 0 20px;
+}
+.sky-muted,
+.sky-panel > p,
+.sky-page-heading p {
+  color: var(--text-secondary);
+}
+.sky-eyebrow {
+  font-size: 11px !important;
+  letter-spacing: 2px;
+  color: var(--accent) !important;
+  font-weight: 650;
+}
+.sky-chips span,
+.sky-status {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.sky-dashboard label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 20px 0 8px;
+}
+.sky-dashboard input,
+.sky-dashboard select,
+.sky-dashboard textarea {
+  width: 100%;
+  background: var(--input-bg);
+  color: var(--input-text);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 11px 13px;
+  outline: none;
+  font: inherit;
+  margin-top: 7px;
+}
+.sky-dashboard input:focus,
+.sky-dashboard select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px #83c7ed20;
+}
+.sky-dashboard button {
+  background: var(--button-primary-bg);
+  color: var(--button-primary-text);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.5;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.15s;
+}
+.sky-dashboard button:hover {
+  filter: brightness(1.07);
+}
+.sky-dashboard button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+}
+.sky-dashboard button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.sky-dashboard button.secondary {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+/* Identity cards are surface buttons, not filled primary actions. */
+.sky-dashboard button.sky-workspace-option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  text-align: left;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sky-dashboard .sky-workspace-option h2 {
+  color: inherit;
+}
+.sky-dashboard button.sky-workspace-option:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--accent);
+  filter: none;
+}
+.sky-dashboard button.sky-workspace-option:disabled {
+  opacity: 1;
+  color: var(--text-secondary);
+  cursor: wait;
+}
+.sky-dashboard a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.sky-dashboard a:hover {
+  text-decoration: underline;
+}
+.sky-inline,
+.sky-between {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.sky-inline input {
+  min-width: 0;
+  margin-top: 0;
+}
+.sky-inline button {
+  flex-shrink: 0;
+}
+.sky-between {
+  justify-content: space-between;
+  margin-top: 18px;
+}
+.sky-notice {
+  border: 1px solid var(--border);
+  background: var(--badge-blue-bg);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 9px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.sky-dashboard {
+  padding: 36px;
+  max-width: 1180px;
+  margin: auto;
+  color: var(--text-primary);
+  font:
+    14px/1.65 Inter,
+    'Segoe UI',
+    'Microsoft YaHei',
+    sans-serif;
+}
+.sky-page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 28px;
+}
+.sky-page-heading h1 {
+  margin-bottom: 8px;
+}
+.sky-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.sky-panel {
+  color: var(--text-primary);
+  padding: 28px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg-secondary);
+  margin-bottom: 22px;
+}
+.sky-chips,
+.sky-feature-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.sky-feature-list span {
+  background: var(--badge-blue-bg);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.sky-resource-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sky-resource-row p {
+  margin: 4px 0;
+  color: var(--text-secondary);
+}
+.sky-resource-row small {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+.sky-transcript {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 360px;
+  overflow: auto;
+  background: var(--input-bg);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+}
+.sky-two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.sky-floating-back {
+  margin: 12px 36px;
+}
+@media (max-width: 900px) {
+  .sky-dashboard {
+    padding: 20px;
+  }
+  .sky-page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .sky-two-columns {
+    grid-template-columns: 1fr;
+  }
+  .sky-inline {
+    flex-wrap: wrap;
+  }
+  .sky-inline input {
+    flex: 1;
+    min-width: 140px;
+  }
+}
+@media (max-width: 480px) {
+  .sky-panel {
+    padding: 22px;
+  }
+  .sky-dashboard {
+    padding: 12px;
+  }
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+# Private alias for Wing child tools; never installed into the system Node path.
+exec "$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)/bin/skyalyticwing-node" "$@"

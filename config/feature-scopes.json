@@ -1,0 +1,27 @@
+{
+  "edition": "community",
+  "implementation": "independent-copy",
+  "included": [
+    "chat",
+    "cli",
+    "computer-use",
+    "office",
+    "media-tools",
+    "custom-models",
+    "skill-zip-import-export",
+    "resource-marketplace",
+    "personal-account",
+    "personal-membership",
+    "check-in"
+  ],
+  "excluded": [
+    "enterprise-account",
+    "organization",
+    "seats",
+    "departments",
+    "enterprise-budgets",
+    "resource-approval"
+  ],
+  "enterpriseCustomApiKeys": "personal-configuration",
+  "unclassifiedChange": "ask-user-if-scope-cannot-be-determined"
+}

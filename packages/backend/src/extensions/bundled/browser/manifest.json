@@ -1,0 +1,18 @@
+{
+  "id": "wing-browser",
+  "name": "浏览器",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "builtin_browser",
+      "description": "操作应用内置浏览器，与用户在“浏览器”面板中看到的标签页一致。action: navigate(打开网址或通过百度搜索关键词)/snapshot(刷新元素快照)/click(按 index 点击)/fill(按 index 输入文本)/select(下拉选择)/type(向当前焦点输入)/key(按键)/scroll(滚动)/hover(悬停)/element(按 index 读取元素详情含选择器与HTML)/back/forward(导航历史)/reload(刷新页面)/close(关闭页面，all=true 关闭浏览器)/status(运行状态)。new_tab 新建标签页，activate 切换 pageId，upload 上传已授权文件。浏览器按当前会话隔离；用户接管后请等待。先观察当前页，快照列出视口内可交互元素编号（#1 <button> \"登录\"），再按编号操作；每次操作后返回新 DOM 快照；需要视觉判断时用 screenshot 或 screenshot=true。wait_for 按 text/url/element/load 条件等待（最多3秒），不重放动作。先 status 复用当前会话已打开的标签页。输入必须携带快照的 pageId 和 observationId；目标变化或过期时重新观察。输入已投递不等于业务完成。",
+      "category": "interactive",
+      "dangerous": true
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "id": "wing-computer-use",
+  "name": "桌面操作",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md",
+    "references/wing-runtime.md",
+    "references/codex/docs/confirmations.md"
+  ],
+  "platformGuides": {
+    "win32": [
+      "references/wing-runtime.md",
+      "references/codex/skills/computer-use/SKILL.md",
+      "references/codex/docs/guidance.md",
+      "references/codex/docs/api.md",
+      "references/codex/docs/confirmations.md"
+    ]
+  },
+  "tools": [
+    {
+      "name": "node_repl",
+      "description": "Persistent Computer Use JavaScript session. Read the bundled Computer Use guide; import @oai/sky, use returned windows, inspect snapshots, and perform one state-derived input per cell. nodeRepl.write accepts strings. Each conversation has independent state.",
+      "category": "interactive",
+      "dangerous": true,
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "name": "node_repl_reset",
+      "description": "End this conversation Computer Use JavaScript session; pending input is interrupted and observations invalidated. Reinitialize before continuing.",
+      "category": "interactive",
+      "dangerous": false,
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
+      "name": "computer_use_confirm",
+      "description": "Wait for the user without an execution timeout. Use purpose=user_step when the user must complete phone verification, login, or restore an app; do not end the task as blocked while awaiting them. Use action_confirmation for the bundled confirmations policy, including exact action, recipient/destination and content. Cancellation is not approval. After any reply, refresh windows and observe again.",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "computer_use",
+      "description": "Operate the desktop using screenshots and real OS mouse/keyboard input on Windows, macOS and Linux X11. No virtual mouse mode is available. For a named app, first list_windows to distinguish its main process and visible/hidden state; then screenshot (no root needed). Hidden main windows must be restored from the observed tray, not confused with a visible mini-app of the same title. Open or restore apps by clicking their visible icons, including the tray overflow; do not launch them with terminal commands. Act with the latest screenshotId and coordinates in that returned image. Every act returns the next screenshot: inspect it and continue directly. click/moveMouse/scroll/drag use targetX/targetY; typeText uses params.text; keypress uses params.key. For small icons use zoom with screenshotId and region:{x,y,width,height}; it returns a magnified pixel crop. Use regions.notificationArea when available to zoom the entire system tray. No UIA tree required. Verify focus before typing, the exact recipient before sending, and the sent bubble afterwards. A delivered input is not task completion. If nothing changed, reassess the screenshot instead of repeating the same click. The user can stop at any time. Wayland requires a Portal adapter and is currently unsupported.",
+      "category": "automation",
+      "dangerous": true,
+      "platforms": [
+        "darwin",
+        "linux"
+      ]
+    }
+  ]
+}

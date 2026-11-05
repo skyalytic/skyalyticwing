@@ -1,0 +1,24 @@
+{
+  "id": "wing-web",
+  "name": "网页",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "web-fetch",
+      "description": "抓取 URL 内容（http/https），支持 text/json/html 格式。SSRF fail-close。",
+      "category": "web",
+      "dangerous": false
+    },
+    {
+      "name": "web_search",
+      "description": "通用网页搜索：返回标题/URL/摘要结果列表（默认前 10 条）。优先使用 config.web.search 配置的搜索提供商（searxng），未配置时使用 DuckDuckGo HTML 端点。所有请求经 SSRF 防护。",
+      "category": "web",
+      "dangerous": false
+    }
+  ]
+}

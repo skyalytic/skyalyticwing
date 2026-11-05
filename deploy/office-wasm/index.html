@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <title>Wing Office</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="/editor.css" />
+  </head>
+  <body>
+    <div id="loading" role="status">正在打开文档…</div>
+    <div id="error" role="alert" hidden></div>
+    <nav id="menus" hidden aria-label="Office 菜单"></nav>
+    <div id="font-tools" aria-label="文字格式">
+      <label for="font-picker">字体</label>
+      <select id="font-picker" disabled title="同时设置所选中文和英文字体">
+        <option value="">选择字体…</option>
+      </select>
+      <span id="font-status" role="status"></span>
+    </div>
+    <canvas id="qtcanvas" tabindex="0"></canvas>
+    <script src="/input.js"></script>
+    <script src="/host.js"></script>
+  </body>
+</html>

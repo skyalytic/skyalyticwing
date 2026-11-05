@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skyalyticwing
+  labels:
+    app: skyalyticwing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: skyalyticwing
+  template:
+    metadata:
+      labels:
+        app: skyalyticwing
+    spec:
+      # C-D4 fix: Pod 级 securityContext，强制非 root 运行。
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      # H-I2 fix: 使用最小权限 ServiceAccount，automountServiceAccountToken: false 防止
+      # 容器被攻破后利用挂载的 SA token 访问 Kubernetes API。SA 定义见 k8s/rbac.yaml。
+      serviceAccountName: skyalyticwing
+      containers:
+      - name: gateway
+        # H-I1 fix: 不使用可变 :latest tag，改为不可变版本 tag，避免镜像被静默替换导致
+        # 运行版本与预期不一致（供应链风险）。发布新版本时同步更新此 tag。
+        image: skyalyticwing/gateway:v1.4.0
+        # C-D4 fix: Container 级 securityContext，只读根文件系统并丢弃所有 Linux capabilities。
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+              - ALL
+        ports:
+        - containerPort: 18789
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: skyalyticwing-secrets
+              key: database-url
+        - name: REDIS_URL
+          valueFrom:
+            secretKeyRef:
+              name: skyalyticwing-secrets
+              key: redis-url
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 18789
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 18789
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        # C-D4 fix: readOnlyRootFilesystem 下挂载 emptyDir 供 Node.js 写 /tmp 与 /home/node。
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: node-home
+          mountPath: /home/node
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: node-home
+        emptyDir: {}

@@ -1,0 +1,24 @@
+{
+  "id": "wing-terminal",
+  "name": "终端",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "bash",
+      "description": "执行 bash 命令（默认不设执行时限，停止聊天会取消执行）。返回输出、退出码和取消状态。命令须通过安全校验。",
+      "category": "shell",
+      "dangerous": true
+    },
+    {
+      "name": "powershell",
+      "description": "执行 PowerShell 命令（默认不设执行时限，停止聊天会取消执行）。返回输出、退出码和取消状态。命令须通过安全校验。",
+      "category": "shell",
+      "dangerous": true
+    }
+  ]
+}

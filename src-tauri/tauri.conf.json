@@ -1,0 +1,148 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "skyalyticwing",
+  "version": "2.1.0",
+  "identifier": "com.skyalyticwing.community",
+  "build": {
+    "beforeDevCommand": "pnpm --filter @skyalyticwing/frontend build && pnpm --filter @skyalyticwing/backend build",
+    "devUrl": "http://localhost:19111",
+    "beforeBuildCommand": "node scripts/audit-installer-inputs.cjs --require-wrapper",
+    "frontendDist": "../packages/frontend/dist"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "macOSPrivateApi": true,
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:19111 http://127.0.0.1:19111 ws://localhost:19111 ws://127.0.0.1:19111; font-src 'self' data:"
+    },
+    "windows": [
+      {
+        "title": "skyalyticwing v2.1.0",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "url": "desktop-startup.html",
+        "visible": false
+      }
+    ]
+  },
+  "bundle": {
+    "active": true,
+    "createUpdaterArtifacts": true,
+    "licenseFile": "LICENSE.txt",
+    "targets": [
+      "nsis",
+      "dmg",
+      "deb",
+      "appimage"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "../packages/backend/deploy/dist/",
+      "../packages/backend/deploy/cli/",
+      "../packages/backend/deploy/frontend/",
+      "../packages/backend/deploy/node_modules/",
+      "../packages/backend/deploy/office-installer/",
+      "../packages/backend/deploy/office-wasm/",
+      "../packages/backend/deploy/python/",
+      "../packages/backend/deploy/vendor/",
+      "../packages/backend/deploy/app-version.json",
+      "../packages/backend/deploy/product-edition.json",
+      "../packages/backend/deploy/desktop-main.cjs",
+      "../packages/backend/deploy/wing-tui.cjs",
+      "../packages/backend/deploy/update-recovery.cjs",
+      "../packages/backend/deploy/package.json",
+      "../packages/backend/deploy/package-lock.json",
+      "../packages/frontend/dist/",
+      "../packages/web/skills/",
+      "../packages/web/plugins/",
+      "../packages/web/bin/",
+      "../packages/web/binaries/",
+      "../packages/web/tools/",
+      "../packages/web/SkyInput.cs",
+      "../packages/web/SkyPost.cs",
+      "../packages/web/WinMgmt.cs",
+      "../packages/web/WinRestoreHelper.cs",
+      "../packages/web/WinDiag.cs",
+      "../packages/web/manage-window.ps1",
+      "../packages/web/restore-window.ps1",
+      "../packages/web/restore-win.ps1",
+      "../packages/web/enum-windows.ps1",
+      "../packages/web/diag-windows.ps1",
+      "../packages/web/winocr.ps1"
+    ],
+    "externalBin": [
+      "binaries/node"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "offlineInstaller",
+        "silent": true
+      },
+      "digestAlgorithm": "sha256",
+      "nsis": {
+        "languages": [
+          "SimpChinese",
+          "English"
+        ],
+        "displayLanguageSelector": true,
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "installerHooks": "./windows/hooks.nsi",
+        "template": "./windows/installer.nsi"
+      }
+    },
+    "macOS": {
+      "entitlements": "./entitlements.mac.plist",
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "linux": {
+      "deb": {
+        "postInstallScript": "linux/community-postinst.sh",
+        "postRemoveScript": "linux/community-postrm.sh",
+        "desktopTemplate": "linux/community.desktop",
+        "depends": [
+          "libwebkit2gtk-4.1-0",
+          "libgtk-3-0",
+          "gstreamer1.0-plugins-good",
+          "gstreamer1.0-libav",
+          "xdotool",
+          "wmctrl",
+          "scrot",
+          "python3",
+          "python3-gi",
+          "gir1.2-atspi-2.0",
+          "imagemagick"
+        ]
+      },
+      "appimage": {
+        "bundleMediaFramework": true
+      }
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": "https?://[^\\s]+"
+    },
+    "updater": {
+      "endpoints": [
+        "https://claw.skyalytic.com/downloads/community/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDhFMTFFMTY3NjMwQ0E4ODUKUldTRnFBeGpaK0VSam5tWVlPQ1Jhbkc1cjNxK3JWZXZOUlU1V1Z1V3AzSE9hZm5sSFp0aTlwYXkK"
+    }
+  },
+  "mainBinaryName": "SkyalyticWingCommunity"
+}

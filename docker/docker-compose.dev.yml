@@ -1,0 +1,17 @@
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    ports:
+      - "127.0.0.1:19111:19111"
+    environment:
+      SKYALYTICWING_AUTH_TOKEN: ${SKYALYTICWING_AUTH_TOKEN:?Set a random token of at least 32 characters}
+      SKYALYTICWING_ALLOWED_ORIGINS: http://localhost:1420,http://127.0.0.1:1420,http://localhost:19111
+    volumes:
+      - ../packages/backend/src:/app/packages/backend/src:ro
+      - skydevdata:/data
+    init: true
+
+volumes:
+  skydevdata:

@@ -1,0 +1,35 @@
+{
+  "productName": "skyalyticwing",
+  "mainBinaryName": "SkyalyticWingCommunity",
+  "identifier": "com.skyalyticwing.community",
+  "build": {
+    "devUrl": "http://localhost:19111"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "skyalyticwing v2.1.0",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 900,
+        "minHeight": 600,
+        "center": true,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "url": "desktop-startup.html",
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:19111 http://127.0.0.1:19111 ws://localhost:19111 ws://127.0.0.1:19111; font-src 'self' data:"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://claw.skyalytic.com/downloads/community/latest.json"
+      ]
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "wing-ocr",
+  "name": "文字识别",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "ocr",
+      "description": "本地 OCR 文字识别（离线、零成本）。识别图片中的文字并返回全文 + 词级坐标框（每个词的 text/x/y/w/h）。Windows 优先用系统内置 WinRT OCR（中文准确），失败自动降级 tesseract.js；其他平台直接用 tesseract.js。典型用途：1) 桌面自动化时按文字精确定位坐标（配合 desktop 工具点击 words 里目标词的中心点）；2) 读取截图/扫描件文字；3) 与 computer_use（UIA 元素级）互补——UIA 找不到控件时用 OCR 坐标降级定位。",
+      "category": "automation",
+      "dangerous": false
+    }
+  ]
+}

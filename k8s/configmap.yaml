@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skyalyticwing-config
+data:
+  gateway.yaml: |
+    port: 18789
+    host: "0.0.0.0"
+    tls:
+      # M-I7 fix: 生产环境应启用 TLS（end-to-end 加密）。
+      # 此处置 false 是因为 TLS 由 ingress 终止（见 k8s/ingress.yaml 的 TLS 配置），
+      # Pod 内通信在集群网络内（受 NetworkPolicy 隔离，见 k8s/network-policy.yaml）。
+      # 若不使用 ingress 终止 TLS，必须改为 true 并配置 cert/key 路径。
+      # 生产部署时建议启用 mTLS 或使用 service mesh（如 Istio）加密 Pod 间通信。
+      enabled: false
+  agents.yaml: |
+    default:
+      model: "claude-sonnet-4"
+      provider: "anthropic"
+      permissionMode: "ask"
+  permissions.yaml: |
+    defaultMode: "ask"
+    rules:
+      - type: "path"
+        pattern: "/workspace/**"
+        permission: "allow"

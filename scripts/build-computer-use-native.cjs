@@ -1,0 +1,13 @@
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+if (process.platform !== 'win32') process.exit(0);
+const root = path.resolve(__dirname, '..');
+const native = path.join(root, 'packages/backend/src/extensions/bundled/computer-use/native');
+const target = path.join(root, 'build/computer-use-native');
+const result = spawnSync('cargo', ['build', '--release', '--locked', '--manifest-path', path.join(native, 'wgc/Cargo.toml'), '--target-dir', target], { stdio: 'inherit', windowsHide: true });
+if (result.error) throw result.error;
+if (result.status !== 0) process.exit(result.status || 1);
+const bin = path.join(native, 'bin'); fs.mkdirSync(bin, { recursive: true });
+fs.copyFileSync(path.join(target, 'release/wing-window-capture.exe'), path.join(bin, 'wing-window-capture.exe'));

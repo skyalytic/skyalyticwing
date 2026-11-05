@@ -1,0 +1,1040 @@
+{
+  "reviewedAt": "2026-10-25",
+  "retired": [
+    "dingtalk",
+    "feishu",
+    "amap",
+    "notion",
+    "mail-imap-smtp"
+  ],
+  "retirementReason": "Current pinned npm packages include unresolved high-severity advisories; exclude from new installations pending upstream fix or validated replacement.",
+  "excludedSkills": {
+    "skill-creator": "Description optimizer depends on the Claude CLI and Claude-specific eval workflow.",
+    "frontend-design-review": "Mixed attribution requires a separate license review of inherited design guidance."
+  },
+  "items": [
+    {
+      "id": "algorithmic-art",
+      "name": "交互式生成艺术",
+      "description": "交互式生成艺术操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-dbd4588f9e10-wing1",
+      "publisher": "anthropics",
+      "source": "https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/algorithmic-art",
+      "license": "Apache-2.0",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "e402c6bd38df685b2bb18e29fb8671b263397183a37dc76f8ec35b331a679bad",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "mcp-builder",
+      "name": "MCP 服务开发",
+      "description": "MCP 服务开发操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-dbd4588f9e10-wing1",
+      "publisher": "anthropics",
+      "source": "https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/mcp-builder",
+      "license": "Apache-2.0",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "f4a8b3cd0d04fdbd0232ad9133c85b8e260bbea0efabc574477fd0cbddb58f40",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "slack-gif-creator",
+      "name": "动图制作与体积优化",
+      "description": "动图制作与体积优化操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-dbd4588f9e10-wing1",
+      "publisher": "anthropics",
+      "source": "https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/slack-gif-creator",
+      "license": "Apache-2.0",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "9600d11f73da6fd22fcb6799db883133aa1081584503d93f1a4403dd13f0a3c8",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "webapp-testing",
+      "name": "网页交互验收",
+      "description": "网页交互验收操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-dbd4588f9e10-wing1",
+      "publisher": "anthropics",
+      "source": "https://github.com/anthropics/skills/tree/dbd4588f9e1033efb41dad4bef2f7947c8993d44/skills/webapp-testing",
+      "license": "Apache-2.0",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "50e410e39632cfe91e7057728081521dba9ddae7bb870ebb8e0601b38694ea9f",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "systematic-debugging",
+      "name": "系统化故障定位",
+      "description": "系统化故障定位操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2ce8aa15d05b-wing1",
+      "publisher": "obra",
+      "source": "https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/systematic-debugging",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "6cdb32c3991344e479deeeca0901da64b71ef048ed87cfeec92dc97af0069301",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "test-driven-development",
+      "name": "测试驱动开发",
+      "description": "测试驱动开发操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2ce8aa15d05b-wing1",
+      "publisher": "obra",
+      "source": "https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/test-driven-development",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "dbdcab05cecf27e41dc3c63725fa65f234b2921aac46474852519488067376e2",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "verification-before-completion",
+      "name": "交付前结果验证",
+      "description": "交付前结果验证操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2ce8aa15d05b-wing1",
+      "publisher": "obra",
+      "source": "https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/verification-before-completion",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "e3e6b28d6cb3efb2525707ee37dd21bcce2dc6c738b031a1fb4deb709541d3e6",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "receiving-code-review",
+      "name": "代码审查意见核验",
+      "description": "代码审查意见核验操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2ce8aa15d05b-wing1",
+      "publisher": "obra",
+      "source": "https://github.com/obra/superpowers/tree/2ce8aa15d05bd57213e6f746f953aafb7ded7a8b/skills/receiving-code-review",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "9b48666e2850ed02b10e3719b8e2c8999374d9311cd0b87d703e58fd6fa4fb45",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "fastapi-router-py",
+      "name": "FastAPI 接口开发",
+      "description": "FastAPI 接口开发操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/fastapi-router-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "47c50066540ffb21832ee73f5c23944cd87a56be132fbfd4298fb7681e7c263b",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "pydantic-models-py",
+      "name": "Pydantic 数据模型",
+      "description": "Pydantic 数据模型操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/pydantic-models-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "68a6af0c6e43454c1c15217702b44fd4fa3cce835c0f7397d9052d8b423ef98d",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "zustand-store-ts",
+      "name": "Zustand 状态管理",
+      "description": "Zustand 状态管理操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/zustand-store-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "26423d7f16df3a8f7cf418361f8e8d8837938f6e3f88a99ca9039bbfd56ac756",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "react-flow-node-ts",
+      "name": "React Flow 节点开发",
+      "description": "React Flow 节点开发操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/react-flow-node-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "c0744e9e32b762e5222205ad04b0c7a399848ac564c499f8fd39fcbf3a83c2c0",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "cloud-solution-architect",
+      "name": "Azure 云架构设计",
+      "description": "Azure 云架构设计操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/skills/cloud-solution-architect",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "5ce2b6de100afd6458cf71ede492b862031fe5e1f91973661c266a4985a58ea7",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "kql",
+      "name": "KQL 查询与优化",
+      "description": "KQL 查询与优化操作指南与配套参考。按需读取；脚本运行依赖以技能说明和本机环境为准。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/skills/kql",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "09b75ea66ae0b406443f82502c4026544153d8213e0f48d3c38d6c11a6b7aeee",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-identity-py",
+      "name": "Azure 身份认证 · Python",
+      "description": "Azure 身份认证 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-identity-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "c58159787abab8b7f587a255651e5aeb8be8feae37b41c60e82124b8e70ed884",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-storage-blob-py",
+      "name": "Azure 对象存储 · Python",
+      "description": "Azure 对象存储 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-storage-blob-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "300cb282af31e6e106e7d26619eb58543712673e2068f2a42b30b874817dc4fd",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-keyvault-py",
+      "name": "Azure 密钥保管库 · Python",
+      "description": "Azure 密钥保管库 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-keyvault-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "982a4fd858a4b1fd51be903065f727f40f714fe2b292004f7e5782c32a5d827a",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-search-documents-py",
+      "name": "Azure AI 检索 · Python",
+      "description": "Azure AI 检索 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-search-documents-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "cbe444227b30c3f0a1b157128ae9e7df922f297e7a117a7655ee0820d19ad994",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-textanalytics-py",
+      "name": "Azure 文本分析 · Python",
+      "description": "Azure 文本分析 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-ai-textanalytics-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "b04161ac66cfc56acbbbea2c16cec81428e8f48f667a361ed5ae2e9ea4f7fdde",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-contentsafety-py",
+      "name": "Azure 内容安全 · Python",
+      "description": "Azure 内容安全 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-ai-contentsafety-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "8b63d1959265795111d26ed080a27c9aa890d34051cef72e2ea7d98b9137bf35",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-translation-text-py",
+      "name": "Azure 文本翻译 · Python",
+      "description": "Azure 文本翻译 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-ai-translation-text-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "bea3acade397fd135cafc077166a58a40b21bb3953724f84862f976aa4c68c06",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-translation-document-py",
+      "name": "Azure 文档翻译 · Python",
+      "description": "Azure 文档翻译 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-ai-translation-document-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "b10c74e2c72c78ee4f59dfd1306a5b130110bc23b7ca1d58d512f90b55cc2c5e",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-vision-imageanalysis-py",
+      "name": "Azure 图像分析 · Python",
+      "description": "Azure 图像分析 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-ai-vision-imageanalysis-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "6b1174a6468189d72036f44c8af69d1280c3659d1705830f560faa7fb1e6f8d3",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-document-intelligence-ts",
+      "name": "Azure 文档识别 · TypeScript",
+      "description": "Azure 文档识别 · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-ai-document-intelligence-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "d0d901259ed6800f1a355ed965283a6483f11e8e2017e0713884444c1f65fcae",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-cosmos-db-py",
+      "name": "Cosmos DB 数据访问 · Python",
+      "description": "Cosmos DB 数据访问 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-cosmos-db-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "cd3ab12ec0a7acd07565d1b746ee09ed2c960c429f434ca89ac9f90aba0861cb",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-servicebus-py",
+      "name": "Azure 消息总线 · Python",
+      "description": "Azure 消息总线 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-servicebus-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "526fbcbd22b79438e96abd389b24e2e1cfd5dbf51e95684f1f7a4dbbaad96e3d",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-storage-queue-py",
+      "name": "Azure 队列存储 · Python",
+      "description": "Azure 队列存储 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-storage-queue-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "f9cd76a65e3830310359952050213cf609058e6dd678d7f2544db796bcd1c33e",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-data-tables-py",
+      "name": "Azure 表存储 · Python",
+      "description": "Azure 表存储 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-data-tables-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "ac0ba5683909c88e172d4b203de9e52d2f53a7706b70562f8656f7d44f76a1c2",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-monitor-query-py",
+      "name": "Azure 日志与指标 · Python",
+      "description": "Azure 日志与指标 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-monitor-query-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "20e205e4a97787f23600b36dd5643f2783a4d214744df4b4d947337041041245",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-eventgrid-py",
+      "name": "Azure 事件分发 · Python",
+      "description": "Azure 事件分发 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-eventgrid-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "008744f3a90a3cffb33381080e78a7a9f9ed9758784842a32b1969c19db45a04",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-eventhub-py",
+      "name": "Azure 流式事件 · Python",
+      "description": "Azure 流式事件 · Python操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-python/skills/azure-eventhub-py",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "3af5e713587312aabc02f2da58a425794e10e39a867cd598d76acd1490545538",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-identity-ts",
+      "name": "Azure 身份认证 · TypeScript",
+      "description": "Azure 身份认证 · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-identity-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "3ded34ada4ea58202d53f015047fb9a16318abd626e3d055cd4bdcb919bb70b2",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-storage-blob-ts",
+      "name": "Azure 对象存储 · TypeScript",
+      "description": "Azure 对象存储 · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-storage-blob-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "44f43c99b8aeb99555da6ddcef88128b941a855e6d986ee1773b66910d4ed4cc",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-keyvault-secrets-ts",
+      "name": "Azure 密钥管理 · TypeScript",
+      "description": "Azure 密钥管理 · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-keyvault-secrets-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "6cdf95c028b621587b0a6ea6634cab9ce336757be3b60184a6b1ae6151fc0187",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-postgres-ts",
+      "name": "Azure PostgreSQL · TypeScript",
+      "description": "Azure PostgreSQL · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-postgres-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "1bd81e21a43b13d72cbb95efa2e5ac358977feeca3def7ae4fda918f8e218640",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-search-documents-ts",
+      "name": "Azure AI 检索 · TypeScript",
+      "description": "Azure AI 检索 · TypeScript操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-typescript/skills/azure-search-documents-ts",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "1658fbd79658ac41f2119b14a7ed71bce73c57040724b269fc596eb45fc0c3e7",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-identity-dotnet",
+      "name": "Azure 身份认证 · .NET",
+      "description": "Azure 身份认证 · .NET操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-dotnet/skills/azure-identity-dotnet",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "78343b7dbc9a6ea79ef3535761d8fbcbd5f995efbf75a31807583bb799f2490f",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-ai-document-intelligence-dotnet",
+      "name": "Azure 文档识别 · .NET",
+      "description": "Azure 文档识别 · .NET操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-dotnet/skills/azure-ai-document-intelligence-dotnet",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "91ca392414d18f784dbd754f3a8f29360a23c81efda4674797f33a04209a881c",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-storage-blob-java",
+      "name": "Azure 对象存储 · Java",
+      "description": "Azure 对象存储 · Java操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-java/skills/azure-storage-blob-java",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "801d21ba7a8dbcaf1723aa85c558ceae083abf78165abdcc8581fad1c7941356",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "azure-identity-java",
+      "name": "Azure 身份认证 · Java",
+      "description": "Azure 身份认证 · Java操作指南与配套参考。用于开发集成，需要相应 SDK、Azure 账号与资源权限；费用和网络可达性由服务商决定。",
+      "kind": "skill",
+      "version": "git-2130750147de-wing1",
+      "publisher": "microsoft",
+      "source": "https://github.com/microsoft/skills/tree/2130750147dee0311215099ddf36647ba1e0f006/.github/plugins/azure-sdk-java/skills/azure-identity-java",
+      "license": "MIT",
+      "permissions": [
+        "用户授权的文件、命令和工具；外部发送、部署及付费服务需相应授权"
+      ],
+      "artifactSha256": "a06d60c6203e36633853c34313f0d28509305bf20271a8fc6b3d8d2e88f894ff",
+      "minDesktopVersion": "2.0.0",
+      "validation": "pinned-source, license, content/credential scan, Wing adaptation, signed install/uninstall; external cloud tasks require user credentials",
+      "reviewedAt": "2026-10-25",
+      "network": "Skill package is downloaded from skyalytic.com; optional SDKs and cloud calls have separate network requirements"
+    },
+    {
+      "id": "github",
+      "name": "GitHub 项目协作 MCP",
+      "description": "连接 GitHub 官方远程服务；填写完整 Bearer Token。使用社区 MIT 传输适配器，不代表 GitHub 为 Wing 背书。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "GitHub service / punkpeye adapter",
+      "source": "https://github.com/github/github-mcp-server",
+      "license": "MIT",
+      "permissions": [
+        "PAT 授权范围内的仓库、Issue、PR 访问"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://api.githubcopilot.com/mcp/",
+          "--header",
+          "Authorization:${GITHUB_AUTH_HEADER}"
+        ],
+        "envKeys": [
+          "GITHUB_AUTH_HEADER"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "tencent-docs",
+      "name": "腾讯文档 MCP",
+      "description": "连接腾讯文档官方 MCP。到 docs.qq.com/open/auth/mcp.html 获取 Token，按授权页要求填写 Authorization 值。使用社区 MIT 传输适配器。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "腾讯文档 service / punkpeye adapter",
+      "source": "https://docs.qq.com/open/auth/mcp.html",
+      "license": "MIT",
+      "permissions": [
+        "已授权腾讯文档读写；服务条款另行适用"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://docs.qq.com/openapi/mcp",
+          "--header",
+          "Authorization:${TENCENT_DOCS_AUTHORIZATION}"
+        ],
+        "envKeys": [
+          "TENCENT_DOCS_AUTHORIZATION"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "context7",
+      "name": "Context7 开发文档",
+      "description": "检索版本相关的开发文档；填写个人 API Key，额度由 Context7 账号决定。",
+      "kind": "mcp",
+      "version": "4.4.4",
+      "publisher": "Upstash",
+      "source": "https://github.com/upstash/context7",
+      "license": "MIT",
+      "permissions": [
+        "将库名和查询发送到 Context7"
+      ],
+      "artifactSha256": "2ae37c3a2b41ff4d591a275ff1dc56883cb60bfc71e34c399c14ebd38837bb38",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "@upstash/context7-mcp@4.4.4",
+        "args": [],
+        "envKeys": [
+          "CONTEXT7_API_KEY"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "id": "microsoft-learn",
+      "name": "Microsoft Learn 官方文档",
+      "description": "搜索和读取微软公开技术文档及代码示例，不需要账号。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Microsoft / mcp-remote adapter",
+      "source": "https://learn.microsoft.com/en-us/training/support/mcp",
+      "license": "MIT",
+      "permissions": [
+        "发送公开文档检索查询到 Microsoft Learn"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://learn.microsoft.com/api/mcp"
+        ],
+        "envKeys": [],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "deepwiki",
+      "name": "DeepWiki 仓库文档",
+      "description": "读取已索引公开仓库的文档和结构；私有仓库不包含在此连接器中。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Cognition / mcp-remote adapter",
+      "source": "https://docs.devin.ai/work-with-devin/deepwiki-mcp",
+      "license": "MIT",
+      "permissions": [
+        "向 DeepWiki 发送公开仓库名及文档问题"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://mcp.deepwiki.com/mcp"
+        ],
+        "envKeys": [],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "cloudflare-docs",
+      "name": "Cloudflare 官方文档",
+      "description": "搜索 Cloudflare 的公开开发文档；不访问账号内资源。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Cloudflare / mcp-remote adapter",
+      "source": "https://developers.cloudflare.com/workers/get-started/prompting/",
+      "license": "MIT",
+      "permissions": [
+        "向 Cloudflare 发送公开文档查询"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://docs.mcp.cloudflare.com/mcp"
+        ],
+        "envKeys": [],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "tavily",
+      "name": "Tavily 搜索与网页提取",
+      "description": "连接 Tavily 官方远程服务，使用个人 API Key；搜索、抓取按服务商额度计费。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Tavily / mcp-remote adapter",
+      "source": "https://github.com/tavily-ai/tavily-mcp",
+      "license": "MIT",
+      "permissions": [
+        "将查询和网址发送到 Tavily，使用用户账号额度"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://mcp.tavily.com/mcp/",
+          "--header",
+          "Authorization:Bearer ${TAVILY_API_KEY}"
+        ],
+        "envKeys": [
+          "TAVILY_API_KEY"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "firecrawl",
+      "name": "Firecrawl 网页采集",
+      "description": "连接官方远程服务，填写个人 API Key；网页抓取与搜索使用用户自己的额度。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Firecrawl / mcp-remote adapter",
+      "source": "https://github.com/firecrawl/firecrawl-mcp-server",
+      "license": "MIT",
+      "permissions": [
+        "将网址与采集任务发送到 Firecrawl，可能消耗账户额度"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://mcp.firecrawl.dev/v2/mcp",
+          "--header",
+          "Authorization:Bearer ${FIRECRAWL_API_KEY}"
+        ],
+        "envKeys": [
+          "FIRECRAWL_API_KEY"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "neon",
+      "name": "Neon 数据库管理",
+      "description": "连接 Neon 官方远程服务；填写自己的 API Key，可访问该 Key 范围内的数据库项目。写入和资源创建遵守工具审批，可能产生费用。",
+      "kind": "mcp",
+      "version": "0.15.2",
+      "publisher": "Neon / mcp-remote adapter",
+      "source": "https://neon.com/docs/ai/neon-mcp-server",
+      "license": "MIT",
+      "permissions": [
+        "Key 授权范围内的数据库查询、修改和项目管理"
+      ],
+      "artifactSha256": "364a418993680ee0385baafe807f4f74ce72a4d6165dfe96c2d39dd08a8d74ff",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "mcp-remote@0.15.2",
+        "args": [
+          "https://mcp.neon.tech/mcp",
+          "--header",
+          "Authorization:Bearer ${NEON_API_KEY}"
+        ],
+        "envKeys": [
+          "NEON_API_KEY"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25",
+      "adapterSource": "https://github.com/punkpeye/mcp-remote"
+    },
+    {
+      "id": "mcp-memory",
+      "name": "本地知识图谱记忆",
+      "description": "在用户指定的本机文件保存实体、关系和观察记录；需要 Node.js 24（Wing 当前内置版本满足）。",
+      "kind": "mcp",
+      "version": "2.0.0",
+      "publisher": "Model Context Protocol",
+      "source": "https://github.com/modelcontextprotocol/servers",
+      "license": "Apache-2.0 AND MIT; documentation CC-BY-4.0",
+      "permissions": [
+        "用户提交的分析数据及指定本地记忆文件读写"
+      ],
+      "artifactSha256": "1ffb8dc5396540b8449170bfa56a75d66a4f8a6a5cd2b13cf04c9cbbb8638ef1",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "@modelcontextprotocol/server-memory@2.0.0",
+        "args": [],
+        "envKeys": [
+          "MEMORY_FILE_PATH"
+        ],
+        "defaults": {}
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25"
+    },
+    {
+      "id": "sequential-thinking",
+      "name": "分步骤问题分析",
+      "description": "记录显式分析步骤与修订，不接入外部模型；需要 Node.js 24（Wing 当前内置版本满足）。",
+      "kind": "mcp",
+      "version": "2.0.0",
+      "publisher": "Model Context Protocol",
+      "source": "https://github.com/modelcontextprotocol/servers",
+      "license": "Apache-2.0 AND MIT; documentation CC-BY-4.0",
+      "permissions": [
+        "用户提交的分析数据，不自动访问第三方业务"
+      ],
+      "artifactSha256": "16abc08487e9bf78a7a11e9fbd5473dc9121eb70a6c811c6be375f931856b057",
+      "minDesktopVersion": "2.0.0",
+      "install": {
+        "spec": "@modelcontextprotocol/server-sequential-thinking@2.0.0",
+        "args": [],
+        "envKeys": [],
+        "defaults": {
+          "DISABLE_THOUGHT_LOGGING": "true"
+        }
+      },
+      "validation": "fixed package integrity + dependency audit; credentialed business calls require user authorization",
+      "reviewedAt": "2026-10-25"
+    }
+  ]
+}

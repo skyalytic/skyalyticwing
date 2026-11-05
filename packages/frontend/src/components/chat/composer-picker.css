@@ -1,0 +1,111 @@
+.wing-composer-picker {
+  position: fixed;
+  z-index: 10010;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 30px #0003;
+  padding: 6px;
+  font-size: 13px;
+}
+.wing-picker-heading {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.wing-picker-heading span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.wing-composer-picker button {
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 5px 8px;
+}
+.wing-composer-picker button:hover,
+.wing-picker-item[aria-selected='true'] {
+  background: var(--bg-secondary);
+}
+.wing-picker-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  min-height: 34px;
+}
+.wing-picker-item strong {
+  font-weight: 500;
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wing-picker-item .wing-picker-description {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+.wing-picker-group {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 8px 9px 3px;
+}
+.wing-composer-picker p {
+  padding: 8px;
+  overflow-wrap: anywhere;
+}
+.wing-composer-picker footer {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+  padding-top: 5px;
+}
+.wing-selection-action {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: 0 3px 12px #0003;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.wing-selection-action kbd {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.wing-composer-picker [role='listbox'] {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+.wing-picker-heading,
+.wing-composer-picker footer {
+  flex-shrink: 0;
+}
+.wing-picker-item > span:first-child {
+  flex: 0 0 15px;
+}

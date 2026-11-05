@@ -1,0 +1,8 @@
+{
+  "name": "Ubuntu Noble OCI amd64 root filesystem",
+  "source": "https://partner-images.canonical.com/oci/noble/current/",
+  "upstream": "https://partner-images.canonical.com/oci/noble/current/ubuntu-noble-oci-amd64-root.tar.gz",
+  "url": "https://skyalytic.com/download/components/ubuntu-noble-oci-amd64-20260930.tar.gz",
+  "sha256": "6fb36aacf06bfa77b8b624c63f07c04b85d76ad66d3bd3d9f101462537e770e3",
+  "licenses": "Per-package notices retained in /usr/share/doc; Ubuntu source packages available at https://archive.ubuntu.com/ubuntu/pool/"
+}

@@ -1,0 +1,52 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noImplicitOverride": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "baseUrl": ".",
+    "paths": {
+      "@skyalyticwing/shared": ["packages/shared/src"],
+      "@skyalyticwing/shared/*": ["packages/shared/src/*"],
+      "@skyalyticwing/core": ["packages/core/src"],
+      "@skyalyticwing/core/*": ["packages/core/src/*"],
+      "@skyalyticwing/cli": ["packages/cli/src"],
+      "@skyalyticwing/cli/*": ["packages/cli/src/*"],
+      "@skyalyticwing/sdk": ["packages/sdk/src"],
+      "@skyalyticwing/sdk/*": ["packages/sdk/src/*"],
+      "@skyalyticwing/channels": ["packages/channels/src"],
+      "@skyalyticwing/channels/*": ["packages/channels/src/*"],
+      "@skyalyticwing/tools": ["packages/tools/src"],
+      "@skyalyticwing/tools/*": ["packages/tools/src/*"],
+      "@skyalyticwing/providers": ["packages/providers/src"],
+      "@skyalyticwing/providers/*": ["packages/providers/src/*"]
+    }
+  },
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/core" },
+    { "path": "./packages/cli" },
+    { "path": "./packages/sdk" },
+    { "path": "./packages/channels" },
+    { "path": "./packages/tools" },
+    { "path": "./packages/providers" }
+  ]
+}

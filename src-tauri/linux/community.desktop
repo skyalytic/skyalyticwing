@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=skyalyticwing
+Comment=Wing 个人版（社区版）
+Exec=SkyalyticWingCommunity
+Icon=SkyalyticWingCommunity
+Terminal=false
+Categories=Office;Utility;

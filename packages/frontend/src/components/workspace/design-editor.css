@@ -1,0 +1,119 @@
+.sky-design-editor {
+  overflow: hidden;
+  container-type: inline-size;
+}
+.sky-design-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sky-design-tools button,
+.sky-design-tools select,
+.sky-design-welcome button {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  background: var(--bg-secondary);
+  color: inherit;
+  font-size: 12px;
+}
+.sky-design-tools button:disabled {
+  opacity: 0.4;
+}
+.sky-design-divider {
+  width: 1px;
+  background: var(--border);
+  margin: 0 3px;
+}
+.sky-design-body {
+  display: flex;
+  flex: 1;
+  min-height: 160px;
+  overflow: hidden;
+}
+.sky-design-layers {
+  width: 160px;
+  flex-shrink: 0;
+  overflow: auto;
+  padding: 8px;
+  border-right: 1px solid var(--border);
+  font-size: 12px;
+}
+.sky-design-layers strong {
+  display: block;
+  padding: 6px;
+}
+.sky-design-layers p {
+  opacity: 0.6;
+  padding: 8px;
+  line-height: 1.6;
+}
+.sky-design-layers button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 6px;
+  margin: 3px 0;
+  border-radius: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sky-design-layers button[aria-pressed='true'] {
+  background: var(--accent-bg, #3b82f625);
+  color: var(--accent, #2563eb);
+}
+.sky-design-welcome {
+  margin: auto;
+  padding: 36px 16px;
+  text-align: center;
+}
+.sky-design-welcome h3 {
+  font-size: 22px;
+  margin: 0 0 12px;
+}
+.sky-design-welcome p {
+  font-size: 13px;
+  opacity: 0.65;
+  margin-bottom: 24px;
+}
+.sky-design-welcome > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.sky-design-welcome button {
+  min-width: 115px;
+  min-height: 80px;
+}
+.sky-design-editor > div:last-child:has(.sky-canvas-properties) {
+  max-height: 32%;
+  overflow: auto;
+}
+.sky-design-editor .sky-canvas-properties {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: end;
+}
+.sky-design-editor .sky-canvas-properties label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+.sky-design-editor .sky-canvas-properties input {
+  width: 88px;
+  padding: 5px;
+}
+.sky-design-editor .sky-canvas-properties .sky-canvas-text-value {
+  width: 190px;
+}
+@container (max-width:550px) {
+  .sky-design-layers {
+    width: 115px;
+  }
+}

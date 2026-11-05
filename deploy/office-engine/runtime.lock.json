@@ -1,0 +1,71 @@
+{
+  "version": "26.04.5",
+  "platform": "linux-amd64",
+  "source": {
+    "commit": "22ce52fb5173821dd90782638afcbfb6b6d7cb40",
+    "url": "https://codeload.github.com/CollaboraOnline/online.mirror/tar.gz/22ce52fb5173821dd90782638afcbfb6b6d7cb40",
+    "sha256": "534f4390c473744f4809e36775d711fd9df6e0c872e5190bf5af8f72b008d1dd"
+  },
+  "packages": [
+    {
+      "name": "collaboraoffice-ure_26.04.5-1_amd64.deb",
+      "sha256": "a3caf90f0c212c6c427eaf90cee5e1153132e65d88720d29e100a975261495fb"
+    },
+    {
+      "name": "collaboraoffice_26.04.5-1_amd64.deb",
+      "sha256": "5dd96a78cddc06b81ef157b6f768d73ab66313ca1f1ff53ca2e9bf3742991645"
+    },
+    {
+      "name": "collaboraofficebasis-calc_26.04.5-1_amd64.deb",
+      "sha256": "c5512f7afcf363fb56b945966124569d8de131e86b5d212caaa4c0ee92af3811"
+    },
+    {
+      "name": "collaboraofficebasis-core_26.04.5-1_amd64.deb",
+      "sha256": "a0b08c4b89b3678bdfefd1bbf1f5589c3c1004cdd99f87903d6449225af08fab"
+    },
+    {
+      "name": "collaboraofficebasis-draw_26.04.5-1_amd64.deb",
+      "sha256": "5ef7af4200223692528c0f5c895b8151be6bf72a9f863255fc87127f8a954ca9"
+    },
+    {
+      "name": "collaboraofficebasis-en-us_26.04.5-1_amd64.deb",
+      "sha256": "10c9d638b5cb74a381c212663090db1807302fb9ae3f5484aaebb090c8f9cfc6"
+    },
+    {
+      "name": "collaboraofficebasis-extension-pdf-import_26.04.5-1_amd64.deb",
+      "sha256": "53cb6a2a3709498e3a1f68869af9c9191504df5945bd4d2f48ccc5bed9503e6e"
+    },
+    {
+      "name": "collaboraofficebasis-graphicfilter_26.04.5-1_amd64.deb",
+      "sha256": "9e9f19f0a8d82bb75e3713a7807f719727190e64d014c7548e638982d62d7472"
+    },
+    {
+      "name": "collaboraofficebasis-images_26.04.5-1_amd64.deb",
+      "sha256": "e5d16bf5bb5de7d4f859e33bb67d5d3bcaa5363a1b7c3fc06b6435fcda012724"
+    },
+    {
+      "name": "collaboraofficebasis-impress_26.04.5-1_amd64.deb",
+      "sha256": "293b5f68d104f9617d47a59b81159579825cccaefa783f0f8b5718733838c604"
+    },
+    {
+      "name": "collaboraofficebasis-math_26.04.5-1_amd64.deb",
+      "sha256": "b89891763b203a5d94373a0bf94b0e1128885e52ebba4d12235d40997ea2fa4e"
+    },
+    {
+      "name": "collaboraofficebasis-ooofonts_26.04.5-1_amd64.deb",
+      "sha256": "d64290bd73d34f0379a150ef1f203fa1c0f22a48cb9a677e7906a0abbf6f858d"
+    },
+    {
+      "name": "collaboraofficebasis-ooolinguistic_26.04.5-1_amd64.deb",
+      "sha256": "a4e4e75b25e4a5c3f59582c807fd4eeee2bcb22796271978d7b8d9df5642b290"
+    },
+    {
+      "name": "collaboraofficebasis-writer_26.04.5-1_amd64.deb",
+      "sha256": "19652b14d887c65632ec844211d4b40ae7e18989be60a240265103fc230aedbd"
+    },
+    {
+      "name": "coolwsd_26.04.5.1-1_amd64.deb",
+      "sha256": "73b60e95a82ea9f8af5aa53fa9419d16bf0be7e772d4a0a6b5eaee9163b3151f"
+    }
+  ]
+}

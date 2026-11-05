@@ -1,0 +1,63 @@
+# C-D7 fix: 防止敏感临时文件与构建产物被打包进镜像构建上下文。
+# 凭据 / 环境变量
+.env*
+.env.local
+.env.*.local
+
+# 日志与临时文本
+*.log
+*.txt
+build-*.log
+chat_tmp.txt
+cfg_*.txt
+
+# 数据库 / 数据目录
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Node 构建产物与依赖（镜像内重新安装）
+node_modules/
+**/node_modules/
+
+# Git / CI / IDE 元数据
+.git/
+.gitignore
+.github/
+.vscode/
+.trae/
+.tauri/
+
+# 构建产物
+dist/
+dist-desktop/
+**/dist/
+**/*.js.map
+
+# 测试与文档
+tests/
+docs/
+*.md
+!README.md
+
+# Tauri 构建产物
+src-tauri/target/
+.test-runtime-data/
+.test-data/
+.pnpm-store/
+.turbo/
+build/
+**/deploy/
+**/data/
+
+# 压缩包与归档
+*.tar.gz
+*.zip
+*.tgz
+
+# 截图与图片临时文件
+*.png
+*.jpg
+*.jpeg
+test_*.png

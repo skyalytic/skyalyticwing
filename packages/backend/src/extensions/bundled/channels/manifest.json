@@ -1,0 +1,42 @@
+{
+  "id": "wing-channels",
+  "name": "渠道",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "gmail_search",
+      "description": "搜索 Gmail 邮件（Gmail API）。需要 Google OAuth 凭据，未配置时返回配置指引。",
+      "category": "channel",
+      "dangerous": false
+    },
+    {
+      "name": "gmail_send",
+      "description": "发送 Gmail 邮件（Gmail API）。需要 Google OAuth 凭据，未配置时返回配置指引。",
+      "category": "channel",
+      "dangerous": true
+    },
+    {
+      "name": "webhook_send",
+      "description": "向指定 URL 发送 Webhook 请求（默认 POST JSON），用于与外部系统集成。支持 HMAC-SHA256 签名（secret 参数，签名写入 X-Signature-256 头）。SSRF 防护。",
+      "category": "channel",
+      "dangerous": false
+    },
+    {
+      "name": "http_request",
+      "description": "发送通用 HTTP 请求并返回响应（方法白名单 GET/POST/PUT/PATCH/DELETE/HEAD，超时上限 60s，响应体截断 100k 字符）。SSRF 防护。",
+      "category": "channel",
+      "dangerous": true
+    },
+    {
+      "name": "show_message",
+      "description": "向前端推送一条即时消息（WebSocket broadcast show_message 事件），用于在用户界面弹出提示。与 notify 的区别：show_message 面向对话内即时展示，notify 面向系统通知中心。",
+      "category": "channel",
+      "dangerous": false
+    }
+  ]
+}

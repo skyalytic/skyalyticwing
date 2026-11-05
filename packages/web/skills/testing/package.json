@@ -1,0 +1,11 @@
+{
+  "name": "@skyalyticwing/skill-testing",
+  "version": "1.0.0",
+  "description": "Test generation skill for SkyalyticWing",
+  "main": "dist/index.js",
+  "type": "module",
+  "skyalyticwing": {
+    "skill": true,
+    "triggers": ["generate_tests", "write_tests", "create_tests"]
+  }
+}

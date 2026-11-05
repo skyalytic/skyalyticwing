@@ -1,0 +1,54 @@
+{
+  "id": "wing-files",
+  "name": "文件",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "file-read",
+      "description": "读取本地文本或图片。PNG/JPEG/WebP 等图片作为视觉观察返回给支持视觉的模型，不按文本解码；PDF、音视频、压缩包等二进制请使用对应解析工具。文本支持 offset/limit 行分页，大文本使用 byteOffset 和 nextByteOffset 分段读取。仅允许访问白名单路径。",
+      "category": "filesystem",
+      "dangerous": false
+    },
+    {
+      "name": "file-write",
+      "description": "写入文件（原子写入：先写临时文件再 rename）。仅允许访问白名单路径。相对路径按当前工作目录解析（已选择项目文件夹时即工程目录），产物文件建议用相对路径写入当前工作目录。",
+      "category": "filesystem",
+      "dangerous": true
+    },
+    {
+      "name": "file-edit",
+      "description": "编辑文件：将 oldText 替换为 newText，支持 replaceAll。仅允许访问白名单路径。",
+      "category": "filesystem",
+      "dangerous": true
+    },
+    {
+      "name": "file-delete",
+      "description": "删除一个或多个文件。仅允许删除白名单路径下的文件。",
+      "category": "filesystem",
+      "dangerous": true
+    },
+    {
+      "name": "directory-list",
+      "description": "列出指定目录的内容。仅允许访问白名单路径。",
+      "category": "filesystem",
+      "dangerous": false
+    },
+    {
+      "name": "glob",
+      "description": "按 glob 模式递归匹配文件路径（支持 *、**、?、{a,b}）。不限制搜索深度或结果总量，使用 nextOffset 继续读取后续页。",
+      "category": "filesystem",
+      "dangerous": false
+    },
+    {
+      "name": "grep",
+      "description": "流式递归搜索文件内容（正则匹配），支持大文件。每页最多 500 条，使用 nextOffset 继续。无法完整搜索的文件或超长单行会显式报告。",
+      "category": "filesystem",
+      "dangerous": false
+    }
+  ]
+}

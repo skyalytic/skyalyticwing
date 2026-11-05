@@ -1,0 +1,144 @@
+{
+  "id": "wing-utilities",
+  "name": "工具",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "btw_ask",
+      "description": "旁路提问（/btw）：不打断当前主对话，由轻量隔离 LLM 会话快速回答一个临时问题，不使用工具、不影响主任务流程。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "cli_anything",
+      "description": "通过 CLI-Anything 操作桌面软件（gimp/blender/libreoffice/obs 等，pip 包 cli-anything-<software>）。将 GUI 软件转为命令行操作。action=list/run/install/search/info。命令须经命令守卫校验。",
+      "category": "shell",
+      "dangerous": false
+    },
+    {
+      "name": "apply_patch",
+      "description": "一次应用多块文件补丁（比 file-edit 更高效）。支持 search/replace 补丁列表与unified diff 格式（SafetyManager 补丁解析），search 未命中时按编辑距离模糊匹配兜底。路径须经 PathGuard 白名单。",
+      "category": "file",
+      "dangerous": true
+    },
+    {
+      "name": "diff",
+      "description": "比较两个文件（或两段文本）的差异，输出行级变更（- 旧行 / + 新行）。文件路径须经 PathGuard 读白名单。",
+      "category": "file",
+      "dangerous": false
+    },
+    {
+      "name": "tui_start",
+      "description": "创建本地 Wing 文字交互会话，返回会话 ID。可用终端客户端 wing-tui.cjs 进行文字交互。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "tui_status",
+      "description": "查看当前调用会话创建的 TUI 状态与文字屏幕。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "tui_send",
+      "description": "向 TUI 发送消息或 /help /status /history /clear /cancel /quit；普通消息异步调用已配置模型，使用 status 获取结果。",
+      "category": "system",
+      "dangerous": true
+    },
+    {
+      "name": "tui_stop",
+      "description": "停止指定 TUI；中断在途任务并保留聊天记录。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "python",
+      "description": "执行Python代码（需审批）。通过 python/python3 命令运行Python脚本，支持数据分析、脚本执行等。",
+      "category": "command",
+      "dangerous": true
+    },
+    {
+      "name": "node",
+      "description": "执行Node.js代码（需审批）。通过 node -e 运行JavaScript代码，适用于脚本执行、数据处理等。",
+      "category": "command",
+      "dangerous": true
+    },
+    {
+      "name": "code_build",
+      "description": "构建代码项目（需审批）。自动检测项目类型（npm run build 或 make），也可指定构建命令。执行前会进行安全检查。",
+      "category": "command",
+      "dangerous": true
+    },
+    {
+      "name": "git_operation",
+      "description": "执行Git操作（白名单校验）。支持常用git命令(add/status/log/diff/commit/push/pull/branch/checkout等)；不含 clone/clean（请走 bash 工具并经审批）。",
+      "category": "command",
+      "dangerous": false
+    },
+    {
+      "name": "agent_reach_doctor",
+      "description": "Agent Reach 平台连通性体检（并行探测，≤5s）。检测各平台 API 是否可访问。返回每个平台的状态(ok/fail)和汇总。无需任何配置即可运行。",
+      "category": "network",
+      "dangerous": false
+    },
+    {
+      "name": "plugin_install",
+      "description": "安装插件。从本地路径安装插件。",
+      "category": "plugin",
+      "dangerous": false
+    },
+    {
+      "name": "plugin_search",
+      "description": "搜索可用插件。在本地插件目录中按关键词搜索插件（返回脱敏信息）。",
+      "category": "plugin",
+      "dangerous": false
+    },
+    {
+      "name": "ask_user",
+      "description": "向用户提问并等待选择或输入，直到用户回复、取消回答或停止任务。前端同时提供选项和自由输入框，可填写文件路径；multiple=true 允许多选。适合需求不确定时澄清，等待期间不能自行假设用户已同意；用户取消回答也不代表批准替代方案。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "notification",
+      "description": "发送系统桌面通知（Windows Toast/Balloon Tip、macOS 通知中心、Linux notify-send），并同步经 WebSocket 广播给已连接的前端客户端。用于提醒用户重要事件或任务完成。",
+      "category": "interactive",
+      "dangerous": false
+    },
+    {
+      "name": "browser_open",
+      "description": "使用系统默认浏览器打开指定 URL（仅允许 http/https 协议，经 SSRF 校验）。",
+      "category": "network",
+      "dangerous": false
+    },
+    {
+      "name": "api_call",
+      "description": "调用外部 API 接口（简化版）。发送 HTTP 请求并返回状态码与响应正文（经 SSRF 防护校验，正文截断至 50KB）。",
+      "category": "network",
+      "dangerous": false
+    },
+    {
+      "name": "agent_list",
+      "description": "列出所有可用的母代理（id/名称/描述/类型/能力）。用于选择通信目标或了解当前代理阵容，可按能力过滤。",
+      "category": "agent",
+      "dangerous": false
+    },
+    {
+      "name": "tool_policy_list",
+      "description": "列出所有工具策略（名称与 allow/deny 规则数量）。",
+      "category": "system",
+      "dangerous": false
+    },
+    {
+      "name": "tool_policy_create",
+      "description": "创建（或覆盖）自定义工具策略。allow/deny 均为工具名 glob 模式（支持 * 与 ?），deny 优先；allow 为空数组表示放行全部。",
+      "category": "system",
+      "dangerous": false
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+# C-D7 fix: 防止 packages/web 构建上下文中泄露敏感临时文件。
+# 凭据 / 环境变量
+.env*
+.env.local
+
+# 日志与临时文本
+*.log
+*.txt
+chat_tmp.txt
+cfg_*.txt
+
+# 数据库 / 数据目录
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Node 依赖与构建产物（镜像内重新安装）
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+**/*.js.map
+**/*.d.ts
+
+# Git / IDE 元数据
+.git/
+.gitignore
+.vscode/
+
+# 测试与文档
+tests/
+docs/
+*.md
+
+# 截图与图片临时文件
+*.png
+*.jpg
+*.jpeg
+test_*.png
+
+# 工作区与运行时目录
+workspace/
+.agents/

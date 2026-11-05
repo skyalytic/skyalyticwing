@@ -1,0 +1,32 @@
+gateway:
+  port: 19111
+  host: "0.0.0.0"
+  tls:
+    enabled: true
+    cert: "/etc/ssl/certs/skyalyticwing.crt"
+    key: "/etc/ssl/private/skyalyticwing.key"
+
+auth:
+  mode: "token"
+  session:
+    ttl: 7200
+    token: "${AUTH_TOKEN}"
+
+database:
+  type: "postgresql"
+  url: "${DATABASE_URL}"
+
+redis:
+  enabled: true
+  url: "${REDIS_URL}"
+
+logging:
+  level: "info"
+  format: "json"
+
+agents:
+  default:
+    permissionMode: "ask"
+
+permissions:
+  defaultMode: "ask"

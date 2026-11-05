@@ -1,0 +1,18 @@
+const fs=require('fs'),crypto=require('crypto'),path=require('path');
+const artifact=path.resolve(process.argv[2]);
+const pub=JSON.parse(fs.readFileSync(path.resolve(__dirname,'../src-tauri/tauri.conf.json'),'utf8')).plugins.updater.pubkey;
+const lines=Buffer.from(pub,'base64').toString('utf8').trim().split(/\r?\n/);
+const key=Buffer.from(lines[1],'base64');
+const signed=Buffer.from(fs.readFileSync(artifact+'.sig','utf8').trim(),'base64').toString('utf8').trim().split(/\r?\n/);
+const sig=Buffer.from(signed[1],'base64');
+if(!key.subarray(2,10).equals(sig.subarray(2,10)))throw new Error('Updater key ID mismatch');
+const der=Buffer.concat([Buffer.from('302a300506032b6570032100','hex'),key.subarray(10)]);
+const publicKey=crypto.createPublicKey({key:der,format:'der',type:'spki'});
+const payload=fs.readFileSync(artifact);
+const message=sig.subarray(0,2).toString()==='ED'?crypto.createHash('blake2b512').update(payload).digest():payload;
+if(!crypto.verify(null,message,publicKey,sig.subarray(10)))throw new Error('Artifact signature invalid');
+const comment=signed[2].replace(/^trusted comment: /,'');
+if(!crypto.verify(null,Buffer.concat([sig.subarray(10),Buffer.from(comment)]),publicKey,Buffer.from(signed[3],'base64')))throw new Error('Trusted comment signature invalid');
+const version=require('./release-config.cjs').releaseConfig().version;
+if(!comment.includes(version))throw new Error('Missing signed release version '+version);
+console.log('PASS: artifact signature matches the updater public key and signed version '+version);

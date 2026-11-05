@@ -1,0 +1,42 @@
+{
+  "id": "wing-coding",
+  "name": "编程",
+  "version": "2.1.0",
+  "apiVersion": 1,
+  "entry": "index.js",
+  "guides": [
+    "GUIDE.md"
+  ],
+  "tools": [
+    {
+      "name": "lsp_query",
+      "description": "真实项目语言服务：定义、引用、实现、悬浮信息、符号、补全、签名、文件/项目诊断。rename/format 返回可审查预览，不直接写入。位置从 1 开始。其他语言需要已安装语言服务器。",
+      "category": "development",
+      "dangerous": false
+    },
+    {
+      "name": "lsp_apply",
+      "description": "应用本会话已审查的语言服务重命名/格式化预览。检查全部文件版本，拒绝覆盖后来修改，保留文件恢复记录。",
+      "category": "development",
+      "dangerous": true
+    },
+    {
+      "name": "repo_inspect",
+      "description": "检查真实 Git 仓库：HEAD、未提交改动、补丁、已跟踪文件和可用测试/构建命令。不会自动执行仓库脚本。",
+      "category": "development",
+      "dangerous": false
+    },
+    {
+      "name": "repo_verify",
+      "description": "执行一条明确指定的仓库测试/构建命令，记录真实退出码、耗时、完整输出日志和执行前后 Git 补丁。命令参数用数组传递；未运行或失败不得报告测试通过。停止任务会终止进程树。",
+      "category": "development",
+      "dangerous": true
+    },
+    {
+      "name": "task_journal",
+      "description": "读取当前账号下本会话持久执行记录，包括已完成工具、运行状态和中断后结果未知的调用。未知操作必须检查副作用后再决定是否重试。",
+      "category": "development",
+      "dangerous": false
+    }
+  ]
+}

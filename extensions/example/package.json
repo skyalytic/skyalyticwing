@@ -1,0 +1,20 @@
+{
+  "name": "@skyalyticwing/extension-example",
+  "version": "1.0.0",
+  "description": "Example extension for SkyalyticWing",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@skyalyticwing/sdk": "workspace:*"
+  },
+  "skyalyticwing": {
+    "extension": true,
+    "hooks": ["onMessage", "onToolCall"],
+    "tools": ["ExampleTool"],
+    "channels": []
+  }
+}

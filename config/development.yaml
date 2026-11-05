@@ -1,0 +1,43 @@
+gateway:
+  port: 18789
+  host: "127.0.0.1"
+
+auth:
+  # M-I8 fix: 开发环境关闭鉴权（mode: "none"）仅限本地开发使用，严禁用于生产或暴露到公网。
+  # 生产环境必须使用 mode: "token" 并配置强 token（见 config/production.yaml）。
+  # 若需在开发环境测试鉴权流程，可改为 mode: "token" 并设置开发用 token（如 "dev-token-change-me"）。
+  # gateway.host 已限制为 127.0.0.1，仅本机可访问，降低无鉴权风险。
+  mode: "none"
+  session:
+    ttl: 3600
+
+database:
+  type: "sqlite"
+  path: "./data/dev.db"
+
+logging:
+  level: "debug"
+  format: "pretty"
+
+agents:
+  default:
+    id: "default"
+    name: "天爪"
+    model: "claude-sonnet-4"
+    provider: "anthropic"
+    maxTokens: 4096
+    temperature: 0.7
+    permissionMode: "ask"
+
+channels:
+  - name: "cli"
+    enabled: true
+
+security:
+  ssrfProtection: true
+  commandApproval: "ask"
+  sandboxEnabled: false
+
+plugins:
+  enabled: true
+  autoLoad: true

@@ -1,0 +1,8 @@
+{
+  "bundle": { "macOS": { "minimumSystemVersion": "15.0" } },
+  "app": {
+    "security": {
+      "csp": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' http://localhost:19111 http://127.0.0.1:19111 ws://localhost:19111 ws://127.0.0.1:19111; font-src 'self' data:"
+    }
+  }
+}

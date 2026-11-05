@@ -1,0 +1,24 @@
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
+import { VideoTasksPanel } from '@/modules/tools/VideoTasksPanel';
+import { apiClient } from '@/services/api-client';
+vi.mock('@/services/api-client', () => ({apiClient:{get:vi.fn(),delete:vi.fn(),post:vi.fn()}}));
+beforeEach(() => vi.clearAllMocks());
+afterEach(cleanup);
+it('confirms cleanup, removes finished records and keeps active jobs', async () => {
+  let jobs = [{id:'done',status:'succeeded',request:{prompt:'finished'}},{id:'active',status:'running',request:{prompt:'running'}}];
+  vi.mocked(apiClient.get).mockImplementation(async () => [...jobs] as never);
+  vi.mocked(apiClient.delete).mockImplementation(async () => {jobs=jobs.filter(j=>j.id!=='done');return {deleted:1} as never;});
+  render(<MemoryRouter><VideoTasksPanel /></MemoryRouter>);
+  await screen.findByText(/finished/);
+  fireEvent.click(screen.getByRole('button',{name:'清理已结束记录'}));
+  expect(apiClient.delete).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button',{name:'取消'}));
+  fireEvent.click(screen.getByRole('button',{name:'删除记录'}));
+  await act(async () => {fireEvent.click(screen.getByRole('button',{name:'确定'}));});
+  expect(apiClient.delete).toHaveBeenCalledWith('/automation/media/video-tasks/done');
+  await waitFor(() => expect(screen.queryByText(/finished/)).toBeNull());
+  expect(screen.getByText(/running/)).toBeTruthy();
+  expect(screen.getByRole('button',{name:'清理已结束记录'})).toBeDisabled();
+});

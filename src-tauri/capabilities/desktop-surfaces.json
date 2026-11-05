@@ -1,0 +1,17 @@
+{
+  "identifier": "desktop-surfaces",
+  "description": "Drag only the local desktop control and question surfaces",
+  "webviews": [
+    "wing-approval",
+    "wing-desktop-control"
+  ],
+  "remote": {
+    "urls": [
+      "http://127.0.0.1:19111/?wingSurface=approval",
+      "http://127.0.0.1:19111/?wingSurface=control"
+    ]
+  },
+  "permissions": [
+    "core:window:allow-start-dragging"
+  ]
+}

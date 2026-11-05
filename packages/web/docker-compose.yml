@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  skyalyticwing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: skyalyticwing
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - skyalyticwing-data:/app/data
+      - skyalyticwing-workspace:/app/workspace
+      - skyalyticwing-skills:/app/skills
+      - skyalyticwing-logs:/app/logs
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - SECURITY_GUARD_ENABLED=true
+      - DASHSCOPE_API_KEY=${DASHSCOPE_API_KEY:-}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - MOONSHOT_API_KEY=${MOONSHOT_API_KEY:-}
+      - ZHIPU_API_KEY=${ZHIPU_API_KEY:-}
+      - MINIMAX_API_KEY=${MINIMAX_API_KEY:-}
+      - QIANFAN_ACCESS_KEY=${QIANFAN_ACCESS_KEY:-}
+      - VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY:-}
+      - STEPFUN_API_KEY=${STEPFUN_API_KEY:-}
+      - SILICONFLOW_API_KEY=${SILICONFLOW_API_KEY:-}
+      - YI_API_KEY=${YI_API_KEY:-}
+      - BAICHUAN_API_KEY=${BAICHUAN_API_KEY:-}
+      - SPARK_API_KEY=${SPARK_API_KEY:-}
+      - HUNYUAN_API_KEY=${HUNYUAN_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - DISCORD_BOT_TOKEN=${DISCORD_BOT_TOKEN:-}
+      - DINGTALK_CLIENT_ID=${DINGTALK_CLIENT_ID:-}
+      - DINGTALK_CLIENT_SECRET=${DINGTALK_CLIENT_SECRET:-}
+      - WECOM_BOT_ID=${WECOM_BOT_ID:-}
+      - WECOM_SECRET=${WECOM_SECRET:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  skyalyticwing-data:
+  skyalyticwing-workspace:
+  skyalyticwing-skills:
+  skyalyticwing-logs:

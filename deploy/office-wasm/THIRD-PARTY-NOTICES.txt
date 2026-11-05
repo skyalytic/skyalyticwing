@@ -1,0 +1,24 @@
+Wing local Office integration
+
+Engine: ZetaOffice 24.2, build efaf0670b4d055f838a2849becb10f08aa06a257.
+Based on LibreOffice and Qt for WebAssembly. Runtime binaries are separate from the Wing host application.
+Upstream source: https://github.com/LibreOffice/core/tree/distro/allotropia/zeta-24-2
+ZetaJS JavaScript bindings: https://github.com/allotropia/zetajs (MIT; ZETAJS-LICENSE.txt).
+LibreOffice licensing and source notices: https://www.libreoffice.org/about-us/licenses/
+Qt source and licensing: https://github.com/allotropia/qtbase and https://www.qt.io/licensing/
+
+Chinese translations from Ubuntu libreoffice-l10n-zh-cn 24.2.7.
+See LIBREOFFICE-L10N-COPYRIGHT.txt for translation and upstream notices.
+Noto Sans CJK SC: SIL Open Font License 1.1, see Noto-OFL.txt.
+Noto Serif CJK SC: SIL Open Font License 1.1, see NotoSerif-OFL.txt.
+Common system fonts are read locally from the user's own computer for editing.
+They are not included in Wing packages or uploaded to any server.
+
+Local integration changes: host.js, worker.js and the HTML/CSS wrapper; Chinese font
+and locale data appended to the virtual filesystem; loader creates added parent
+directories. One equal-length UTF-16 Qt font path in the pinned WASM is redirected
+from :/fonts/DejaVuSans.ttf to /fonts/NotoSansCJK.otf, so native UI widgets and
+tooltips can use the same bundled CJK font. No WASM instructions are changed.
+The exact guarded modification recipe is included as office-ui-font.cjs.
+Input/output SHA-256 hashes and patch details are in manifest.json. Assembly is
+reproducible using scripts/prepare-office-wasm.cjs and scripts/office-ui-font.cjs.

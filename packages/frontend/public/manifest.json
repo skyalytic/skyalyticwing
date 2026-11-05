@@ -1,0 +1,21 @@
+{
+  "name": "SkyalyticWing",
+  "short_name": "SkyalyticWing",
+  "description": "AI \u52a9\u624b\u5e73\u53f0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

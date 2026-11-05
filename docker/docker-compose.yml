@@ -1,0 +1,21 @@
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    ports:
+      - '127.0.0.1:19111:19111'
+    environment:
+      SKYALYTICWING_AUTH_TOKEN: ${SKYALYTICWING_AUTH_TOKEN:?Set a random token of at least 32 characters}
+      SKYALYTICWING_ALLOWED_ORIGINS: ${SKYALYTICWING_ALLOWED_ORIGINS:-http://localhost:19111}
+    volumes:
+      - skydata:/data
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    restart: unless-stopped
+
+volumes:
+  skydata:

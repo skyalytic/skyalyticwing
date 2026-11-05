@@ -1,0 +1,111 @@
+{
+  "name": "skyalyticwing-community",
+  "version": "2.1.0",
+  "description": "SkyalyticWing community desktop assistant",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "pnpm -r --parallel dev",
+    "test": "pnpm version:check && pnpm test:delivery && turbo run test && pnpm test:integration && pnpm test:exports",
+    "test:integration": "vitest run --config tests/vitest.config.ts",
+    "test:exports": "node scripts/check-package-exports.mjs",
+    "e2e": "pnpm --dir e2e install --ignore-workspace && pnpm --dir e2e run e2e",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "prepare": "node scripts/prepare-source.cjs",
+    "clean": "pnpm -r clean",
+    "release": "node scripts/release.js",
+    "cli": "pnpm --filter @skyalyticwing/cli cli",
+    "desktop:dev": "node scripts/dev-desktop.cjs",
+    "desktop:build": "node scripts/build-desktop.cjs",
+    "desktop:build:win": "node scripts/build-desktop.cjs --target x86_64-pc-windows-msvc",
+    "desktop:build:mac": "node scripts/build-desktop.cjs --target aarch64-apple-darwin",
+    "desktop:build:linux": "node scripts/build-desktop.cjs --target x86_64-unknown-linux-gnu",
+    "desktop:sign": "cargo tauri signer generate -w ~/.tauri/skyalyticwing.key",
+    "version:sync": "node scripts/sync-versions.cjs",
+    "version:check": "node scripts/sync-versions.cjs --check",
+    "test:delivery": "node --test tests/release-version.test.cjs tests/desktop-editions.test.cjs tests/packaging-inputs.test.cjs",
+    "desktop:check": "node scripts/build-desktop.cjs --check",
+    "desktop:audit": "node scripts/audit-installer-inputs.cjs",
+    "test:packaging": "node --test tests/packaging-inputs.test.cjs",
+    "test:public-source": "node scripts/check-public-source.cjs"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "agent",
+    "llm",
+    "automation",
+    "desktop"
+  ],
+  "author": "Skyalytic contributors",
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.0.0"
+  },
+  "packageManager": "pnpm@11.19.0",
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.4",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "oxlint": "^0.15.0",
+    "prettier": "^3.0.0",
+    "ts-node": "^10.9.0",
+    "tsdown": "^0.21.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "oxlint --fix"
+    ],
+    "*.{json,md,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "@lancedb/lancedb": "^0.4.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-jaeger": "^1.30.0",
+    "@opentelemetry/sdk-node": "^0.57.0",
+    "@slack/bolt": "^4.7.0",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "croner": "^9.0.0",
+    "date-fns": "^3.6.0",
+    "discord.js": "^14.26.2",
+    "grammy": "^1.42.0",
+    "hono": "^4.12.0",
+    "ink": "^5.0.0",
+    "ioredis": "^5.4.0",
+    "lodash-es": "^4.17.0",
+    "openai": "^4.70.0",
+    "pg": "^8.13.0",
+    "pino": "^9.0.0",
+    "playwright-core": "^1.59.1",
+    "uuid": "^10.0.0",
+    "ws": "^8.20.0",
+    "zod": "^3.23.0",
+    "zustand": "^5.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skyalytic/skyalyticwing.git"
+  },
+  "bugs": {
+    "url": "https://github.com/skyalytic/skyalyticwing/issues"
+  },
+  "homepage": "https://github.com/skyalytic/skyalyticwing#readme"
+}

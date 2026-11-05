@@ -1,0 +1,257 @@
+.wing-browser {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--bg-primary, #fff);
+  color: var(--text-primary, #24333e);
+  position: relative;
+  overflow: hidden;
+  font-size: 12px;
+}
+.wing-browser button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 7px;
+  padding: 6px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.wing-browser button:hover {
+  background: #7894aa18;
+}
+.wing-browser button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.wing-browser button:focus-visible,
+.wing-browser input:focus-visible {
+  outline: 2px solid #5ba0db;
+  outline-offset: -2px;
+}
+.wing-browser-tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  flex-shrink: 0;
+  min-height: 32px;
+  background: #8195a60d;
+  padding: 3px 6px 0;
+}
+.wing-browser-tabs > div {
+  display: flex;
+  max-width: 180px;
+  min-width: 70px;
+  border-radius: 8px 8px 0 0;
+}
+.wing-browser-tabs .is-active {
+  background: #8195a61c;
+}
+.wing-browser-tabs [role='tab'] {
+  min-width: 0;
+  flex: 1;
+}
+.wing-browser-tabs span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wing-browser-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 7px 6px;
+  border-bottom: 1px solid #8195a625;
+  flex-shrink: 0;
+}
+.wing-browser-toolbar > button {
+  flex-shrink: 0;
+  min-width: 26px;
+  height: 30px;
+}
+.wing-browser-address {
+  flex: 1;
+  min-width: 40px;
+}
+.wing-browser-address input {
+  border: 1px solid #8195a62e;
+  border-radius: 18px;
+  background: #8195a60b;
+  padding: 7px 12px;
+  width: 100%;
+  min-width: 0;
+  color: inherit;
+  outline: none;
+}
+.wing-browser-toolbar .is-selected {
+  color: #1677ff;
+  background: #1677ff15;
+}
+.wing-browser-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.wing-browser-surface {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.wing-browser-menu {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  margin: 0;
+  flex-shrink: 0;
+  z-index: 4;
+  border: 1px solid #8195a640;
+  border-radius: 12px;
+  background: var(--bg-primary, #fff);
+  box-shadow: 0 12px 30px #0002;
+  padding: 8px;
+  max-height: calc(100% - 12px);
+  overflow: auto;
+}
+.wing-browser-menu {
+  left: auto;
+  min-width: 240px;
+  max-width: calc(100% - 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 340px;
+}
+.wing-browser-menu > button {
+  justify-content: flex-start;
+  padding: 10px;
+}
+.wing-browser-zoom {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.wing-browser-zoom span {
+  flex: 1;
+}
+.wing-browser-menu-backdrop { position:absolute; inset:0; z-index:3; border-radius:0!important; background:transparent!important; }
+.wing-browser-menu-preview { position:absolute; inset:0; width:100%; height:100%; object-fit:fill; pointer-events:none; }
+.wing-browser-downloads { width:370px; padding:12px; gap:10px; overflow:hidden; }
+.wing-browser-downloads header { display:flex; align-items:center; justify-content:space-between; font-size:14px; }
+.wing-browser-downloads input { min-width:0; width:100%; padding:8px 10px; border:1px solid #8195a640; border-radius:8px; background:var(--bg-secondary,#f7f9fb); color:inherit; font:inherit; }
+.wing-download-list { min-height:0; overflow:auto; max-height:390px; }
+.wing-download-row { display:flex; align-items:center; gap:10px; padding:12px 2px; min-width:0; }
+.wing-download-file { display:flex; align-items:center; justify-content:center; width:34px; height:38px; flex-shrink:0; border-radius:8px; background:#8195a613; color:var(--text-secondary,#80909d); }
+.wing-download-info { min-width:0; flex:1; }
+.wing-browser button.wing-download-name { padding:0; border-radius:2px; display:block; text-align:left; width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:12px; line-height:1.8; color:var(--accent,#166b98); }
+.wing-browser button.wing-download-name:disabled { color:inherit; opacity:1; }
+.wing-download-info p { margin:2px 0 0; font-size:11px; color:var(--text-secondary,#7a8998); }
+.wing-download-actions { display:flex; align-items:center; gap:0; flex-shrink:0; }
+.wing-download-actions button { width:26px; height:28px; padding:4px; }
+.wing-download-progress { height:3px; margin-top:7px; overflow:hidden; border-radius:2px; background:#1677ff19; }
+.wing-download-progress span { display:block; height:100%; background:#3184e8; border-radius:2px; transition:width .2s linear; }
+.wing-browser-downloads footer { display:flex; align-items:center; justify-content:space-between; gap:5px; border-top:1px solid #8195a625; padding-top:8px; color:var(--text-secondary,#718096); font-size:11px; }
+.wing-browser-downloads footer button { font-size:11px; white-space:nowrap; }
+.wing-download-empty { margin:22px 0; text-align:center; color:var(--text-secondary,#718096); }
+.wing-download-error { margin:0; color:#c74848; overflow-wrap:anywhere; }
+.wing-download-trigger { position:relative; border-radius:50%!important; width:30px; }
+.wing-download-ring { position:absolute; inset:0; width:100%; height:100%; transform:rotate(-90deg); pointer-events:none; }
+.wing-download-trigger.is-downloading { color:#3184e8; }
+.wing-download-trigger.is-downloading::after { content:''; position:absolute; inset:0; border:2px solid #3184e840; border-radius:50%; pointer-events:none; }
+.wing-download-count { position:absolute; right:-3px; top:-3px; min-width:13px; height:13px; border-radius:8px; background:#2879c9; color:#fff; font-size:9px; line-height:13px; text-align:center; padding:0 2px; }
+.wing-download-trigger.has-update:not(.is-downloading)::after { content:''; position:absolute; width:5px; height:5px; right:3px; top:3px; border-radius:50%; background:#3184e8; }
+.wing-browser button.wing-download-notice { flex-shrink:0; justify-content:space-between; padding:6px 12px; gap:12px; font-size:11px; background:#1677ff0c; border-radius:0; color:var(--accent,#166b98); }
+.wing-download-notice span:first-child { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+@media (prefers-reduced-motion:reduce) { .wing-download-trigger.is-downloading::after,.wing-download-progress span { animation:none; } }
+.wing-browser-control,
+.wing-browser-annotation-hint {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 10px;
+  background: #1677ff12;
+  color: #1677ff;
+  flex-shrink: 0;
+}
+.wing-browser-control button {
+  border: 1px solid #1677ff44;
+}
+.wing-browser-progress {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #1677ff, transparent);
+  background-size: 200% 100%;
+  animation: wing-browser-load 1.3s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes wing-browser-load {
+  to {
+    background-position: -200% 0;
+  }
+}
+.wing-browser-error {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  max-height: 70px;
+  overflow: auto;
+  background: #ef444410;
+  color: #b91c1c;
+  padding: 6px 10px;
+  flex-shrink: 0;
+  overflow-wrap: anywhere;
+}
+.wing-browser-notice {
+  padding: 16px;
+  opacity: 0.7;
+  text-align: center;
+}
+.wing-browser-annotation {
+  border-top: 1px solid #8195a638;
+  padding: 10px;
+  flex-shrink: 0;
+  background: #1677ff08;
+  max-height: 220px;
+  overflow: auto;
+}
+.wing-browser-annotation > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.wing-browser-annotation p {
+  margin: 5px 0;
+  max-height: 36px;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+.wing-browser-annotation textarea {
+  display: block;
+  width: 100%;
+  resize: vertical;
+  max-height: 80px;
+  border: 1px solid #8195a640;
+  background: transparent;
+  color: inherit;
+  border-radius: 7px;
+  padding: 7px;
+  margin: 7px 0;
+}
+.wing-browser-annotation > button {
+  background: #1677ff;
+  color: white;
+  padding: 7px 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wing-browser-progress {
+    animation: none;
+  }
+}

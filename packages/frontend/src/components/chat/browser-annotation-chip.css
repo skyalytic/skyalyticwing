@@ -1,0 +1,113 @@
+.sky-browser-annotation-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: min(100%, 260px);
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  font-size: 12px;
+  line-height: 19px;
+  vertical-align: middle;
+}
+.sky-browser-annotation-chip > svg {
+  flex-shrink: 0;
+}
+.sky-browser-annotation-chip > span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sky-browser-annotation-chip > button {
+  flex-shrink: 0;
+  padding: 0 3px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.sky-browser-annotation-chip > button:hover {
+  background: #8195a630;
+}
+.sky-browser-annotation-chip > button:focus-visible {
+  outline: 2px solid #5ba0db;
+}
+
+.sky-browser-annotation-chip .wing-context-open {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  max-width: 230px;
+  padding: 0;
+  text-align: left;
+}
+.wing-context-open span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wing-context-open svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.wing-context-open .wing-context-range {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.wing-user-reference {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0 6px 2px 0;
+  vertical-align: baseline;
+}
+.wing-user-text { white-space: pre-wrap; }
+.wing-user-files { display: flex; flex-direction: column; gap: 6px; }
+.wing-user-files:empty { display: none; }
+.wing-user-files:not(:empty) { margin-top: 8px; }
+.wing-composer-input {
+  min-width: 0;
+  border: 1px solid var(--input-border);
+  border-radius: 9px;
+  background: var(--input-bg);
+  transition: border-color 120ms;
+}
+.wing-composer-input:focus-within { border-color: var(--accent); }
+.sky-composer .wing-composer-input textarea.input-field {
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
+.wing-composer-references {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 10px 0;
+}
+.wing-context-detail pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 45vh;
+  overflow: auto;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.wing-context-source {
+  overflow-wrap: anywhere;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 10px;
+}

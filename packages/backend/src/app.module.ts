@@ -1,4 +1,6 @@
+import { SchedulerModule } from './modules/core/scheduler/scheduler.module.js';
 import { Module } from '@nestjs/common';
+import { RemoteWorkspaceModule } from './modules/core/remote-workspace/remote-workspace.module.js';
 import { EcosystemModule } from './modules/ecosystem/ecosystem.module.js';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
@@ -80,6 +82,7 @@ const frontendDist = (() => {
       rootPath: frontendDist,
       exclude: ['/api/(.*)', '/ws', '/health'],
     }),
+    SchedulerModule,
     ConfigModule,
     LocalResourcePolicyModule,
     LoggerModule,
@@ -90,6 +93,7 @@ const frontendDist = (() => {
     SystemModule,
     QueueModule,
     RemoteModule,
+    RemoteWorkspaceModule,
     BackupModule,
     WorkspaceModule,
     VersionModule,

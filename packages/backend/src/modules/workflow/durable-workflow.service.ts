@@ -1,3 +1,4 @@
+import { SchedulerService } from '../core/scheduler/scheduler.service.js';
 import { RunJournal } from '../ai/agent/run-journal.js';
 import { LocalResourcePolicy } from '../core/security/local-resource-policy.service.js';
 import { updateMaintenance } from '../core/system/update-maintenance.js';
@@ -48,6 +49,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     @Optional() private readonly agents?: AgentService,
     @Optional() private readonly swarm?: AgentSwarmService,
     @Optional() private readonly resources?: LocalResourcePolicy,
+    @Optional() private readonly scheduler?: SchedulerService,
   ) {}
 
   onModuleInit(): void {
@@ -87,6 +89,12 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
         workflows: Object.fromEntries(this.workflows),
         runs: Object.fromEntries(this.runLogs),
       });
+    for (const runs of this.runLogs.values())
+      for (const run of runs)
+        this.scheduler?.workflow(
+          run,
+          run.identity ?? this.resources?.credentialIdentity() ?? 'local',
+        );
   }
   listWorkflows(): WorkflowDef[] {
     return structuredClone([...this.workflows.values()].sort((a, b) => b.createdAt - a.createdAt));
@@ -138,8 +146,9 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     const wf = this.workflows.get(id);
     if (!wf) return { success: false, error: '工作流不存在' };
     if (
-      (this.runLogs.get(id) || []).some((r) =>
-        ['running', 'paused', 'interrupted'].includes(r.status) || this.controllers.has(r.id),
+      (this.runLogs.get(id) || []).some(
+        (r) =>
+          ['running', 'paused', 'interrupted'].includes(r.status) || this.controllers.has(r.id),
       )
     )
       return { success: false, error: '请先取消尚未结束的运行' };
@@ -160,8 +169,9 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     if (!wf) return { success: false, error: '工作流不存在' };
     if (wf.enabled === false) return { success: false, error: '工作流已停用' };
     if (
-      (this.runLogs.get(id) || []).some((r) =>
-        ['running', 'paused', 'interrupted'].includes(r.status) || this.controllers.has(r.id),
+      (this.runLogs.get(id) || []).some(
+        (r) =>
+          ['running', 'paused', 'interrupted'].includes(r.status) || this.controllers.has(r.id),
       )
     )
       return { success: false, error: '请先完成或取消已有运行' };
@@ -171,6 +181,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       return { success: false, error: this.message(e) };
     }
     const run: WorkflowRunLog = {
+      identity: this.resources?.credentialIdentity() ?? 'local',
       id: randomUUID(),
       workflowId: id,
       snapshot: structuredClone(wf),
@@ -208,6 +219,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   ): WorkflowRunTriggerResult {
     const run = this.runLogs.get(id)?.find((r) => r.id === runId);
     if (!run) return { success: false, error: '运行不存在' };
+    if (run.identity && run.identity !== (this.resources?.credentialIdentity() ?? 'local'))
+      return { success: false, error: '运行身份已变更' };
     if (action === 'cancel') {
       if (run.status === 'success') return { success: false, error: '运行已完成' };
       run.status = 'cancelled';
@@ -276,7 +289,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
   private launch(run: WorkflowRunLog): void {
     const controller = new AbortController();
     this.controllers.set(run.id, controller);
-    void updateMaintenance.run('工作流', () => this.execute(run, controller))
+    void updateMaintenance
+      .run('工作流', () => this.execute(run, controller))
       .catch((e) => {
         run.status = 'error';
         run.error = this.message(e);
@@ -291,8 +305,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       .finally(() => this.controllers.delete(run.id));
   }
   private async execute(run: WorkflowRunLog, controller: AbortController): Promise<void> {
-    const identity=this.resources?.credentialIdentity()??'local';
-    const journal=new RunJournal(identity,'workflow-'+run.id,run.snapshot.name);
+    const identity = this.resources?.credentialIdentity() ?? 'local';
+    const journal = new RunJournal(identity, 'workflow-' + run.id, run.snapshot.name);
     const sliceStarted = Date.now();
     const budget = run.snapshot.budget || DEFAULT_BUDGET;
     const timer = setTimeout(
@@ -304,7 +318,8 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
     );
     try {
       while (run.status === 'running') {
-        if((this.resources?.credentialIdentity()??'local')!==identity)throw new Error('账号或企业身份已切换，工作流已停止');
+        if ((this.resources?.credentialIdentity() ?? 'local') !== identity)
+          throw new Error('账号或企业身份已切换，工作流已停止');
         if (controller.signal.aborted) throw new Error(run.error || '执行已停止');
         const done = new Set(run.stepResults.filter((r) => r.ok).map((r) => r.stepId));
         if (done.size === run.snapshot.steps.length) {
@@ -342,7 +357,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
         const prompt = context ? `${context}\n【当前任务】\n${step.prompt}` : step.prompt;
         const started = Date.now();
         run.activeStepId = step.id;
-        journal.toolStarted(step.id,'workflow-step',{step:step.id,model});
+        journal.toolStarted(step.id, 'workflow-step', { step: step.id, model });
         // Reserve calls before execution so crash recovery cannot reset the allowance.
         const allowance = expert ? Math.min(20, budget.maxCalls - run.calls) : 1;
         run.calls += allowance;
@@ -408,7 +423,7 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
             workspace,
             ...(expert ? { agentId: expert.id, agentName: expert.name } : {}),
           });
-          journal.toolFinished(step.id,{success:true,output});
+          journal.toolFinished(step.id, { success: true, output });
           delete run.activeStepId;
         } catch (e) {
           run.stepResults.push({
@@ -431,7 +446,19 @@ export class WorkflowService implements OnModuleInit, OnModuleDestroy {
       if (run.status === 'running') run.status = 'error';
       run.error = this.message(e);
     } finally {
-      try{journal.finish(controller.signal.aborted?'cancelled':run.status==='success'?'completed':run.status==='paused'?'paused':'failed');}catch(error){this.logger.error('Could not finish workflow journal',{error:String(error)});}
+      try {
+        journal.finish(
+          controller.signal.aborted
+            ? 'cancelled'
+            : run.status === 'success'
+              ? 'completed'
+              : run.status === 'paused'
+                ? 'paused'
+                : 'failed',
+        );
+      } catch (error) {
+        this.logger.error('Could not finish workflow journal', { error: String(error) });
+      }
       clearTimeout(timer);
       run.elapsedMs += Date.now() - sliceStarted;
       run.finishedAt = run.status === 'paused' ? null : Date.now();

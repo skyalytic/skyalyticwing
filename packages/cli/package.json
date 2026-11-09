@@ -1,6 +1,6 @@
 {
   "name": "@skyalyticwing/cli",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "SkyalyticWing CLI - 无头运行时命令行（连接后端 HTTP/WS API，零运行时依赖）",
   "private": true,

@@ -1,4 +1,5 @@
 import { NativeOfficeService } from '../../../../modules/tools/files/native-office.service.js';
+import { RemoteWorkspaceService } from '../../../../modules/core/remote-workspace/remote-workspace.service.js';
 import type { ToolDefinition } from '@skyalyticwing/shared';
 import { OfficeService } from '../../../../modules/tools/files/office.service.js';
 import type { ServiceResolver } from '../../../../modules/tools/executor/built-in/service-resolver.js';
@@ -8,8 +9,8 @@ export function createOfficeTools(resolve: ServiceResolver): ToolDefinition[] {
     category: 'file',
     dangerous: write,
     description: write
-      ? '按 office_read 返回的原文件版本和元素 ID 修改 Word/PPT 文字或 Excel 单元格，保留其他格式并自动备份。版本冲突时先重新读取，不覆盖用户修改。'
-      : '读取本地 Word、Excel、PPT 的文字/单元格结构与版本，用于分析和后续精确修改。返回不是原始二进制。',
+      ? '按 office_read 返回的原文件版本和元素 ID 修改 Word/PPT 文字或 Excel 单元格，保留其他格式。版本冲突时先重新读取，不覆盖用户修改。'
+      : '读取当前工作区 Word、Excel、PPT 的文字/单元格结构与版本，用于分析和后续精确修改。返回不是原始二进制。',
     parameters: {
       type: 'object' as const,
       properties: {
@@ -70,7 +71,7 @@ export function createOfficeTools(resolve: ServiceResolver): ToolDefinition[] {
       },
       required: ['path', 'action'],
     },
-    async execute(raw: unknown) {
+    async execute(raw: unknown, ctx) {
       const service = resolve<NativeOfficeService>(NativeOfficeService);
       if (!service) return { success: false, error: '内置 Office 服务不可用' };
       try {
@@ -79,7 +80,10 @@ export function createOfficeTools(resolve: ServiceResolver): ToolDefinition[] {
           action: string;
           [key: string]: unknown;
         };
-        const data = await service.live(path, action, args);
+        const workspace = resolve<RemoteWorkspaceService>(RemoteWorkspaceService)?.binding(
+          ctx.sessionId,
+        );
+        const data = await service.live(path, action, args, workspace?.id);
         return { success: true, data, output: JSON.stringify(data) };
       } catch (e) {
         return { success: false, error: e instanceof Error ? e.message : String(e) };

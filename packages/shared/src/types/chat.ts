@@ -13,6 +13,7 @@ export type MessageRole = 'user' | 'assistant' | 'system' | 'tool';
 
 /** 聊天消息 */
 export interface ChatMessage {
+  responseState?: { provider: string; model: string; items: Record<string, unknown>[] };
   /** Stable owner and order, shared by live events and persisted history. */
   turnId?: string;
   turnSequence?: number;

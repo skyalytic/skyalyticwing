@@ -1,3 +1,4 @@
+import { SchedulerService } from '../../core/scheduler/scheduler.service.js';
 import {
   Inject,
   Injectable,
@@ -75,6 +76,7 @@ export interface BackgroundTask {
 
 /** 持久化条目（精简形态：prompt 截断防文件膨胀，attachments 不落盘——文件本体在 media/generated） */
 interface PersistedTask {
+  memoryIdentity?: string;
   id: string;
   title: string;
   prompt: string;
@@ -114,6 +116,7 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
     private readonly logger: LoggerService,
     @Optional() @Inject(SESSION_SERVICE) private readonly session?: ISessionService,
     @Optional() private readonly memoryPolicy?: LocalResourcePolicy,
+    @Optional() private readonly scheduler?: SchedulerService,
   ) {}
 
   onModuleInit(): void {
@@ -123,6 +126,12 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
     for (const task of this.tasks.values()) if (task.status === 'pending') this.queue.push(task.id);
   }
   onApplicationBootstrap(): void {
+    this.scheduler?.registerDispatcher((input) => {
+      const task = this.submit(input);
+      this.scheduler?.background(task);
+      return task;
+    });
+    for (const task of this.tasks.values()) this.scheduler?.background(task);
     this.drain();
   }
 
@@ -132,6 +141,7 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
    * 不阻塞当前对话轮次。
    */
   submit(input: {
+    id?: string;
     sessionId: string;
     prompt: string;
     title?: string;
@@ -139,9 +149,19 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
     agentId?: string;
   }): BackgroundTask {
     if (!input.prompt.trim()) throw new ConflictException('任务指令不能为空');
-    const id = 'bgt-' + randomUUID();
+    const id = input.id || 'bgt-' + randomUUID();
+    const existing = this.tasks.get(id);
+    if (existing) {
+      if (
+        existing.memoryIdentity !== this.memoryPolicy?.credentialIdentity() ||
+        existing.prompt !== input.prompt ||
+        existing.sessionId !== input.sessionId
+      )
+        throw new ConflictException('Task identity conflict');
+      return existing;
+    }
     const task: BackgroundTask = {
-      ...(this.memoryPolicy ? {memoryIdentity:this.memoryPolicy.credentialIdentity()} : {}),
+      ...(this.memoryPolicy ? { memoryIdentity: this.memoryPolicy.credentialIdentity() } : {}),
       id,
       title: (input.title || '后台任务').slice(0, 120),
       prompt: input.prompt,
@@ -302,7 +322,8 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
         model?: string;
         agentId?: string;
       } = {};
-      if (task.memoryIdentity && this.memoryPolicy?.credentialIdentity() !== task.memoryIdentity) throw new Error('后台任务所属账号或企业身份已切换，请切回原身份后恢复');
+      if (task.memoryIdentity && this.memoryPolicy?.credentialIdentity() !== task.memoryIdentity)
+        throw new Error('后台任务所属账号或企业身份已切换，请切回原身份后恢复');
       if (task.model) loopOptions.model = task.model;
       if (task.agentId) loopOptions.agentId = task.agentId;
 
@@ -425,6 +446,7 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
 
   /** 推送 background_task 事件到任务归属会话（订阅该会话的前端实时更新任务卡） */
   private emitTaskEvent(task: BackgroundTask): void {
+    this.scheduler?.background(task);
     this.ws.broadcastToSession(task.sessionId, {
       type: 'background_task',
       data: {
@@ -465,6 +487,7 @@ export class BackgroundTaskService implements OnModuleInit, OnApplicationBootstr
         // 诚实标记 interrupted 而非静默丢弃——用户可在历史中看到任务未完成
         const status: BackgroundTaskStatus = p.status === 'running' ? 'interrupted' : p.status;
         this.tasks.set(p.id, {
+          ...(p.memoryIdentity ? { memoryIdentity: p.memoryIdentity } : {}),
           id: p.id,
           title: p.title || '后台任务',
           prompt: p.prompt || '',

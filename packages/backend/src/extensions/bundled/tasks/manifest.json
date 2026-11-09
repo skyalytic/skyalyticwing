@@ -1,12 +1,10 @@
 {
   "id": "wing-tasks",
   "name": "任务",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "apiVersion": 1,
   "entry": "index.js",
-  "guides": [
-    "GUIDE.md"
-  ],
+  "guides": ["GUIDE.md"],
   "tools": [
     {
       "name": "todo",

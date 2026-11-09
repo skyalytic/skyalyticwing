@@ -1,3 +1,5 @@
+import { Optional } from '@nestjs/common';
+import { SchedulerService } from '../core/scheduler/scheduler.service.js';
 import { replyContext, replyThread } from './reply-context.js';
 import { BadRequestException, ConflictException, Injectable, OnModuleInit } from '@nestjs/common';
 import { randomUUID } from 'node:crypto';
@@ -36,6 +38,7 @@ interface InboxState {
 /** One durable store per trusted workspace instance; never shared across tenant instances. */
 @Injectable()
 export class InboxService implements OnModuleInit {
+  constructor(@Optional() private readonly scheduler?: SchedulerService) {}
   private file = '';
   private state: InboxState = { version: 1, items: [], drafts: [] };
   onModuleInit() {
@@ -70,6 +73,23 @@ export class InboxService implements OnModuleInit {
     this.state = next;
   }
   list() {
+    if (this.scheduler) {
+      const receipts = this.scheduler.snapshot().deliveries;
+      const updates = this.state.drafts.filter(
+        (d) =>
+          d.status !== 'sent' &&
+          receipts.some((r) => r.key === 'draft:' + d.id && r.state === 'sent'),
+      );
+      if (updates.length)
+        this.commit((next) => {
+          for (const draft of next.drafts)
+            if (updates.some((d) => d.id === draft.id)) {
+              draft.status = 'sent';
+              draft.sentAt = Date.now();
+              delete draft.error;
+            }
+        });
+    }
     return structuredClone({
       ...this.state,
       items: [...this.state.items].reverse().map((item) => ({ ...item, options: undefined })),
@@ -116,16 +136,16 @@ export class InboxService implements OnModuleInit {
     return { updated: true };
   }
   remove(ids: unknown) {
-    if (!Array.isArray(ids) || !ids.every(id => typeof id === 'string' && id.length > 0))
+    if (!Array.isArray(ids) || !ids.every((id) => typeof id === 'string' && id.length > 0))
       throw new BadRequestException('请选择需要删除的消息');
     const selected = new Set<string>(ids);
-    if (this.state.drafts.some(d => selected.has(d.itemId) && d.status === 'sending'))
+    if (this.state.drafts.some((d) => selected.has(d.itemId) && d.status === 'sending'))
       throw new ConflictException('所选消息有回复正在发送，请发送结束后再删除');
-    const deleted = this.state.items.filter(item => selected.has(item.id)).length;
+    const deleted = this.state.items.filter((item) => selected.has(item.id)).length;
     if (deleted) {
-      this.commit(next => {
-        next.items = next.items.filter(item => !selected.has(item.id));
-        next.drafts = next.drafts.filter(draft => !selected.has(draft.itemId));
+      this.commit((next) => {
+        next.items = next.items.filter((item) => !selected.has(item.id));
+        next.drafts = next.drafts.filter((draft) => !selected.has(draft.itemId));
       });
       // The recovery copy must not resurrect messages explicitly deleted by the user.
       writeJsonAtomicSync(this.file, this.state);

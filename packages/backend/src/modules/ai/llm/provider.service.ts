@@ -68,35 +68,95 @@ export function getMediaModelCatalog(availableProviderIds?: Set<string>): {
 
 /** Conservative output budget, not the model's context window. Saved values are retained. */
 const PROVIDER_MAX_TOKENS: Record<string, number> = Object.fromEntries(
-  PROVIDERS_REGISTRY.map(provider => [provider.id, 8192]),
+  PROVIDERS_REGISTRY.map((provider) => [provider.id, 8192]),
 );
 
 /** 支持视觉输入的供应商（全量移植自 start.cjs VISION_PROVIDERS） */
 const VISION_PROVIDERS = new Set([
   // https://api-docs.deepseek.com/guides/vision/ — deepseek-flash accepts screenshots.
   'deepseek',
-  'openai', 'anthropic', 'google', 'azure', 'ollama', 'grok', 'qwen', 'glm',
-  'moonshot', 'hunyuan', 'stepfun', 'mistral', 'minimax', 'doubao', 'xiaomi',
-  'siliconflow', 'together', 'nvidia',
+  'openai',
+  'anthropic',
+  'google',
+  'azure',
+  'ollama',
+  'grok',
+  'qwen',
+  'glm',
+  'moonshot',
+  'hunyuan',
+  'stepfun',
+  'mistral',
+  'minimax',
+  'doubao',
+  'xiaomi',
+  'siliconflow',
+  'together',
+  'nvidia',
 ]);
 
 /** 明确不支持视觉的模型（全量移植自 start.cjs NON_VISION_MODELS） */
 const NON_VISION_MODELS = new Set([
-  'deepseek-coder', 'deepseek-v4-pro', 'deepseek-v4-flash', 'o1-mini', 'o3-mini',
-  'o3-mini-high', 'qwen-turbo', 'qwen-plus', 'qwen-max', 'qwen-long', 'glm-4',
-  'glm-4-flash', 'glm-4-air', 'glm-4-airx', 'glm-4-long', 'glm-3-turbo', 'glm-5-turbo',
-  'codegeex-4', 'moonshot-v1-auto', 'moonshot-v1-32k', 'moonshot-v1-128k',
-  'moonshot-v1-8k', 'hunyuan-turbos-latest', 'hunyuan-a13b', 'hunyuan-role-latest',
-  'hy3-preview', 'step-3', 'step-3.5-flash', 'step-3.5-ultra', 'step-r1-v-mini',
-  'mistral-large-latest', 'mistral-small-latest', 'mistral-medium-3.5',
-  'codestral-latest', 'devstral-medium-latest', 'doubao-seed-evolving',
-  'doubao-seed-2-1-pro-260628', 'doubao-seed-2-1-turbo-260628', 'doubao-seed-character-260628',
-  'doubao-seed-2-0-pro-260215', 'doubao-seed-2-0-lite-260428', 'doubao-seed-2-0-mini-260428',
-  'doubao-seed-2-0-code-preview-260215', 'doubao-pro-128k', 'doubao-pro-32k',
-  'doubao-lite-32k', 'Baichuan-M3-Plus', 'Baichuan-M3', 'Baichuan4', 'Baichuan4-Turbo',
-  'mimo-v2.5-pro', 'ernie-5.1', 'ernie-5.0-8k', 'ernie-5.0-thinking-preview',
-  'ernie-5.0-thinking-latest', 'ernie-4.5-turbo-128k', 'ernie-4.5-turbo-32k',
-  'ernie-4.0-turbo-8k', 'ernie-4.0-8k', 'ernie-speed-128k',
+  'deepseek-coder',
+  'deepseek-v4-pro',
+  'deepseek-v4-flash',
+  'o1-mini',
+  'o3-mini',
+  'o3-mini-high',
+  'qwen-turbo',
+  'qwen-plus',
+  'qwen-max',
+  'qwen-long',
+  'glm-4',
+  'glm-4-flash',
+  'glm-4-air',
+  'glm-4-airx',
+  'glm-4-long',
+  'glm-3-turbo',
+  'glm-5-turbo',
+  'codegeex-4',
+  'moonshot-v1-auto',
+  'moonshot-v1-32k',
+  'moonshot-v1-128k',
+  'moonshot-v1-8k',
+  'hunyuan-turbos-latest',
+  'hunyuan-a13b',
+  'hunyuan-role-latest',
+  'hy3-preview',
+  'step-3',
+  'step-3.5-flash',
+  'step-3.5-ultra',
+  'step-r1-v-mini',
+  'mistral-large-latest',
+  'mistral-small-latest',
+  'mistral-medium-3.5',
+  'codestral-latest',
+  'devstral-medium-latest',
+  'doubao-seed-evolving',
+  'doubao-seed-2-1-pro-260628',
+  'doubao-seed-2-1-turbo-260628',
+  'doubao-seed-character-260628',
+  'doubao-seed-2-0-pro-260215',
+  'doubao-seed-2-0-lite-260428',
+  'doubao-seed-2-0-mini-260428',
+  'doubao-seed-2-0-code-preview-260215',
+  'doubao-pro-128k',
+  'doubao-pro-32k',
+  'doubao-lite-32k',
+  'Baichuan-M3-Plus',
+  'Baichuan-M3',
+  'Baichuan4',
+  'Baichuan4-Turbo',
+  'mimo-v2.5-pro',
+  'ernie-5.1',
+  'ernie-5.0-8k',
+  'ernie-5.0-thinking-preview',
+  'ernie-5.0-thinking-latest',
+  'ernie-4.5-turbo-128k',
+  'ernie-4.5-turbo-32k',
+  'ernie-4.0-turbo-8k',
+  'ernie-4.0-8k',
+  'ernie-speed-128k',
 ]);
 
 /** 视觉模型名关键词（全量移植自 start.cjs VISION_MODEL_KEYWORDS）。
@@ -105,13 +165,52 @@ const NON_VISION_MODELS = new Set([
  * glm-5.3/glm-5 为视觉（官方 GLM 视觉为 5v/4.6v/4.5v/5.3-flash 系）；
  * DeepSeek 官方视觉 id 为 deepseek-flash（deepseek-v4-pro 官方明确无视觉）。 */
 const VISION_MODEL_KEYWORDS = [
-  'gpt-5.6', 'gpt-5.5', 'gpt-5.4', 'gpt-5.3', 'gpt-4.1', 'gpt-4o', 'gpt-4o-mini', 'o3',
-  'claude-fable', 'claude-mythos', 'claude-opus', 'claude-sonnet', 'claude-haiku', 'gemini', 'kimi-k2',
-  'kimi-k3', 'qwen-vl', 'qwen2-vl', 'qwen2.5-vl', 'qwen3-vl', 'qwen3.7', 'qwen3.8',
-  'qwen-max', 'qwen-plus', 'qvq', 'deepseek-vl', 'deepseek-flash', 'moonshot-vl', 'moonshot-v1',
-  'glm-5v', 'glm-5.3-flash', 'glm-4.6v', 'glm-4.5v', 'minimax', 'hunyuan-vision',
-  'hunyuan-turbos-vision', 'hunyuan-t1-vision', 'grok', 'doubao-seed-2-1', 'doubao-seed-2-0',
-  'mimo-v2.5', 'ernie-5.0-thinking', 'ernie-4.5-turbo-vl', 'spark-x2', 'pixtral', 'step-3',
+  'gpt-5.6',
+  'gpt-5.5',
+  'gpt-5.4',
+  'gpt-5.3',
+  'gpt-4.1',
+  'gpt-4o',
+  'gpt-4o-mini',
+  'o3',
+  'claude-fable',
+  'claude-mythos',
+  'claude-opus',
+  'claude-sonnet',
+  'claude-haiku',
+  'gemini',
+  'kimi-k2',
+  'kimi-k3',
+  'qwen-vl',
+  'qwen2-vl',
+  'qwen2.5-vl',
+  'qwen3-vl',
+  'qwen3.7',
+  'qwen3.8',
+  'qwen-max',
+  'qwen-plus',
+  'qvq',
+  'deepseek-vl',
+  'deepseek-flash',
+  'moonshot-vl',
+  'moonshot-v1',
+  'glm-5v',
+  'glm-5.3-flash',
+  'glm-4.6v',
+  'glm-4.5v',
+  'minimax',
+  'hunyuan-vision',
+  'hunyuan-turbos-vision',
+  'hunyuan-t1-vision',
+  'grok',
+  'doubao-seed-2-1',
+  'doubao-seed-2-0',
+  'mimo-v2.5',
+  'ernie-5.0-thinking',
+  'ernie-4.5-turbo-vl',
+  'spark-x2',
+  'pixtral',
+  'step-3',
 ];
 
 /**
@@ -120,10 +219,11 @@ const VISION_MODEL_KEYWORDS = [
  */
 export function isVisionModel(providerId: string, model: string): boolean {
   const baseProvider = providerId.replace(/_\d+$/, '');
-  const preset = PROVIDERS_REGISTRY.find(p => p.id === baseProvider);
+  const preset = PROVIDERS_REGISTRY.find((p) => p.id === baseProvider);
   if (preset?.visionModels?.includes(model)) return true;
   if (preset?.models.includes(model) && preset.visionModels) return false;
-  if (!VISION_PROVIDERS.has(baseProvider) && !['custom', 'lmstudio', 'vllm'].includes(baseProvider)) return false;
+  if (!VISION_PROVIDERS.has(baseProvider) && !['custom', 'lmstudio', 'vllm'].includes(baseProvider))
+    return false;
   const m = (model || '').toLowerCase();
   if (!m) return false;
   if (NON_VISION_MODELS.has(model) || NON_VISION_MODELS.has(m)) return false;
@@ -132,6 +232,7 @@ export function isVisionModel(providerId: string, model: string): boolean {
 
 /** 供应商列表项 */
 export interface ProviderListItem {
+  apiFormat?: string;
   id: string;
   name: string;
   type: string;
@@ -219,12 +320,16 @@ export class ProviderService implements OnModuleInit {
     for (const reg of PROVIDERS_REGISTRY) {
       registryIds.add(reg.id);
       const cfg = saved[reg.id] as Record<string, unknown> | undefined;
-      const baseUrl = (cfg && typeof cfg['baseUrl'] === 'string' ? cfg['baseUrl'] : '') || reg.baseUrl;
-      const models = Array.isArray(cfg?.['models']) ? (cfg!['models'] as unknown[]).map(String) : reg.models;
+      const baseUrl =
+        (cfg && typeof cfg['baseUrl'] === 'string' ? cfg['baseUrl'] : '') || reg.baseUrl;
+      const models = Array.isArray(cfg?.['models'])
+        ? (cfg!['models'] as unknown[]).map(String)
+        : reg.models;
       const isLocal = reg.type === 'local';
       // 用户自定义显示名（编辑表单可改）：优先于注册表默认名；空串回退默认名。
       // 此前恒用 reg.name，编辑保存的 displayName 被丢弃——改名的 bug 根因
-      const dn = typeof cfg?.['displayName'] === 'string' ? (cfg!['displayName'] as string).trim() : '';
+      const dn =
+        typeof cfg?.['displayName'] === 'string' ? (cfg!['displayName'] as string).trim() : '';
       list.push({
         id: reg.id,
         name: dn || reg.name,
@@ -235,7 +340,10 @@ export class ProviderService implements OnModuleInit {
         baseUrl,
         models,
         envKey: reg.envKey,
-        maxTokens: typeof cfg?.['maxTokens'] === 'number' ? cfg['maxTokens'] : (PROVIDER_MAX_TOKENS[reg.id] ?? 8192),
+        maxTokens:
+          typeof cfg?.['maxTokens'] === 'number'
+            ? cfg['maxTokens']
+            : (PROVIDER_MAX_TOKENS[reg.id] ?? 8192),
         vision: !!reg.visionModels?.length,
         local: isLocal,
         ...(dn ? { displayName: dn } : {}),
@@ -312,6 +420,10 @@ export class ProviderService implements OnModuleInit {
 
     // Browsing presets must not depend on a cloud subscription. Model execution
     // still checks the account entitlement in the LLM/media services.
+    for (const item of list)
+      item.apiFormat = String(
+        (saved[item.id] as Record<string, unknown> | undefined)?.['apiFormat'] || 'auto',
+      );
     return { providers: list };
   }
 
@@ -323,9 +435,46 @@ export class ProviderService implements OnModuleInit {
    * - apiKey 经由 sanitize 处理（环境变量引用 `${VAR}` 保留原值不替换）
    */
   updateProvider(id: string, partial: Record<string, unknown>): { updated: boolean } {
-    for (const key of ['visionModels','imageModels','videoModels']) if(partial[key]!==undefined && (!Array.isArray(partial[key]) || (partial[key] as unknown[]).some(m=>typeof m!=='string'||!m.trim()||m.length>160))) throw new Error('Invalid capability model list');
-    for (const [key,protocols] of [['imageProtocol',['none','openai-compatible','openai-images','dashscope','gemini','minimax','xai','zhipu','siliconflow','ideogram']],['videoProtocol',['none','dashscope','ark','runway','pika','minimax','xai']]] as const) if(partial[key]!==undefined && !(protocols as readonly unknown[]).includes(partial[key])) throw new Error('Unsupported media API protocol');
-    for (const key of ['imageBaseUrl','videoBaseUrl']) if(partial[key] && (typeof partial[key]!=='string' || !this.security.checkUrlSync(partial[key] as string))) throw new Error('Media API URL blocked');
+    if (
+      partial['apiFormat'] !== undefined &&
+      !['auto', 'chat-completions', 'responses'].includes(String(partial['apiFormat']))
+    )
+      throw Error('Unsupported chat API protocol');
+    for (const key of ['visionModels', 'imageModels', 'videoModels'])
+      if (
+        partial[key] !== undefined &&
+        (!Array.isArray(partial[key]) ||
+          (partial[key] as unknown[]).some(
+            (m) => typeof m !== 'string' || !m.trim() || m.length > 160,
+          ))
+      )
+        throw new Error('Invalid capability model list');
+    for (const [key, protocols] of [
+      [
+        'imageProtocol',
+        [
+          'none',
+          'openai-compatible',
+          'openai-images',
+          'dashscope',
+          'gemini',
+          'minimax',
+          'xai',
+          'zhipu',
+          'siliconflow',
+          'ideogram',
+        ],
+      ],
+      ['videoProtocol', ['none', 'dashscope', 'ark', 'runway', 'pika', 'minimax', 'xai']],
+    ] as const)
+      if (partial[key] !== undefined && !(protocols as readonly unknown[]).includes(partial[key]))
+        throw new Error('Unsupported media API protocol');
+    for (const key of ['imageBaseUrl', 'videoBaseUrl'])
+      if (
+        partial[key] &&
+        (typeof partial[key] !== 'string' || !this.security.checkUrlSync(partial[key] as string))
+      )
+        throw new Error('Media API URL blocked');
     if (!id || typeof id !== 'string') {
       throw new Error('Provider id required');
     }
@@ -355,7 +504,9 @@ export class ProviderService implements OnModuleInit {
     const providers = this.getSavedProviders();
     if (!providers[id]) providers[id] = {};
     const existing = providers[id] as Record<string, unknown>;
-    for (const [k, v] of Object.entries(restoreRedactedConfig(partial, existing) as Record<string, unknown>)) {
+    for (const [k, v] of Object.entries(
+      restoreRedactedConfig(partial, existing) as Record<string, unknown>,
+    )) {
       if (k === 'id' || k === 'providerId') continue;
       existing[k] = v;
     }
@@ -391,12 +542,7 @@ export class ProviderService implements OnModuleInit {
     try {
       const general = this.config.get<Record<string, unknown>>('general');
       const dm = general['defaultModel'];
-      if (
-        general &&
-        typeof dm === 'string' &&
-        dm &&
-        (dm === id || providerModels.includes(dm))
-      ) {
+      if (general && typeof dm === 'string' && dm && (dm === id || providerModels.includes(dm))) {
         general['defaultModel'] = '';
         this.config.set('general', general);
       }
@@ -426,10 +572,17 @@ export class ProviderService implements OnModuleInit {
     // 本地服务连通性测试（ollama/lmstudio/vllm）：GET ${baseUrl}/api/tags 或 /models
     // 豁免 SSRF 校验：目标为用户本机/局域网服务（与旧版行为一致）
     if (id === 'ollama' || id === 'lmstudio' || id === 'vllm' || cfg['type'] === 'local') {
-      const root = baseUrl || (id === 'lmstudio' ? 'http://localhost:1234/v1' : id === 'vllm' ? 'http://localhost:8000/v1' : 'http://localhost:11434');
-      const url = id === 'ollama' && !root.endsWith('/v1')
-        ? root.replace(/\/$/, '') + '/api/tags'
-        : root.replace(/\/$/, '') + '/models';
+      const root =
+        baseUrl ||
+        (id === 'lmstudio'
+          ? 'http://localhost:1234/v1'
+          : id === 'vllm'
+            ? 'http://localhost:8000/v1'
+            : 'http://localhost:11434');
+      const url =
+        id === 'ollama' && !root.endsWith('/v1')
+          ? root.replace(/\/$/, '') + '/api/tags'
+          : root.replace(/\/$/, '') + '/models';
       const start = Date.now();
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 10_000);
@@ -466,7 +619,10 @@ export class ProviderService implements OnModuleInit {
     try {
       const result = await this.llm.chatSync({
         messages: [
-          { role: 'system', content: 'You are a connectivity test endpoint. Reply with the single word: pong' },
+          {
+            role: 'system',
+            content: 'You are a connectivity test endpoint. Reply with the single word: pong',
+          },
           { role: 'user', content: 'ping' },
         ],
         model,
@@ -514,7 +670,9 @@ export class ProviderService implements OnModuleInit {
           providerId: p.id,
           providerName: p.name,
           available: p.configured || p.type === 'local',
-          vision: (Array.isArray(saved[p.id]?.['visionModels']) ? saved[p.id]['visionModels'].includes(m) : isVisionModel(p.baseProvider || p.id, m)),
+          vision: Array.isArray(saved[p.id]?.['visionModels'])
+            ? saved[p.id]['visionModels'].includes(m)
+            : isVisionModel(p.baseProvider || p.id, m),
           kind: 'chat',
         });
       }
@@ -527,7 +685,7 @@ export class ProviderService implements OnModuleInit {
       const pushGen = (list: MediaModelEntry[] | undefined, kind: 'image' | 'video'): void => {
         for (const m of list ?? []) {
           models.push({
-            id: (p.baseProvider || saved[p.id]?.[kind+'Protocol']) ? `${p.id}::${m.id}` : m.id,
+            id: p.baseProvider || saved[p.id]?.[kind + 'Protocol'] ? `${p.id}::${m.id}` : m.id,
             name: m.id,
             provider: p.id,
             providerId: p.id,
@@ -538,10 +696,17 @@ export class ProviderService implements OnModuleInit {
           });
         }
       };
-      for(const kind of ['image','video'] as const) {
-        if(saved[p.id]?.[kind+'Protocol']==='none')continue;
-        const declared=saved[p.id]?.[kind+'Models'];
-        pushGen(Array.isArray(declared)?declared.map(id=>({id,traits:''})):kind==='image'?reg?.imageModels:reg?.videoModels,kind);
+      for (const kind of ['image', 'video'] as const) {
+        if (saved[p.id]?.[kind + 'Protocol'] === 'none') continue;
+        const declared = saved[p.id]?.[kind + 'Models'];
+        pushGen(
+          Array.isArray(declared)
+            ? declared.map((id) => ({ id, traits: '' }))
+            : kind === 'image'
+              ? reg?.imageModels
+              : reg?.videoModels,
+          kind,
+        );
       }
     }
     return { models };
@@ -571,7 +736,10 @@ export class ProviderService implements OnModuleInit {
         if (reg.type === 'anthropic') entry['type'] = 'anthropic';
         providers[reg.id] = entry;
         configured++;
-        this.logger.info('Auto-configured provider from env', { providerId: reg.id, name: reg.name });
+        this.logger.info('Auto-configured provider from env', {
+          providerId: reg.id,
+          name: reg.name,
+        });
       }
     }
     if (configured > 0) {

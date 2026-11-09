@@ -25,6 +25,10 @@ test.describe('chat-flow', () => {
 
     // mock 后端在 POST /chat/send 时经 WS 广播 assistant chat_message
     await expect(page.getByText('E2E-MOCK 后端的自动回复内容')).toBeVisible({ timeout: 15_000 });
+    // Wait for history reconciliation, then ensure both delivery channels produced one card.
+    await expect(page.getByRole('button', { name: '停止', exact: true })).toHaveCount(0);
+    await expect(page.locator('.wing-user-text')).toHaveCount(1);
+    await expect(page.getByText('E2E-MOCK 后端的自动回复内容')).toHaveCount(1);
   });
 
   test('消息发送走 POST /chat/send 且携带会话', async ({ page, request }) => {

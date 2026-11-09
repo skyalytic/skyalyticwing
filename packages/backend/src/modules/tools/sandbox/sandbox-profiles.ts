@@ -89,6 +89,17 @@ export const READ_ONLY_TOOLS: readonly string[] = [
   'tool-list',
   'memory-search',
   'memory-get',
+  'todo',
+  'update-plan',
+  'task-journal',
+  'cron-list',
+  'mcp-list',
+  'mcp-resources',
+  'mcp-loopback-status',
+  'mcp-conversations-list',
+  'skill-list',
+  'skill-execute',
+  'knowledge-search',
 ];
 
 /** 写类工具的路径参数名（workspace-write 档位用于工作区边界判定） */

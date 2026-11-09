@@ -11,8 +11,12 @@ export class InboxController {
   @Get() list() {
     return this.inbox.list();
   }
-  @Delete('items/:id') remove(@Param('id') id: string) { return this.inbox.remove([id]); }
-  @Post('clear') clear(@Body() body: { ids?: unknown }) { return this.inbox.remove(body.ids); }
+  @Delete('items/:id') remove(@Param('id') id: string) {
+    return this.inbox.remove([id]);
+  }
+  @Post('clear') clear(@Body() body: { ids?: unknown }) {
+    return this.inbox.remove(body.ids);
+  }
   @Post('items/:id') update(
     @Param('id') id: string,
     @Body() body: { unread?: boolean; task?: string },
@@ -27,7 +31,10 @@ export class InboxController {
     @Body() body: { confirmedContent: string },
   ) {
     return this.inbox.send(id, body.confirmedContent, (item, content) =>
-      this.channels.sendMessage(item.channelId, item.peer, content, item.options),
+      this.channels.sendMessage(item.channelId, item.peer, content, {
+        ...item.options,
+        deliveryKey: 'draft:' + id,
+      }),
     );
   }
 }

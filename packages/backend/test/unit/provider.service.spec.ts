@@ -29,11 +29,14 @@ function createConfigMock(initial: Record<string, unknown> = {}) {
 
 type ConfigMock = ReturnType<typeof createConfigMock>;
 
-function createService(config: ConfigMock, opts?: {
-  checkUrlSync?: jest.Mock;
-  chatSync?: jest.Mock;
-  getDefaultModel?: jest.Mock;
-}) {
+function createService(
+  config: ConfigMock,
+  opts?: {
+    checkUrlSync?: jest.Mock;
+    chatSync?: jest.Mock;
+    getDefaultModel?: jest.Mock;
+  },
+) {
   const security = {
     checkUrlSync: opts?.checkUrlSync ?? jest.fn().mockReturnValue(true),
   } as unknown as SecurityManagerService;
@@ -54,11 +57,16 @@ describe('ProviderService', () => {
   let config: ConfigMock;
 
   it('preserves an existing provider key when the API echoes a redacted mask', () => {
-    const saved = createConfigMock({providers:{openai:{apiKey:'fixture-key',maxTokens:8192}}});
-    const {service} = createService(saved);
-    service.updateProvider('openai',{apiKey:'***',maxTokens:16384});
-    expect((saved.store['providers'] as any).openai).toMatchObject({apiKey:'fixture-key',maxTokens:16384});
-    service.updateProvider('openai',{apiKey:''});
+    const saved = createConfigMock({
+      providers: { openai: { apiKey: 'fixture-key', maxTokens: 8192 } },
+    });
+    const { service } = createService(saved);
+    service.updateProvider('openai', { apiKey: '***', maxTokens: 16384 });
+    expect((saved.store['providers'] as any).openai).toMatchObject({
+      apiKey: 'fixture-key',
+      maxTokens: 16384,
+    });
+    service.updateProvider('openai', { apiKey: '' });
     expect((saved.store['providers'] as any).openai.apiKey).toBe('');
   });
 
@@ -68,12 +76,12 @@ describe('ProviderService', () => {
   });
 
   describe('listProviders', () => {
-    it('无保存配置时保留第三方注册表且不提供 Wing 官方入口', () => {
+    it('无保存配置时保留第三方注册表且不附加官方账号入口', () => {
       const { service } = createService(config);
       const { providers } = service.listProviders();
 
-      expect(providers.find(p=>p.id==='skyalytic')).toBeUndefined();
-      expect(new Set(providers.map(p=>p.id)).size).toBe(providers.length);
+      expect(providers.find((p) => p.id === 'skyalytic')).toBeUndefined();
+      expect(new Set(providers.map((p) => p.id)).size).toBe(providers.length);
       const openai = providers.find((p) => p.id === 'openai');
       expect(openai).toMatchObject({
         name: 'OpenAI (GPT)',
@@ -90,10 +98,36 @@ describe('ProviderService', () => {
       // 旧版 30 供应商全量迁移
       const ids = new Set(providers.map((p) => p.id));
       for (const id of [
-        'custom', 'anthropic', 'openai', 'azure', 'google', 'bedrock', 'grok', 'mistral',
-        'groq', 'perplexity', 'openrouter', 'nvidia', 'together', 'vertex', 'qwen', 'glm',
-        'deepseek', 'moonshot', 'qianfan', 'doubao', 'minimax', 'hunyuan', 'xunfei',
-        'xiaomi', 'baichuan', 'stepfun', 'siliconflow', 'ollama', 'lmstudio', 'vllm',
+        'custom',
+        'anthropic',
+        'openai',
+        'azure',
+        'google',
+        'bedrock',
+        'grok',
+        'mistral',
+        'groq',
+        'perplexity',
+        'openrouter',
+        'nvidia',
+        'together',
+        'vertex',
+        'qwen',
+        'glm',
+        'deepseek',
+        'moonshot',
+        'qianfan',
+        'doubao',
+        'minimax',
+        'hunyuan',
+        'xunfei',
+        'xiaomi',
+        'baichuan',
+        'stepfun',
+        'siliconflow',
+        'ollama',
+        'lmstudio',
+        'vllm',
       ]) {
         expect(ids.has(id)).toBe(true);
       }
@@ -108,7 +142,11 @@ describe('ProviderService', () => {
     it('已保存 apiKey 或 baseUrl 的供应商 configured=true 并沿用保存值', () => {
       config = createConfigMock({
         providers: {
-          openai: { apiKey: 'sk-secret', baseUrl: 'https://proxy.example.com/v1', models: ['gpt-4o-mini'] },
+          openai: {
+            apiKey: 'sk-secret',
+            baseUrl: 'https://proxy.example.com/v1',
+            models: ['gpt-4o-mini'],
+          },
         },
       });
       const { service } = createService(config);
@@ -122,7 +160,12 @@ describe('ProviderService', () => {
     it('保存的自定义供应商（custom_ 前缀）追加到列表', () => {
       config = createConfigMock({
         providers: {
-          custom_xyz: { apiKey: 'k', baseUrl: 'https://my.llm/v1', displayName: '我的网关', models: ['m1'] },
+          custom_xyz: {
+            apiKey: 'k',
+            baseUrl: 'https://my.llm/v1',
+            displayName: '我的网关',
+            models: ['m1'],
+          },
         },
       });
       const { service } = createService(config);
@@ -169,7 +212,10 @@ describe('ProviderService', () => {
     it('合法更新合并进 providers 段并持久化', () => {
       const { service } = createService(config);
 
-      const res = service.updateProvider('openai', { apiKey: 'sk-1', baseUrl: 'https://api.openai.com/v1' });
+      const res = service.updateProvider('openai', {
+        apiKey: 'sk-1',
+        baseUrl: 'https://api.openai.com/v1',
+      });
 
       expect(res).toEqual({ updated: true });
       expect(config.set).toHaveBeenCalledWith('providers', expect.any(Object));
@@ -237,7 +283,9 @@ describe('ProviderService', () => {
     });
 
     it('未配置 apiKey 的远程供应商返回失败', async () => {
-      config = createConfigMock({ providers: { openai: { baseUrl: 'https://api.openai.com/v1' } } });
+      config = createConfigMock({
+        providers: { openai: { baseUrl: 'https://api.openai.com/v1' } },
+      });
       const { service } = createService(config);
 
       const res = await service.testProvider('openai');
@@ -257,7 +305,9 @@ describe('ProviderService', () => {
 
     it('chatSync 返回内容时连通成功并带时延与模型', async () => {
       config = createConfigMock({
-        providers: { openai: { apiKey: 'sk-1', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o-mini'] } },
+        providers: {
+          openai: { apiKey: 'sk-1', baseUrl: 'https://api.openai.com/v1', models: ['gpt-4o-mini'] },
+        },
       });
       const chatSync = jest.fn().mockResolvedValue({ content: 'pong' });
       const { service } = createService(config, { chatSync });
@@ -275,7 +325,9 @@ describe('ProviderService', () => {
       config = createConfigMock({
         providers: { openai: { apiKey: 'sk-1', models: ['gpt-4o'] } },
       });
-      const { service } = createService(config, { chatSync: jest.fn().mockResolvedValue({ content: '' }) });
+      const { service } = createService(config, {
+        chatSync: jest.fn().mockResolvedValue({ content: '' }),
+      });
 
       const res = await service.testProvider('openai');
       expect(res).toMatchObject({ success: false, message: '空响应' });
@@ -315,7 +367,9 @@ describe('ProviderService', () => {
         config = createConfigMock({
           providers: { ollama: { baseUrl: 'http://localhost:11434' } },
         });
-        fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 200 } as Response);
+        fetchSpy = jest
+          .spyOn(global, 'fetch')
+          .mockResolvedValue({ ok: true, status: 200 } as Response);
         const { service } = createService(config);
 
         const res = await service.testProvider('ollama');
@@ -332,7 +386,9 @@ describe('ProviderService', () => {
         config = createConfigMock({
           providers: { ollama: { baseUrl: 'http://localhost:11434' } },
         });
-        fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: false, status: 503 } as Response);
+        fetchSpy = jest
+          .spyOn(global, 'fetch')
+          .mockResolvedValue({ ok: false, status: 503 } as Response);
         const { service } = createService(config);
 
         const res = await service.testProvider('ollama');
@@ -354,8 +410,12 @@ describe('ProviderService', () => {
         config = createConfigMock({
           providers: { ollama: { baseUrl: 'http://10.0.0.1:11434' } },
         });
-        fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 200 } as Response);
-        const { service } = createService(config, { checkUrlSync: jest.fn().mockReturnValue(false) });
+        fetchSpy = jest
+          .spyOn(global, 'fetch')
+          .mockResolvedValue({ ok: true, status: 200 } as Response);
+        const { service } = createService(config, {
+          checkUrlSync: jest.fn().mockReturnValue(false),
+        });
 
         const res = await service.testProvider('ollama');
         // local 类型豁免 SSRF：即使 checkUrlSync 返回 false 也照常请求本机/局域网服务
@@ -370,7 +430,9 @@ describe('ProviderService', () => {
         config = createConfigMock({
           providers: { lmstudio: { baseUrl: 'http://localhost:1234/v1' } },
         });
-        fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({ ok: true, status: 200 } as Response);
+        fetchSpy = jest
+          .spyOn(global, 'fetch')
+          .mockResolvedValue({ ok: true, status: 200 } as Response);
         const { service } = createService(config);
 
         const res = await service.testProvider('lmstudio');
@@ -395,7 +457,12 @@ describe('ProviderService', () => {
       const { models } = service.listModels();
 
       const gpt = models.find((m) => m.id === 'gpt-4o');
-      expect(gpt).toMatchObject({ providerId: 'openai', providerName: 'OpenAI (GPT)', available: true, vision: true });
+      expect(gpt).toMatchObject({
+        providerId: 'openai',
+        providerName: 'OpenAI (GPT)',
+        available: true,
+        vision: true,
+      });
 
       // 未配置的远程供应商 available=false；vision 按 VISION_PROVIDERS/KEYWORDS 判定
       // （2026-09-27 官方校正：glm-5.2 为纯文本，视觉为 5v/4.6v/4.5v/5.3-flash 系）
@@ -424,36 +491,29 @@ describe('ProviderService', () => {
         normal: 'untouched',
       };
 
-      interceptor
-        .intercept({} as never, { handle: () => of(data) })
-        .subscribe((result) => {
-          const json = JSON.stringify(result);
-          expect(json).toContain('***');
-          expect(json).not.toContain('sk-very-secret');
-          expect(json).not.toContain('tk-1');
-          expect(json).not.toContain('"pw"');
-          expect(json).toContain('untouched');
-          expect(json).toContain('"ok"');
-          done();
-        });
+      interceptor.intercept({} as never, { handle: () => of(data) }).subscribe((result) => {
+        const json = JSON.stringify(result);
+        expect(json).toContain('***');
+        expect(json).not.toContain('sk-very-secret');
+        expect(json).not.toContain('tk-1');
+        expect(json).not.toContain('"pw"');
+        expect(json).toContain('untouched');
+        expect(json).toContain('"ok"');
+        done();
+      });
     });
 
     it('数组与嵌套结构均被递归脱敏', (done) => {
       const interceptor = new RedactInterceptor();
       const data = [{ apiKey: 'a' }, { list: [{ secret: 'b' }] }];
 
-      interceptor
-        .intercept({} as never, { handle: () => of(data) })
-        .subscribe((result) => {
-          const json = JSON.stringify(result);
-          expect(json).not.toContain('"a"');
-          expect(json).not.toContain('"b"');
-          expect(JSON.parse(json)).toEqual([
-            { apiKey: '***' },
-            { list: [{ secret: '***' }] },
-          ]);
-          done();
-        });
+      interceptor.intercept({} as never, { handle: () => of(data) }).subscribe((result) => {
+        const json = JSON.stringify(result);
+        expect(json).not.toContain('"a"');
+        expect(json).not.toContain('"b"');
+        expect(JSON.parse(json)).toEqual([{ apiKey: '***' }, { list: [{ secret: '***' }] }]);
+        done();
+      });
     });
   });
 
@@ -511,4 +571,9 @@ describe('ProviderService', () => {
   });
 });
 
-describe('browser vision capability metadata',()=>{it('enables current DeepSeek Flash without enabling text-only Pro',()=>{expect(isVisionModel('deepseek','deepseek-flash')).toBe(true);expect(isVisionModel('deepseek','deepseek-v4-pro')).toBe(false);});});
+describe('browser vision capability metadata', () => {
+  it('enables current DeepSeek Flash without enabling text-only Pro', () => {
+    expect(isVisionModel('deepseek', 'deepseek-flash')).toBe(true);
+    expect(isVisionModel('deepseek', 'deepseek-v4-pro')).toBe(false);
+  });
+});

@@ -85,16 +85,20 @@ describe('local full Office persistence', () => {
     const etag = first.headers.get('etag')!;
     expect(etag).toBeTruthy();
     expect(first.headers.get('cache-control')).toBe('private, no-cache');
+    expect(await first.text()).toBe('/* input bridge */');
     const cached = await fetch(url.origin + '/input.js', { headers: { 'If-None-Match': etag } });
     expect(cached.status).toBe(304);
+    await cached.arrayBuffer();
     writeFileSync(join(dir, 'input.js'), '/* updated input bridge */');
     const updated = await fetch(url.origin + '/input.js', { headers: { 'If-None-Match': etag } });
     expect(updated.status).toBe(200);
     expect(updated.headers.get('etag')).not.toBe(etag);
+    expect(await updated.text()).toBe('/* updated input bridge */');
     const document = await fetch(url.origin + '/documents/' + session.id + '/file', {
       headers: { 'X-Wing-Capability': url.hash.slice(1) },
     });
     expect(document.headers.get('cache-control')).toBe('no-store');
+    await document.arrayBuffer();
   });
   it('releases closed documents and rejects invalid live cell coordinates', async () => {
     const f = await office.create(dir, 'Sheet', 'xlsx'),

@@ -4,10 +4,18 @@ import { nativeInvoke } from '@/services/native-browser';
 import { isTauri } from '@/services/tauri-bridge';
 import { wt, useWorkbenchLanguage } from '@/i18n/workbench-text';
 import './OfficePreview.css';
-import { registerFileCloseGuard } from './file-tab-lifecycle';
+import { registerFileCloseGuard, registerPendingDraftCheck } from './file-tab-lifecycle';
 import { WORKSPACE_RESIZE_EVENT } from './use-workspace-resize';
 import { BROWSER_ANNOTATION_EVENT, BROWSER_ANNOTATION_MIME } from '@/services/browser-annotation';
 const leases = new Map<string, number>();
+const remoteDirty = new Map<string, boolean>();
+registerPendingDraftCheck(() => [...remoteDirty.values()].some(Boolean));
+window.addEventListener('beforeunload', (e) => {
+  if ([...remoteDirty.values()].some(Boolean)) {
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 const CollaboraEditor = lazy(() =>
   import('./CollaboraEditor').then((m) => ({ default: m.CollaboraEditor })),
 );
@@ -23,8 +31,16 @@ interface State {
   error: string;
   navigation?: string;
 }
-/** Full local Office: the same document engine accepts pointer/keyboard and AI commands. */
-export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpenFile?: (path: string) => void }) {
+/** The same Office engine accepts pointer/keyboard and AI commands for either storage location. */
+export function OfficeEditor({
+  filePath,
+  onOpenFile,
+  remoteWorkspaceId,
+}: {
+  filePath: string;
+  onOpenFile?: (path: string) => void;
+  remoteWorkspaceId?: string;
+}) {
   useWorkbenchLanguage();
   const [activePath, setActivePath] = useState(filePath);
   const onOpenRef = useRef(onOpenFile);
@@ -39,21 +55,32 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
   const surface = useRef<HTMLDivElement>(null);
   const pendingSave = useRef(0);
   const lastNavigation = useRef('');
-  useEffect(() => { lastNavigation.current = ''; }, [session]);
-  useEffect(() => registerFileCloseGuard(filePath, async () => {
-    if (!session) return;
-    const before = await apiClient.get<State>('/office-native/sessions/' + session.id);
-    if (!before.ready && !before.dirty) return;
-    if (before.error) throw Error(before.error);
-    await apiClient.post('/office-native/sessions/' + session.id + '/command', { action: 'save' });
-    for (let n = 0; n < 40; n++) {
-      await new Promise(r => setTimeout(r, 250));
-      const next = await apiClient.get<State>('/office-native/sessions/' + session.id);
-      if (next.error) throw Error(next.error);
-      if (next.savedAt > before.savedAt && !next.dirty) return;
-    }
-    throw Error(wt('修改尚未保存，请处理保存提示后再关闭。'));
-  }), [filePath, session]);
+  useEffect(() => {
+    lastNavigation.current = '';
+  }, [session]);
+  const guardKey = remoteWorkspaceId
+    ? JSON.stringify(['remote', remoteWorkspaceId, activePath])
+    : filePath;
+  useEffect(
+    () =>
+      registerFileCloseGuard(guardKey, async () => {
+        if (!session) return;
+        const before = await apiClient.get<State>('/office-native/sessions/' + session.id);
+        if (!before.ready && !before.dirty) return;
+        if (before.error && !remoteWorkspaceId) throw Error(before.error);
+        await apiClient.post('/office-native/sessions/' + session.id + '/command', {
+          action: 'save',
+        });
+        for (let n = 0; n < 40; n++) {
+          await new Promise((r) => setTimeout(r, 250));
+          const next = await apiClient.get<State>('/office-native/sessions/' + session.id);
+          if (next.error) throw Error(next.error);
+          if (next.savedAt > before.savedAt && !next.dirty) return;
+        }
+        throw Error(wt('修改尚未保存，请处理保存提示后再关闭。'));
+      }),
+    [guardKey, session, remoteWorkspaceId],
+  );
   useEffect(() => {
     if (advanced) return;
     let alive = true;
@@ -66,7 +93,10 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
         if (!alive) return;
         setAvailable(status.available);
         if (!status.available) return;
-        const opened = await apiClient.post<Session>('/office-native/open', { path: activePath });
+        const opened = await apiClient.post<Session>('/office-native/open', {
+          path: activePath,
+          ...(remoteWorkspaceId ? { remoteWorkspaceId } : {}),
+        });
         if (!alive) {
           await apiClient.post('/office-native/sessions/' + opened.id + '/release', {});
           return;
@@ -79,7 +109,8 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
           });
         if (alive) setSession(opened);
         else {
-          if (isTauri()) await nativeInvoke('native_office_view', {id: opened.id, action: 'close'});
+          if (isTauri())
+            await nativeInvoke('native_office_view', { id: opened.id, action: 'close' });
           await apiClient.post('/office-native/sessions/' + opened.id + '/release', {});
         }
       })
@@ -89,7 +120,7 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
     return () => {
       alive = false;
     };
-  }, [activePath, retry, advanced]);
+  }, [activePath, retry, advanced, remoteWorkspaceId]);
   useEffect(() => {
     if (!session || advanced) return;
     let alive = true,
@@ -99,9 +130,9 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
       if (!isTauri()) return;
       const element = surface.current,
         rect = element?.getBoundingClientRect();
-      const modal = [...document.querySelectorAll('[role="dialog"],[aria-modal="true"],[role="menu"]')].some(
-        (node) => (node as HTMLElement).offsetWidth > 0 && !node.contains(element),
-      );
+      const modal = [
+        ...document.querySelectorAll('[role="dialog"],[aria-modal="true"],[role="menu"]'),
+      ].some((node) => (node as HTMLElement).offsetWidth > 0 && !node.contains(element));
       const visible =
         !document.body.dataset['wingWorkspaceResizing'] &&
         !modal &&
@@ -137,6 +168,7 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
         .then((next) => {
           if (alive) {
             setState(next);
+            if (remoteWorkspaceId) remoteDirty.set(session.id, !!next.dirty || !!next.error);
             if (next.navigation && next.navigation !== lastNavigation.current) {
               lastNavigation.current = next.navigation;
               if (onOpenRef.current) onOpenRef.current(next.navigation);
@@ -145,7 +177,9 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
             if (next.savedAt > pendingSave.current) pendingSave.current = 0;
           }
         })
-        .catch(() => {});
+        .catch((e) => {
+          if (alive) setError(e.message);
+        });
     }, 1200);
     return () => {
       alive = false;
@@ -173,6 +207,7 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
             if (current.error || leases.get(session.id)) return;
             if (current.savedAt > before.savedAt && !current.dirty) {
               if (leases.get(session.id)) return;
+              remoteDirty.delete(session.id);
               if (isTauri()) {
                 await nativeInvoke('native_office_view', { id: session.id, action: 'close' });
                 await apiClient.post('/office-native/sessions/' + session.id + '/release', {});
@@ -183,7 +218,7 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
         })
         .catch(() => {});
     };
-  }, [session, advanced]);
+  }, [session, advanced, remoteWorkspaceId]);
   const save = () => {
     if (!session) return;
     pendingSave.current = Date.now();
@@ -191,6 +226,26 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
     void apiClient
       .post('/office-native/sessions/' + session.id + '/command', { action: 'save' })
       .catch((e) => setError(e.message));
+  };
+  const reconnect = async () => {
+    if (!remoteWorkspaceId) {
+      setRetry((n) => n + 1);
+      return;
+    }
+    try {
+      await apiClient.post(
+        '/remote-workspaces/' + encodeURIComponent(remoteWorkspaceId) + '/connect',
+        {},
+      );
+      setError('');
+      if (session)
+        await apiClient.post('/office-native/sessions/' + session.id + '/command', {
+          action: 'save',
+        });
+      else setRetry((n) => n + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
   };
   const annotate = async () => {
     if (!session) return;
@@ -248,8 +303,8 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
               : state.dirty
                 ? wt('正在保存修改…')
                 : state.savedAt
-                ? wt('已保存到原文件')
-                : wt('文档已打开')
+                  ? wt('已保存到原文件')
+                  : wt('文档已打开')
             : session
               ? wt('正在加载内置编辑器…')
               : wt('正在准备文档…')}
@@ -278,7 +333,7 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
       {(error || state?.error) && (
         <div className="wing-office-error" role="alert">
           {error || state?.error}
-          <button onClick={() => setRetry((n) => n + 1)}>{wt('重新连接')}</button>
+          <button onClick={() => void reconnect()}>{wt('重新连接')}</button>
         </div>
       )}
       {available === false ? (
@@ -289,7 +344,9 @@ export function OfficeEditor({ filePath, onOpenFile }: { filePath: string; onOpe
               '此版本缺少完整编辑组件，请使用完整预览版。已配置企业 Office 的用户也可以使用企业编辑服务。',
             )}
           </p>
-          <button onClick={() => setAdvanced(true)}>{wt('企业 Office / 高级连接')}</button>
+          {!remoteWorkspaceId && (
+            <button onClick={() => setAdvanced(true)}>{wt('企业 Office / 高级连接')}</button>
+          )}
         </div>
       ) : session ? (
         <div ref={surface} style={{ flex: 1, minHeight: 180, position: 'relative' }}>

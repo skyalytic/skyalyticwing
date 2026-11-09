@@ -16,6 +16,9 @@ import { ApprovalInlineCard } from './components/chat/ApprovalInlineCard';
 import { EcosystemPage } from './modules/account/EcosystemPage';
 import './components/layout/account.css';
 
+const TaskCenterPage = lazy(() =>
+  import('./modules/tasks/TaskCenterPage').then((m) => ({ default: m.TaskCenterPage })),
+);
 const InboxPage = lazy(() =>
   import('./modules/channels/InboxPage').then((m) => ({ default: m.InboxPage })),
 );
@@ -146,40 +149,38 @@ function Workbench() {
         }
       >
         <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<ChatPage />} />
-              <Route path="/ecosystem" element={<EcosystemPage />} />
-              <Route path="/agents" element={<AgentCenterPage />} />
-              <Route path="/inbox" element={<InboxPage />} />
-              <Route path="/channels" element={<ChannelsPage />} />
-              <Route path="/bindings" element={<BindingsPage />} />
-              <Route
-                path="/protocols"
-                element={<Navigate to="/settings?tab=protocols" replace />}
-              />
-              <Route path="/memory" element={<MemoryPage />} />
-              <Route path="/skills" element={<SkillsPage />} />
-              <Route path="/marketplace" element={<SkillsPage />} />
-              <Route path="/daemon" element={<Navigate to="/settings?tab=advanced" replace />} />
-              <Route path="/remote" element={<RemoteNodesPage />} />
-              <Route path="/worktrees" element={<WorktreesPage />} />
-              <Route path="/usage" element={<UsagePage />} />
-              <Route path="/cron" element={<CronPage />} />
-              <Route path="/workflow" element={<WorkflowPage />} />
-              <Route path="/config" element={<ConfigPage />} />
-              <Route path="/tools" element={<ToolsPage />} />
-              <Route path="/plugins" element={<PluginsPage />} />
-              <Route
-                path="/monitor"
-                element={<Navigate to="/settings?tab=status&details=monitor" replace />}
-              />
-              {/* 旧 MCP 链接统一进入插件连接管理 */}
-              <Route path="/mcp" element={<Navigate to="/plugins?tab=connections" replace />} />
-              <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/settings/*" element={<SettingsPage />} />
-              {/* 404 兜底：未知路由重定向到对话页 */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
+          <Route element={<Layout />}>
+            <Route path="/" element={<ChatPage />} />
+            <Route path="/ecosystem" element={<EcosystemPage />} />
+            <Route path="/agents" element={<AgentCenterPage />} />
+            <Route path="/tasks" element={<TaskCenterPage />} />
+            <Route path="/inbox" element={<InboxPage />} />
+            <Route path="/channels" element={<ChannelsPage />} />
+            <Route path="/bindings" element={<BindingsPage />} />
+            <Route path="/protocols" element={<Navigate to="/settings?tab=protocols" replace />} />
+            <Route path="/memory" element={<MemoryPage />} />
+            <Route path="/skills" element={<SkillsPage />} />
+            <Route path="/marketplace" element={<SkillsPage />} />
+            <Route path="/daemon" element={<Navigate to="/settings?tab=advanced" replace />} />
+            <Route path="/remote" element={<RemoteNodesPage />} />
+            <Route path="/worktrees" element={<WorktreesPage />} />
+            <Route path="/usage" element={<UsagePage />} />
+            <Route path="/cron" element={<CronPage />} />
+            <Route path="/workflow" element={<WorkflowPage />} />
+            <Route path="/config" element={<ConfigPage />} />
+            <Route path="/tools" element={<ToolsPage />} />
+            <Route path="/plugins" element={<PluginsPage />} />
+            <Route
+              path="/monitor"
+              element={<Navigate to="/settings?tab=status&details=monitor" replace />}
+            />
+            {/* 旧 MCP 链接统一进入插件连接管理 */}
+            <Route path="/mcp" element={<Navigate to="/plugins?tab=connections" replace />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/settings/*" element={<SettingsPage />} />
+            {/* 404 兜底：未知路由重定向到对话页 */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </Suspense>
     </div>

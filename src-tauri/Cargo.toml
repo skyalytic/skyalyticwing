@@ -1,7 +1,7 @@
 [package]
 license = "PolyForm-Noncommercial-1.0.0"
 name = "skyalyticwing"
-version = "2.1.0"
+version = "2.1.1"
 description = "SkyalyticWing - Enterprise-grade Personal AI Assistant"
 authors = ["SkyalyticWing Team"]
 edition = "2021"

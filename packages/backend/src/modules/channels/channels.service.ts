@@ -1,4 +1,14 @@
-import { Injectable, Optional, OnModuleDestroy, OnModuleInit, OnApplicationBootstrap, NotFoundException, BadRequestException } from '@nestjs/common';
+import { SchedulerService } from '../core/scheduler/scheduler.service.js';
+import { stableId } from '../core/scheduler/scheduler-store.js';
+import {
+  Injectable,
+  Optional,
+  OnModuleDestroy,
+  OnModuleInit,
+  OnApplicationBootstrap,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { readJsonRecover, writeJsonAtomicSync } from '../core/utils/atomic-json.util.js';
 import { InboxService } from './inbox.service.js';
 import { randomUUID } from 'node:crypto';
@@ -88,7 +98,8 @@ const PREDEFINED_CHANNELS: ReadonlyArray<{ id: string; name: string; category: s
   { id: 'cli', name: 'CLI终端', category: 'local' },
   { id: 'webchat', name: 'Web Chat', category: 'local' },
 ];
-const retainedChannel = (type: string) => PREDEFINED_CHANNELS.some(channel=>channel.id===type);
+const retainedChannel = (type: string) =>
+  PREDEFINED_CHANNELS.some((channel) => channel.id === type);
 
 /**
  * 支持的渠道类型清单（对应 channels.cjs createChannel 的 if 链）
@@ -151,7 +162,7 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
   private readonly statusChangeHandlers: StatusChangeHandler[] = [];
   /** handler 注册守卫（对应 channels.cjs _handlerRegistered，防止重复注册） */
   private handlerRegistered = false;
-  private readonly messageQueues=new Map<string,Promise<void>>();
+  private readonly messageQueues = new Map<string, Promise<void>>();
   private readonly operations = new Map<string, Promise<unknown>>();
   private stopping = false;
 
@@ -170,30 +181,49 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     private readonly wecom: WeComProvider,
     private readonly weixin: WeixinProvider,
     @Optional() private readonly inbox?: InboxService,
+    @Optional() private readonly scheduler?: SchedulerService,
   ) {}
 
   onModuleInit(): void {
     this.channelsPath = this.resolveDataFilePath('channels.json');
     this.load();
+    this.scheduler?.registerSender(async (item) => {
+      const provider = this.providers.get(item.channel);
+      const config = [...this.channels.values()].find(
+        (r) => r.config.type === item.channel,
+      )?.config;
+      if (item.options['_configuration'] !== stableId(JSON.stringify(config ?? null)))
+        return { success: false, error: 'Channel configuration changed' };
+      if (!provider?.status.connected)
+        return { success: false, error: 'Channel disconnected', retryable: true };
+      const { _configuration, _taskSessionId, ...options } = item.options;
+      return provider.sendMessage(item.peer, item.content, options);
+    });
   }
 
   onApplicationBootstrap(): void {
     for (const [id, runtime] of this.channels) {
-      if (runtime.config.enabled && retainedChannel(runtime.config.type)) void this.connectChannel(id).catch(() => {
-        // connectChannel retains the actionable error for the channel card.
-      });
+      if (runtime.config.enabled && retainedChannel(runtime.config.type))
+        void this.connectChannel(id).catch(() => {
+          // connectChannel retains the actionable error for the channel card.
+        });
     }
   }
 
   private async serialize<T>(id: string, operation: () => Promise<T>): Promise<T> {
     const previous = this.operations.get(id) ?? Promise.resolve();
-    const pending = previous.catch(() => undefined).then(() => {
-      if (this.stopping) throw new Error('Application is shutting down');
-      return operation();
-    });
+    const pending = previous
+      .catch(() => undefined)
+      .then(() => {
+        if (this.stopping) throw new Error('Application is shutting down');
+        return operation();
+      });
     this.operations.set(id, pending);
-    try { return await pending; }
-    finally { if (this.operations.get(id) === pending) this.operations.delete(id); }
+    try {
+      return await pending;
+    } finally {
+      if (this.operations.get(id) === pending) this.operations.delete(id);
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -252,7 +282,8 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
 
   /** 添加渠道（持久化到 channels.json，不自动连接） */
   addChannel(config: ChannelConfig): void {
-    if (!retainedChannel(config.type)) throw new BadRequestException('Channel is no longer supported');
+    if (!retainedChannel(config.type))
+      throw new BadRequestException('Channel is no longer supported');
     if (this.channels.has(config.id)) throw new BadRequestException('Channel already exists');
     const runtime: ChannelRuntime = {
       config: {
@@ -263,23 +294,42 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
       messages: [],
     };
     this.channels.set(config.id, runtime);
-    try { this.persist(); } catch (error) { this.channels.delete(config.id); throw error; }
+    try {
+      this.persist();
+    } catch (error) {
+      this.channels.delete(config.id);
+      throw error;
+    }
     this.logger.info('Channel added', { channelId: config.id, type: config.type });
   }
 
   /** Persist first, then apply through saveChannel; predefined cards are created on first save. */
   updateChannel(id: string, config: Partial<ChannelConfig>): void {
     for (const [key, value] of Object.entries(config.credentials ?? {})) {
-      if (/token|secret|password|pass$|api.?key|authorization/i.test(key) && typeof value === 'string' && /^(?:\*+|•+|\[REDACTED\]|\*+REDACTED\*+)$/i.test(value.trim())) {
+      if (
+        /token|secret|password|pass$|api.?key|authorization/i.test(key) &&
+        typeof value === 'string' &&
+        /^(?:\*+|•+|\[REDACTED\]|\*+REDACTED\*+)$/i.test(value.trim())
+      ) {
         throw new BadRequestException('收到脱敏占位符，未覆盖原有凭据；请重新扫码或输入真实密钥');
       }
     }
     let runtime = this.channels.get(id);
     const before = runtime?.config;
     if (!runtime) {
-      const definition = PREDEFINED_CHANNELS.find(d => d.id === id);
+      const definition = PREDEFINED_CHANNELS.find((d) => d.id === id);
       if (!definition) throw new NotFoundException('Channel not found: ' + id);
-      runtime = { config: {id,type:id as ChannelType,name:definition.name,enabled:false,credentials:{}},status:'disconnected',messages:[] };
+      runtime = {
+        config: {
+          id,
+          type: id as ChannelType,
+          name: definition.name,
+          enabled: false,
+          credentials: {},
+        },
+        status: 'disconnected',
+        messages: [],
+      };
       this.channels.set(id, runtime);
     }
     const next = { ...runtime.config };
@@ -290,15 +340,22 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     }
     if (config.options !== undefined) next.options = { ...next.options, ...config.options };
     runtime.config = next;
-    try { this.persist(); }
-    catch (error) { if(before) runtime.config=before;else this.channels.delete(id);throw error; }
+    try {
+      this.persist();
+    } catch (error) {
+      if (before) runtime.config = before;
+      else this.channels.delete(id);
+      throw error;
+    }
   }
 
   getConfiguration(id: string) {
     const runtime = this.channels.get(id);
-    if (!runtime && !PREDEFINED_CHANNELS.some(d => d.id === id)) throw new NotFoundException('Channel not found');
-    const credentials: Record<string, unknown> = {}, configuredSecrets: string[] = [];
-    for (const [key,value] of Object.entries(runtime?.config.credentials ?? {})) {
+    if (!runtime && !PREDEFINED_CHANNELS.some((d) => d.id === id))
+      throw new NotFoundException('Channel not found');
+    const credentials: Record<string, unknown> = {},
+      configuredSecrets: string[] = [];
+    for (const [key, value] of Object.entries(runtime?.config.credentials ?? {})) {
       if (/token|secret|password|pass$|api.?key|authorization/i.test(key)) {
         if (value) configuredSecrets.push(key);
       } else credentials[key] = value;
@@ -306,12 +363,23 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     return { credentials, configuredSecrets };
   }
 
-  async saveChannel(id: string, config: Partial<ChannelConfig>, background = false): Promise<ChannelStatusInfo> {
+  async saveChannel(
+    id: string,
+    config: Partial<ChannelConfig>,
+    background = false,
+  ): Promise<ChannelStatusInfo> {
     return this.serialize(id, async () => {
-      if(!this.channels.has(id)&&!PREDEFINED_CHANNELS.some(c=>c.id===id))throw new NotFoundException('Channel not found: '+id);
+      if (!this.channels.has(id) && !PREDEFINED_CHANNELS.some((c) => c.id === id))
+        throw new NotFoundException('Channel not found: ' + id);
       const type = this.channels.get(id)?.config.type ?? id;
-      if (config.enabled && !retainedChannel(type)) throw new BadRequestException('Channel is no longer supported');
-      if (config.enabled && !['cli','webchat'].includes(type) && !Object.hasOwn(CONNECT_REQUIRED_KEYS,type)) throw new BadRequestException('该渠道尚未接入，暂不能启用或连接');
+      if (config.enabled && !retainedChannel(type))
+        throw new BadRequestException('Channel is no longer supported');
+      if (
+        config.enabled &&
+        !['cli', 'webchat'].includes(type) &&
+        !Object.hasOwn(CONNECT_REQUIRED_KEYS, type)
+      )
+        throw new BadRequestException('该渠道尚未接入，暂不能启用或连接');
       this.updateChannel(id, config);
       const runtime = this.channels.get(id)!;
       await this.disconnectRuntime(id);
@@ -320,9 +388,15 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
           runtime.status = 'connecting';
           this.broadcastStatus(id, 'connecting');
           // Enqueue after this save finishes; keep subsequent edits ordered.
-          void this.connectChannel(id).catch(() => { /* Error retained in channel status. */ });
+          void this.connectChannel(id).catch(() => {
+            /* Error retained in channel status. */
+          });
         } else {
-          try { await this.connectRuntime(id); } catch { /* Saved, with an explicit connection error. */ }
+          try {
+            await this.connectRuntime(id);
+          } catch {
+            /* Saved, with an explicit connection error. */
+          }
         }
       }
       return this.toStatusInfo(runtime);
@@ -361,15 +435,19 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
   private async connectRuntime(id: string): Promise<void> {
     const runtime = this.channels.get(id);
     if (!runtime) throw new Error(`Channel not found: ${id}`);
-    if (!retainedChannel(runtime.config.type)) throw new BadRequestException('Channel is no longer supported');
+    if (!retainedChannel(runtime.config.type))
+      throw new BadRequestException('Channel is no longer supported');
     if (!runtime.config.enabled) throw new Error(`Channel ${id} is disabled`);
 
     runtime.status = 'connecting';
     this.broadcastStatus(id, 'connecting');
 
     try {
-      if (['cli','webchat'].includes(runtime.config.type)) {
-        runtime.status='connected';delete runtime.lastError;this.broadcastStatus(id,'connected');return;
+      if (['cli', 'webchat'].includes(runtime.config.type)) {
+        runtime.status = 'connected';
+        delete runtime.lastError;
+        this.broadcastStatus(id, 'connected');
+        return;
       }
       // 合并 credentials 与 options 作为 provider 配置（对应 .cjs channels[type].config）
       const providerConfig: Record<string, unknown> = {
@@ -397,10 +475,16 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
   }
 
   /** 重新加载渠道（断开 → 应用新配置 → 重连） */
-  async reloadChannel(id: string, newConfig?: Partial<ChannelConfig>): Promise<ChannelOperationResult> {
+  async reloadChannel(
+    id: string,
+    newConfig?: Partial<ChannelConfig>,
+  ): Promise<ChannelOperationResult> {
     try {
       const channel = await this.saveChannel(id, newConfig ?? {});
-      return { success:channel.status!=='error',...(channel.lastError?{error:channel.lastError}:{}) };
+      return {
+        success: channel.status !== 'error',
+        ...(channel.lastError ? { error: channel.lastError } : {}),
+      };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };
     }
@@ -429,10 +513,16 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
   }
 
   /** 发送消息到指定目标（控制器入口，对应 POST /api/channels/:id/send） */
-  async sendMessage(id: string, target: string, content: string, options?: SendOptions): Promise<void> {
+  async sendMessage(
+    id: string,
+    target: string,
+    content: string,
+    options?: SendOptions,
+  ): Promise<void> {
     const runtime = this.channels.get(id);
     if (!runtime) throw new Error(`Channel not found: ${id}`);
-    if (runtime.status !== 'connected') throw new Error(`Channel ${id} is not connected`);
+    if (!this.scheduler && runtime.status !== 'connected')
+      throw new Error(`Channel ${id} is not connected`);
 
     const message: ChannelMessage = {
       id: randomUUID(),
@@ -698,9 +788,13 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     for (const channel of this.listChannels()) {
       const provider = this.providers.get(channel.type);
       status[channel.id] = {
-        lastMessageAt:null,messagesReceived:0,messagesSent:0,
-        ...provider?.getStatus(), ...channel,
-        connected:channel.status==='connected',lastError:channel.lastError??null,
+        lastMessageAt: null,
+        messagesReceived: 0,
+        messagesSent: 0,
+        ...provider?.getStatus(),
+        ...channel,
+        connected: channel.status === 'connected',
+        lastError: channel.lastError ?? null,
       };
     }
     return status;
@@ -717,6 +811,17 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     text: string,
     options?: SendOptions,
   ): Promise<SendResult> {
+    if (this.scheduler) {
+      const config = [...this.channels.values()].find((r) => r.config.type === type)?.config;
+      const { deliveryKey, ...sendOptions } = options ?? {};
+      return this.scheduler.send(
+        type,
+        to,
+        text,
+        { ...sendOptions, _configuration: stableId(JSON.stringify(config ?? null)) },
+        typeof deliveryKey === 'string' ? deliveryKey : undefined,
+      );
+    }
     const provider = this.providers.get(type);
     if (!provider) {
       return { success: false, error: 'Channel not found: ' + type };
@@ -748,10 +853,14 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
   }
 
   stageReply(type: string, peer: string, content: string, raw?: Record<string, unknown>) {
-    let id=type;
-    for(const [key,runtime] of this.channels) if(runtime.config.type===type){id=key;break;}
-    if(!this.inbox) throw new Error('收件箱服务不可用，未发送回复');
-    return this.inbox.suggest(id,peer,content,raw);
+    let id = type;
+    for (const [key, runtime] of this.channels)
+      if (runtime.config.type === type) {
+        id = key;
+        break;
+      }
+    if (!this.inbox) throw new Error('收件箱服务不可用，未发送回复');
+    return this.inbox.suggest(id, peer, content, raw);
   }
 
   /** 注册状态变更处理器（对应 channels.cjs ChannelManager.onStatusChange） */
@@ -823,7 +932,6 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     message: IncomingMessage,
     session: RoutedSession,
   ): Promise<void> {
-
     // 找到对应的 channelId（通过 type 反查 this.channels）
     let channelId = channelType;
     for (const [id, runtime] of this.channels) {
@@ -833,18 +941,42 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
       }
     }
     // 入库 + WebSocket 广播（保留原 ChannelsService.receiveMessage 语义）
-    if (this.inbox?.receive(channelId, message.id, message.from, message.text, message.timestamp, message.raw) === false) return;
+    if (
+      this.inbox?.receive(
+        channelId,
+        message.id,
+        message.from,
+        message.text,
+        message.timestamp,
+        message.raw,
+      ) === false
+    )
+      return;
     this.receiveMessage(channelId, message.text, message.from);
 
     // Persist immediately, then serialize AI work per routed conversation. New messages are not dropped.
-    const previous=this.messageQueues.get(session.sessionId) || Promise.resolve();
-    const pending=previous.catch(()=>{}).then(async()=>{
-      for(const handler of this.messageHandlers) {
-        try{await handler(channelType,message,session);}catch(err){this.logger.warn('[ChannelManager] message handler error',{channelType,error:err instanceof Error?err.message:String(err)});}
-      }
-    });
-    this.messageQueues.set(session.sessionId,pending);
-    try{await pending;}finally{if(this.messageQueues.get(session.sessionId)===pending)this.messageQueues.delete(session.sessionId);}
+    const previous = this.messageQueues.get(session.sessionId) || Promise.resolve();
+    const pending = previous
+      .catch(() => {})
+      .then(async () => {
+        for (const handler of this.messageHandlers) {
+          try {
+            await handler(channelType, message, session);
+          } catch (err) {
+            this.logger.warn('[ChannelManager] message handler error', {
+              channelType,
+              error: err instanceof Error ? err.message : String(err),
+            });
+          }
+        }
+      });
+    this.messageQueues.set(session.sessionId, pending);
+    try {
+      await pending;
+    } finally {
+      if (this.messageQueues.get(session.sessionId) === pending)
+        this.messageQueues.delete(session.sessionId);
+    }
   }
 
   /**
@@ -873,7 +1005,8 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
         } else {
           // Providers clear their previous connection before validating the new one.
           // Keep the manager's connecting state until success or an actual error.
-          if (runtime.status !== 'connecting' || status.lastError) runtime.status = status.lastError ? 'error' : 'disconnected';
+          if (runtime.status !== 'connecting' || status.lastError)
+            runtime.status = status.lastError ? 'error' : 'disconnected';
           if (status.lastError) runtime.lastError = status.lastError;
           if (!status.connected) delete runtime.connectedAt;
           this.broadcastStatus(channelId, runtime.status);
@@ -905,8 +1038,14 @@ export class ChannelsService implements OnModuleInit, OnModuleDestroy, OnApplica
     const provider = this.providers.get(r.config.type);
     const current = provider?.getStatus();
     if (current && r.status !== 'connecting') {
-      r.status = !r.config.enabled ? 'disconnected' : current.connected ? 'connected' : (current.lastError || r.lastError) ? 'error' : 'disconnected';
-      if (r.config.enabled && current.lastError) r.lastError=current.lastError;
+      r.status = !r.config.enabled
+        ? 'disconnected'
+        : current.connected
+          ? 'connected'
+          : current.lastError || r.lastError
+            ? 'error'
+            : 'disconnected';
+      if (r.config.enabled && current.lastError) r.lastError = current.lastError;
       else if (current.connected || !r.config.enabled) delete r.lastError;
     }
     const info: ChannelStatusInfo = {

@@ -67,7 +67,8 @@ describe('ToolExecutorService', () => {
   let extensions: ExtensionHostService, root: string, oldRoot: string | undefined;
 
   beforeEach(() => {
-    oldRoot = process.env['SKYALYTICWING_DATA_DIR']; root = mkdtempSync(join(tmpdir(), 'wing-executor-test-'));
+    oldRoot = process.env['SKYALYTICWING_DATA_DIR'];
+    root = mkdtempSync(join(tmpdir(), 'wing-executor-test-'));
     process.env['SKYALYTICWING_DATA_DIR'] = root;
     registry = new ToolRegistryService();
     extensions = new ExtensionHostService(registry, new ExtensionSelectionService());
@@ -96,25 +97,40 @@ describe('ToolExecutorService', () => {
   });
   afterEach(async () => {
     await extensions.onModuleDestroy();
-    if (oldRoot === undefined) delete process.env['SKYALYTICWING_DATA_DIR']; else process.env['SKYALYTICWING_DATA_DIR'] = oldRoot;
+    if (oldRoot === undefined) delete process.env['SKYALYTICWING_DATA_DIR'];
+    else process.env['SKYALYTICWING_DATA_DIR'] = oldRoot;
     rmSync(root, { recursive: true, force: true });
   });
 
   describe('onModuleInit 内置工具加载', () => {
     it('serializes desktop actions across expert sessions and releases the queue after failure', async () => {
-      let running = 0, peak = 0;
-      registry.registerBuiltin(makeTool('computer_use', {execute: async () => {
-        running++; peak = Math.max(peak,running);
-        await new Promise(resolve => setTimeout(resolve,5)); running--;
-        return {success:false,error:'fixture failure'};
-      }}));
-      const results=await Promise.all(Array.from({length:3},(_,i)=>service.execute('computer_use',{action:'act'},{...ctx,sessionId:'expert-'+i})));
-      expect(peak).toBe(1); expect(results.every(r=>!r.success)).toBe(true);
+      let running = 0,
+        peak = 0;
+      registry.registerBuiltin(
+        makeTool('computer_use', {
+          execute: async () => {
+            running++;
+            peak = Math.max(peak, running);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            running--;
+            return { success: false, error: 'fixture failure' };
+          },
+        }),
+      );
+      const results = await Promise.all(
+        Array.from({ length: 3 }, (_, i) =>
+          service.execute('computer_use', { action: 'act' }, { ...ctx, sessionId: 'expert-' + i }),
+        ),
+      );
+      expect(peak).toBe(1);
+      expect(results.every((r) => !r.success)).toBe(true);
     });
-    it('fresh profiles expose bundled tools without a Wing account', async () => {
+    it('fresh profiles expose the bundled installed tools without manual installation', async () => {
       await service.onModuleInit();
-      expect(service.getToolDefinitions().map(tool => tool.name)).toEqual(expect.arrayContaining(['file-read','node_repl','builtin_browser']));
-      expect(service.listTools().length).toBeGreaterThan(0);
+      expect(service.getToolDefinitions().map((t) => t.name)).toEqual(
+        expect.arrayContaining(['file-read', 'file-write', 'bash']),
+      );
+      expect(service.listTools().every((t) => t.loaded)).toBe(true);
     });
     it('显式安装工具包后注册完整工具集', async () => {
       await service.onModuleInit();
@@ -178,10 +194,11 @@ describe('ToolExecutorService', () => {
     });
 
     it('listTools 返回已安装工具及 loaded 状态', async () => {
-      await service.onModuleInit(); await extensions.install('wing-terminal');
+      await service.onModuleInit();
+      await extensions.install('wing-terminal');
 
       const list = service.listTools();
-      expect(list.map(t => t.name)).toEqual(expect.arrayContaining(['bash', 'powershell']));
+      expect(list.map((t) => t.name)).toEqual(expect.arrayContaining(['bash', 'powershell']));
       for (const item of list) {
         expect(item.loaded).toBe(true);
         expect(typeof item.name).toBe('string');
@@ -194,7 +211,8 @@ describe('ToolExecutorService', () => {
     });
 
     it('getToolDefinitions 返回注册表全部定义（LLM function calling）', async () => {
-      await service.onModuleInit(); await extensions.install('wing-terminal');
+      await service.onModuleInit();
+      await extensions.install('wing-terminal');
 
       const defs = service.getToolDefinitions();
       expect(defs).toEqual(registry.getAll());
@@ -278,7 +296,8 @@ describe('ToolExecutorService', () => {
     });
 
     it('缺少 command 参数返回参数错误', async () => {
-      await service.onModuleInit(); await extensions.install('wing-terminal');
+      await service.onModuleInit();
+      await extensions.install('wing-terminal');
 
       const res = await service.execute('bash', {}, ctx);
       expect(res.success).toBe(false);
@@ -286,7 +305,8 @@ describe('ToolExecutorService', () => {
     });
 
     it('命令被守卫拦截返回 blocked 结果', async () => {
-      await service.onModuleInit(); await extensions.install('wing-terminal');
+      await service.onModuleInit();
+      await extensions.install('wing-terminal');
       (security.isCommandAllowed as jest.Mock).mockReturnValue(false);
 
       const res = await service.execute('bash', { command: 'rm -rf /' }, ctx);
@@ -374,7 +394,8 @@ describe('ToolExecutorService', () => {
       expect(tool.execute).not.toHaveBeenCalled();
     });
     it('plugins cannot replace a reviewed built-in by reusing its name', async () => {
-      await service.onModuleInit(); await extensions.install('wing-files');
+      await service.onModuleInit();
+      await extensions.install('wing-files');
       expect(() => service.registerTool(makeTool('file-read'))).toThrow('Cannot replace built-in');
       expect(() => service.registerTool(makeTool('file_read'))).toThrow('Cannot replace built-in');
     });

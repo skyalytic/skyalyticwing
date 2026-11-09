@@ -4,7 +4,11 @@ import { wt, useWorkbenchLanguage } from '@/i18n/workbench-text';
 // 通用 tab 系统：左上 + 按钮弹出菜单打开 编辑器/文档/终端/浏览器/代码变更/Figma
 // 六类视图（对齐参考形态），TabBar 负责菜单与 tab 条，内容按激活 tab 分派。
 // 收起态不渲染把手——面板切换按钮固定在对话区右上角（ChatView 内 PanelToggleButton）。
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import {
+  RemoteWorkspacePicker,
+  RemoteWorkspaceView,
+} from '@/components/workspace/RemoteWorkspaceView';
 import { Icon } from '@/components/Icon';
 import { FolderPickerModal } from '@/components/modals/FolderPickerModal';
 import { TabBar } from '@/components/workspace/TabBar';
@@ -22,6 +26,8 @@ import { useWorkspaceResize } from './use-workspace-resize';
 export function ProjectPanel() {
   useWorkbenchLanguage();
   const open = useProjectPanel((s) => s.open);
+  const remote = useProjectPanel((s) => s.remoteWorkspace);
+  const [remotePicker, setRemotePicker] = useState(false);
   const toggle = useProjectPanel((s) => s.toggle);
   const setOpen = useProjectPanel((s) => s.setOpen);
   const pickerOpen = useProjectPanel((s) => s.pickerOpen);
@@ -39,7 +45,13 @@ export function ProjectPanel() {
   useEffect(() => {
     void initProjectDir();
     const onKey = (e: KeyboardEvent) => {
-      if (!e.defaultPrevented && !composingKey(e) && primaryModifier(e) && e.altKey && (e.code === 'KeyB' || e.key.toLowerCase() === 'b')) {
+      if (
+        !e.defaultPrevented &&
+        !composingKey(e) &&
+        primaryModifier(e) &&
+        e.altKey &&
+        (e.code === 'KeyB' || e.key.toLowerCase() === 'b')
+      ) {
         e.preventDefault();
         toggle();
       }
@@ -82,6 +94,12 @@ export function ProjectPanel() {
           <div className="sky-workspace-tabbar flex items-center gap-1.5 px-2 py-1.5 border-b border-black/10 dark:border-white/10 shrink-0">
             <TabBar />
             <button
+              className="h-7 shrink-0 rounded-md px-2 text-xs whitespace-nowrap border border-black/10 dark:border-white/10"
+              onClick={() => setRemotePicker((v) => !v)}
+            >
+              SSH / WSL / Docker
+            </button>
+            <button
               className="sky-panel-expand sky-workspace-expand"
               hidden={resize.compact}
               aria-label={resize.full ? wt('还原面板宽度') : wt('展开工作区')}
@@ -101,18 +119,32 @@ export function ProjectPanel() {
           </div>
 
           {/* 内容分派：编辑器（文件树/预览）/ 文档 / 终端 / 浏览器 / 代码变更 / 画布 */}
-          {tabs.some(t => t.kind === 'editor') && <div className="sky-workspace-pane" style={{ display: activeTab === 'editor' ? 'flex' : 'none' }}><EditorView /></div>}
+          {remotePicker && <RemoteWorkspacePicker close={() => setRemotePicker(false)} />}
+          {tabs.some((t) => t.kind === 'editor') && (
+            <div
+              className="sky-workspace-pane"
+              style={{ display: activeTab === 'editor' ? 'flex' : 'none' }}
+            >
+              {remote ? <RemoteWorkspaceView key={remote.id} workspace={remote} /> : <EditorView />}
+            </div>
+          )}
           {activeTab === 'doc' ? <DocView /> : null}
           {tabs.some((t) => t.kind === 'terminal') ? (
             <div
               className="sky-workspace-pane"
               style={{ display: activeTab === 'terminal' ? 'flex' : 'none' }}
             >
-              <TerminalView />
+              <TerminalView key={remote?.id || 'local'} />
             </div>
           ) : null}
           {activeTab === 'browser' ? <BrowserPanel /> : null}
-          {activeTab === 'changes' ? <ChangesView /> : null}
+          {activeTab === 'changes' ? (
+            remote ? (
+              <RemoteWorkspaceView key={remote.id + ':changes'} workspace={remote} changes />
+            ) : (
+              <ChangesView />
+            )
+          ) : null}
           {tabs.some((t) => t.kind === 'canvas') ? (
             <div
               className="sky-workspace-pane"

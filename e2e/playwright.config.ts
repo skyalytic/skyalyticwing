@@ -27,6 +27,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     locale: 'zh-CN',
+    ...(process.env.E2E_BROWSER_CHANNEL ? { channel: process.env.E2E_BROWSER_CHANNEL } : {}),
   },
   webServer: {
     // mock 后端：静态托管前端 dist + mock REST + 真实 WS + 测试控制端点

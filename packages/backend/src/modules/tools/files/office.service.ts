@@ -61,9 +61,18 @@ export class OfficeService {
   constructor(private readonly security: SecurityManagerService) {}
   /** Read-only content summary for comparing durable Office snapshots. */
   async historyText(buffer: Buffer, format: string): Promise<string> {
-    if (buffer.length > 25 * 1024 * 1024 || !['docx', 'xlsx', 'pptx'].includes(format)) throw new BadRequestException('快照仅提供完整文件比较');
+    if (buffer.length > 25 * 1024 * 1024 || !['docx', 'xlsx', 'pptx'].includes(format))
+      throw new BadRequestException('快照仅提供完整文件比较');
     const { sections } = await this.open(buffer, format);
-    return sections.map(section => `[${section.name}]\n` + section.fields.map(f => format === 'xlsx' ? `${f.row},${f.column}: ${f.value}` : f.value).join('\n')).join('\n\n');
+    return sections
+      .map(
+        (section) =>
+          `[${section.name}]\n` +
+          section.fields
+            .map((f) => (format === 'xlsx' ? `${f.row},${f.column}: ${f.value}` : f.value))
+            .join('\n'),
+      )
+      .join('\n\n');
   }
   private check(raw: string, mode: 'read' | 'write') {
     if (typeof raw !== 'string' || !raw || raw.includes('\0'))
@@ -79,7 +88,9 @@ export class OfficeService {
   }
   async create(directory: string, name: string, format: string, template = 'blank') {
     const buffer = await createOfficePreset(format, template);
-    return createWorkfile(directory, name, format, buffer, path => this.security.isPathAllowed(path, 'write'));
+    return createWorkfile(directory, name, format, buffer, (path) =>
+      this.security.isPathAllowed(path, 'write'),
+    );
   }
   private async open(buffer: Buffer, format: string) {
     const zip = await JSZip.loadAsync(buffer).catch(() => {
@@ -218,14 +229,30 @@ export class OfficeService {
     }
     return { zip, docs, bindings, sections };
   }
-  async read(raw: string): Promise<OfficeSnapshot> {
-    const path = this.check(raw, 'read'),
-      data = readFileSync(path),
-      format = extname(path).slice(1).toLowerCase();
+  private checkBuffer(data: Buffer, format: string) {
+    if (
+      !Buffer.isBuffer(data) ||
+      data.length > 25 * 1024 * 1024 ||
+      !['docx', 'xlsx', 'pptx'].includes(format)
+    )
+      throw new BadRequestException('文档格式或大小无效');
+  }
+  async readBuffer(data: Buffer, format: string): Promise<OfficeSnapshot> {
+    this.checkBuffer(data, format);
     return { format, revision: digest(data), sections: (await this.open(data, format)).sections };
   }
-  async save(raw: string, revision: string, changes: Array<{ id: string; value: string }>) {
-    const path = this.check(raw, 'write');
+  async read(raw: string): Promise<OfficeSnapshot> {
+    const path = this.check(raw, 'read');
+    return this.readBuffer(readFileSync(path), extname(path).slice(1).toLowerCase());
+  }
+  /** Transform bytes without opening a host path; the caller owns the final atomic write. */
+  async editBuffer(
+    before: Buffer,
+    format: string,
+    revision: string,
+    changes: Array<{ id: string; value: string }>,
+  ): Promise<Buffer> {
+    this.checkBuffer(before, format);
     if (
       !/^[a-f0-9]{64}$/.test(revision || '') ||
       !Array.isArray(changes) ||
@@ -240,96 +267,105 @@ export class OfficeService {
       )
     )
       throw new BadRequestException('修改内容或版本无效');
+    if (digest(before) !== revision)
+      throw new ConflictException('文档已被其他程序或 AI 修改；请保留修改并重新打开合并');
+    const { zip, docs, bindings, sections } = await this.open(before, format);
+    const readOnlyIds = new Set(
+      sections.flatMap((s) => s.fields.filter((f) => f.readOnly).map((f) => f.id)),
+    );
+    const changed = new Set<string>();
+    for (const change of changes) {
+      if (readOnlyIds.has(change.id))
+        throw new BadRequestException('此工作表包含共享或数组公式，请在 Excel / WPS 中编辑');
+      const binding = bindings.get(change.id);
+      if (!binding) throw new BadRequestException('找不到要修改的文档元素');
+      const { node, part } = binding;
+      changed.add(part);
+      if (format !== 'xlsx') {
+        node.textContent = change.value;
+        node.setAttribute('xml:space', 'preserve');
+        continue;
+      }
+      const doc = docs.get(part)!;
+      while (node.firstChild) node.removeChild(node.firstChild);
+      node.removeAttribute('t');
+      if (change.value.startsWith('=')) {
+        const f = doc.createElementNS(S, 'f');
+        f.textContent = change.value.slice(1);
+        node.appendChild(f);
+      } else if (
+        /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(change.value) &&
+        Number.isFinite(Number(change.value)) &&
+        change.value.replace(/\D/g, '').length <= 15
+      ) {
+        const v = doc.createElementNS(S, 'v');
+        v.textContent = change.value;
+        node.appendChild(v);
+      } else {
+        node.setAttribute('t', 'inlineStr');
+        const is = doc.createElementNS(S, 'is'),
+          t = doc.createElementNS(S, 't');
+        t.setAttribute('xml:space', 'preserve');
+        t.textContent = change.value;
+        is.appendChild(t);
+        node.appendChild(is);
+      }
+    }
+    if (format === 'xlsx' && changes.length) {
+      if (zip.file('xl/calcChain.xml')) {
+        zip.remove('xl/calcChain.xml');
+        for (const name of ['[Content_Types].xml', 'xl/_rels/workbook.xml.rels']) {
+          const entry = zip.file(name);
+          if (!entry) continue;
+          const doc = parse(await entry.async('string'));
+          const nodes = Array.from(doc.documentElement!.childNodes);
+          for (const node of nodes) {
+            if (node.nodeType !== 1) continue;
+            const element = node as Element;
+            if (
+              element.getAttribute('PartName') === '/xl/calcChain.xml' ||
+              element.getAttribute('Type')?.endsWith('/calcChain')
+            )
+              element.parentNode!.removeChild(element);
+          }
+          zip.file(name, new XMLSerializer().serializeToString(doc));
+        }
+      }
+      for (const [part, doc] of docs)
+        for (const cell of elements(doc, S, 'c'))
+          if (elements(cell, S, 'f').length) {
+            for (const value of elements(cell, S, 'v')) cell.removeChild(value);
+            changed.add(part);
+          }
+      const wb = zip.file('xl/workbook.xml');
+      if (wb) {
+        const doc = parse(await wb.async('string'));
+        let calc = elements(doc, S, 'calcPr')[0];
+        if (!calc) {
+          calc = doc.createElementNS(S, 'calcPr');
+          doc.documentElement!.appendChild(calc);
+        }
+        calc.setAttribute('fullCalcOnLoad', '1');
+        calc.setAttribute('forceFullCalc', '1');
+        calc.setAttribute('calcMode', 'auto');
+        zip.file('xl/workbook.xml', new XMLSerializer().serializeToString(doc));
+      }
+    }
+    for (const part of changed)
+      zip.file(part, new XMLSerializer().serializeToString(docs.get(part)!));
+    const next = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
+    return next;
+  }
+  async save(raw: string, revision: string, changes: Array<{ id: string; value: string }>) {
+    const path = this.check(raw, 'write');
     return withFileMutation(path, async () => {
       const before = readFileSync(path);
-      if (digest(before) !== revision)
-        throw new ConflictException('文档已被其他程序或 AI 修改；请保留修改并重新打开合并');
-      const format = extname(path).slice(1).toLowerCase();
-      const { zip, docs, bindings, sections } = await this.open(before, format);
-      const readOnlyIds = new Set(
-        sections.flatMap((s) => s.fields.filter((f) => f.readOnly).map((f) => f.id)),
+      const next = await this.editBuffer(
+        before,
+        extname(path).slice(1).toLowerCase(),
+        revision,
+        changes,
       );
-      const changed = new Set<string>();
-      for (const change of changes) {
-        if (readOnlyIds.has(change.id))
-          throw new BadRequestException('此工作表包含共享或数组公式，请在 Excel / WPS 中编辑');
-        const binding = bindings.get(change.id);
-        if (!binding) throw new BadRequestException('找不到要修改的文档元素');
-        const { node, part } = binding;
-        changed.add(part);
-        if (format !== 'xlsx') {
-          node.textContent = change.value;
-          node.setAttribute('xml:space', 'preserve');
-          continue;
-        }
-        const doc = docs.get(part)!;
-        while (node.firstChild) node.removeChild(node.firstChild);
-        node.removeAttribute('t');
-        if (change.value.startsWith('=')) {
-          const f = doc.createElementNS(S, 'f');
-          f.textContent = change.value.slice(1);
-          node.appendChild(f);
-        } else if (
-          /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(change.value) &&
-          Number.isFinite(Number(change.value)) &&
-          change.value.replace(/\D/g, '').length <= 15
-        ) {
-          const v = doc.createElementNS(S, 'v');
-          v.textContent = change.value;
-          node.appendChild(v);
-        } else {
-          node.setAttribute('t', 'inlineStr');
-          const is = doc.createElementNS(S, 'is'),
-            t = doc.createElementNS(S, 't');
-          t.setAttribute('xml:space', 'preserve');
-          t.textContent = change.value;
-          is.appendChild(t);
-          node.appendChild(is);
-        }
-      }
-      if (format === 'xlsx' && changes.length) {
-        if (zip.file('xl/calcChain.xml')) {
-          zip.remove('xl/calcChain.xml');
-          for (const name of ['[Content_Types].xml', 'xl/_rels/workbook.xml.rels']) {
-            const entry = zip.file(name);
-            if (!entry) continue;
-            const doc = parse(await entry.async('string'));
-            const nodes = Array.from(doc.documentElement!.childNodes);
-            for (const node of nodes) {
-              if (node.nodeType !== 1) continue;
-              const element = node as Element;
-              if (
-                element.getAttribute('PartName') === '/xl/calcChain.xml' ||
-                element.getAttribute('Type')?.endsWith('/calcChain')
-              )
-                element.parentNode!.removeChild(element);
-            }
-            zip.file(name, new XMLSerializer().serializeToString(doc));
-          }
-        }
-        for (const [part, doc] of docs)
-          for (const cell of elements(doc, S, 'c'))
-            if (elements(cell, S, 'f').length) {
-              for (const value of elements(cell, S, 'v')) cell.removeChild(value);
-              changed.add(part);
-            }
-        const wb = zip.file('xl/workbook.xml');
-        if (wb) {
-          const doc = parse(await wb.async('string'));
-          let calc = elements(doc, S, 'calcPr')[0];
-          if (!calc) {
-            calc = doc.createElementNS(S, 'calcPr');
-            doc.documentElement!.appendChild(calc);
-          }
-          calc.setAttribute('fullCalcOnLoad', '1');
-          calc.setAttribute('forceFullCalc', '1');
-          calc.setAttribute('calcMode', 'auto');
-          zip.file('xl/workbook.xml', new XMLSerializer().serializeToString(doc));
-        }
-      }
-      for (const part of changed)
-        zip.file(part, new XMLSerializer().serializeToString(docs.get(part)!));
-      const next = await zip.generateAsync({ type: 'nodebuffer', compression: 'DEFLATE' });
       // Recheck after asynchronous compression, including external Office edits.
       if (digest(readFileSync(path)) !== revision)
         throw new ConflictException('保存期间文档已变化，请重新加载');
@@ -353,8 +389,12 @@ export class OfficeService {
 @Controller('files/office')
 export class OfficeController {
   constructor(private readonly office: OfficeService) {}
-  @Get('templates') templates() { return officeTemplates; }
-  @Post('create') create(@Body() body: {directory:string;name:string;format:string;template?:string}) {
+  @Get('templates') templates() {
+    return officeTemplates;
+  }
+  @Post('create') create(
+    @Body() body: { directory: string; name: string; format: string; template?: string },
+  ) {
     return this.office.create(body?.directory, body?.name, body?.format, body?.template);
   }
   @Get() read(@Query('path') path: string) {

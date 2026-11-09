@@ -90,7 +90,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 /** 项目文件夹 chip（工程模式）：显示当前项目名，点击打开目录选择器 */
 function ProjectChip() {
   useWorkbenchLanguage();
-  const projectDir = useProjectPanel((s) => s.projectDir);
+  const projectDir = useProjectPanel((s) => s.remoteWorkspace?.root || s.projectDir);
   const setPickerOpen = useProjectPanel((s) => s.setPickerOpen);
   const initProjectDir = useProjectPanel((s) => s.initProjectDir);
   // 惰性初始化（ChatInput 挂载即拉取一次，store 内有 initialized 防重）
@@ -618,8 +618,7 @@ export function ChatInput({
               <optgroup label={t('chat.modelGroups.chat')}>
                 {chatModels.map((m) => (
                   <option key={m.id} value={m.id}>
-                    {wt(m.name)}{' '}
-                    {m.providerName ? `(${wt(m.providerName)})` : ''}
+                    {wt(m.name)} {m.providerName ? `(${wt(m.providerName)})` : ''}
                   </option>
                 ))}
               </optgroup>

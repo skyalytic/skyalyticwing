@@ -1,6 +1,6 @@
 {
   "name": "@skyalyticwing/shared",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "SkyalyticWing Shared - Common utilities, types, and error definitions",
   "type": "module",

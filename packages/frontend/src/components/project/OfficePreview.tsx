@@ -22,7 +22,19 @@ const drafts = new Map<string, { revision: string; changes: Record<string, strin
 registerPendingDraftCheck(() => drafts.size > 0);
 
 /** Edits OOXML text/cells in place; does not rebuild an imported Office document. */
-export function OfficePreview({ filePath }: { filePath: string }) {
+export function OfficePreview({
+  filePath,
+  remoteWorkspaceId,
+}: {
+  filePath: string;
+  remoteWorkspaceId?: string;
+}) {
+  const draftKey = remoteWorkspaceId
+    ? JSON.stringify(['remote', remoteWorkspaceId, filePath])
+    : filePath;
+  const endpoint = remoteWorkspaceId
+    ? '/remote-workspaces/' + encodeURIComponent(remoteWorkspaceId) + '/operation'
+    : '/files/office';
   useWorkbenchLanguage();
   const [doc, setDoc] = useState<Snapshot>();
   const [error, setError] = useState('');
@@ -44,24 +56,28 @@ export function OfficePreview({ filePath }: { filePath: string }) {
     if (mounted.current) setState(wt('保存中'));
     const batch = { ...pending.current };
     try {
-      const result = await apiClient.post<{ revision: string }>('/files/office', {
+      const args = {
         path: filePath,
         revision: revision.current,
         changes: Object.entries(batch).map(([id, value]) => ({ id, value })),
-      });
+      };
+      const result = await apiClient.post<{ revision: string }>(
+        endpoint,
+        remoteWorkspaceId ? { op: 'office-edit', args } : args,
+      );
       revision.current = result.revision;
       for (const [id, value] of Object.entries(batch))
         if (pending.current[id] === value) delete pending.current[id];
       if (Object.keys(pending.current).length)
-        drafts.set(filePath, { revision: revision.current, changes: { ...pending.current } });
-      else drafts.delete(filePath);
+        drafts.set(draftKey, { revision: revision.current, changes: { ...pending.current } });
+      else drafts.delete(draftKey);
       if (mounted.current) {
         setState(wt('已保存'));
         setError('');
       }
     } catch (e) {
       failed.current = true;
-      drafts.set(filePath, { revision: revision.current, changes: { ...pending.current } });
+      drafts.set(draftKey, { revision: revision.current, changes: { ...pending.current } });
       if (mounted.current) {
         setState(wt('保存失败，修改已保留'));
         setError(e instanceof Error ? e.message : String(e));
@@ -73,15 +89,21 @@ export function OfficePreview({ filePath }: { filePath: string }) {
   };
   const flushRef = useRef(flush);
   flushRef.current = flush;
-  useEffect(() => registerFileCloseGuard(filePath, async () => {
-    for (let n = 0; busy.current && n < 100; n++) await new Promise(r => setTimeout(r, 50));
-    await flushRef.current();
-    if (busy.current || Object.keys(pending.current).length) throw Error('Office 修改尚未保存');
-  }), [filePath]);
+  useEffect(
+    () =>
+      registerFileCloseGuard(draftKey, async () => {
+        for (let n = 0; busy.current && n < 100; n++) await new Promise((r) => setTimeout(r, 50));
+        await flushRef.current();
+        if (busy.current || Object.keys(pending.current).length) throw Error('Office 修改尚未保存');
+      }),
+    [draftKey],
+  );
   useEffect(() => {
     mounted.current = true;
-    void apiClient
-      .get<Snapshot>('/files/office?path=' + encodeURIComponent(filePath))
+    const loading = remoteWorkspaceId
+      ? apiClient.post<Snapshot>(endpoint, { op: 'office-read', args: { path: filePath } })
+      : apiClient.get<Snapshot>('/files/office?path=' + encodeURIComponent(filePath));
+    void loading
       .then((data) => {
         if (!mounted.current) return;
         setDoc(data);
@@ -91,7 +113,7 @@ export function OfficePreview({ filePath }: { filePath: string }) {
             section.fields.map((field) => [field.id, field.value]),
           ),
         );
-        const saved = drafts.get(filePath);
+        const saved = drafts.get(draftKey);
         if (saved) {
           pending.current = { ...saved.changes };
           revision.current = saved.revision;
@@ -119,7 +141,7 @@ export function OfficePreview({ filePath }: { filePath: string }) {
       clearTimeout(timer.current);
       void flushRef.current();
     };
-  }, [filePath]);
+  }, [draftKey]);
   useEffect(() => {
     const protect = (event: BeforeUnloadEvent) => {
       if (Object.keys(pending.current).length || busy.current) {
@@ -133,7 +155,7 @@ export function OfficePreview({ filePath }: { filePath: string }) {
   const change = (id: string, value: string) => {
     setValues((previous) => ({ ...previous, [id]: value }));
     pending.current[id] = value;
-    drafts.set(filePath, { revision: revision.current, changes: { ...pending.current } });
+    drafts.set(draftKey, { revision: revision.current, changes: { ...pending.current } });
     setState(failed.current ? wt('草稿待处理') : wt('待保存'));
     clearTimeout(timer.current);
     if (!failed.current) timer.current = setTimeout(() => void flushRef.current(), 600);
@@ -176,11 +198,22 @@ export function OfficePreview({ filePath }: { filePath: string }) {
         >
           {wt('立即保存')}
         </button>
-        <a href={'/api/files/serve?path=' + encodeURIComponent(filePath)} download>
+        <a
+          href={
+            (remoteWorkspaceId
+              ? '/api/remote-workspaces/' +
+                encodeURIComponent(remoteWorkspaceId) +
+                '/document?path='
+              : '/api/files/serve?path=') + encodeURIComponent(filePath)
+          }
+          download
+        >
           {wt('下载文件')}
         </a>
       </div>
-      <div className="preview-toolbar"><ZoomControls scale={zoom} onChange={setZoom} onFit={() => setZoom(1)} /></div>
+      <div className="preview-toolbar">
+        <ZoomControls scale={zoom} onChange={setZoom} onFit={() => setZoom(1)} />
+      </div>
       <p className="text-xs opacity-65 px-3 py-2">
         {wt('修改后自动保存到原文件。此处预览文字和单元格；图片、图表及复杂排版保留在原文件中。')}
         {doc?.format === 'xlsx' ? wt('公式可编辑，计算结果由 Excel / WPS 打开后重算。') : ''}
@@ -212,79 +245,79 @@ export function OfficePreview({ filePath }: { filePath: string }) {
       )}
       <div className="flex-1 overflow-auto p-4 bg-black/5">
         <div style={{ zoom }}>
-        {section?.fields.some((f) => f.readOnly) && (
-          <p className="text-sm mb-3">
-            {wt('此工作表包含共享或数组公式，当前只读，请在 Excel / WPS 中编辑。')}
-          </p>
-        )}
-        {section &&
-          (doc?.format === 'xlsx' ? (
-            rows.length * columns.length <= 50000 ? (
-              <table className="border-collapse bg-white text-gray-900 text-sm">
-                <thead>
-                  <tr>
-                    <th className="border bg-gray-100 p-2">{wt('行')}</th>
-                    {columns.map((c) => (
-                      <th className="border bg-gray-100 p-2 min-w-32" key={c}>
-                        {columnName(c)}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row}>
-                      <th className="border bg-gray-100 p-2 font-normal">{row}</th>
-                      {columns.map((column) => {
-                        const field = cells.get(`${row}:${column}`);
-                        return (
-                          <td key={column} className="border">
-                            {field && (
-                              <input
-                                readOnly={field.readOnly}
-                                className="w-full p-2 bg-transparent outline-blue-500"
-                                aria-label={`${section.name} ${columnName(column)}${row}`}
-                                value={values[field.id] ?? ''}
-                                onChange={(e) => change(field.id, e.target.value)}
-                              />
-                            )}
-                          </td>
-                        );
-                      })}
+          {section?.fields.some((f) => f.readOnly) && (
+            <p className="text-sm mb-3">
+              {wt('此工作表包含共享或数组公式，当前只读，请在 Excel / WPS 中编辑。')}
+            </p>
+          )}
+          {section &&
+            (doc?.format === 'xlsx' ? (
+              rows.length * columns.length <= 50000 ? (
+                <table className="border-collapse bg-white text-gray-900 text-sm">
+                  <thead>
+                    <tr>
+                      <th className="border bg-gray-100 p-2">{wt('行')}</th>
+                      {columns.map((c) => (
+                        <th className="border bg-gray-100 p-2 min-w-32" key={c}>
+                          {columnName(c)}
+                        </th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr key={row}>
+                        <th className="border bg-gray-100 p-2 font-normal">{row}</th>
+                        {columns.map((column) => {
+                          const field = cells.get(`${row}:${column}`);
+                          return (
+                            <td key={column} className="border">
+                              {field && (
+                                <input
+                                  readOnly={field.readOnly}
+                                  className="w-full p-2 bg-transparent outline-blue-500"
+                                  aria-label={`${section.name} ${columnName(column)}${row}`}
+                                  value={values[field.id] ?? ''}
+                                  onChange={(e) => change(field.id, e.target.value)}
+                                />
+                              )}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>{wt('工作表范围过大，请下载后在 Excel / WPS 中编辑。')}</p>
+              )
             ) : (
-              <p>{wt('工作表范围过大，请下载后在 Excel / WPS 中编辑。')}</p>
-            )
-          ) : (
-            <article
-              className={
-                'bg-white text-gray-900 shadow p-6 mx-auto max-w-3xl ' +
-                (doc?.format === 'pptx' ? 'min-h-80' : 'min-h-[600px]')
-              }
-            >
-              <h3 className="text-xs text-gray-400 mb-4">{section.name}</h3>
-              {section.fields.map((field, i) => (
-                <textarea
-                  key={field.id}
-                  aria-label={wt('{{v0}} 文本 {{v1}}', { v0: section.name, v1: i + 1 })}
-                  className="block w-full resize-y bg-transparent border border-transparent hover:border-blue-200 focus:border-blue-500 rounded p-1 my-1 outline-none"
-                  rows={Math.max(
-                    1,
-                    Math.min(
-                      12,
-                      (values[field.id] || '').split('\n').length +
-                        Math.floor((values[field.id] || '').length / 65),
-                    ),
-                  )}
-                  value={values[field.id] ?? ''}
-                  onChange={(e) => change(field.id, e.target.value)}
-                />
-              ))}
-            </article>
-          ))}
+              <article
+                className={
+                  'bg-white text-gray-900 shadow p-6 mx-auto max-w-3xl ' +
+                  (doc?.format === 'pptx' ? 'min-h-80' : 'min-h-[600px]')
+                }
+              >
+                <h3 className="text-xs text-gray-400 mb-4">{section.name}</h3>
+                {section.fields.map((field, i) => (
+                  <textarea
+                    key={field.id}
+                    aria-label={wt('{{v0}} 文本 {{v1}}', { v0: section.name, v1: i + 1 })}
+                    className="block w-full resize-y bg-transparent border border-transparent hover:border-blue-200 focus:border-blue-500 rounded p-1 my-1 outline-none"
+                    rows={Math.max(
+                      1,
+                      Math.min(
+                        12,
+                        (values[field.id] || '').split('\n').length +
+                          Math.floor((values[field.id] || '').length / 65),
+                      ),
+                    )}
+                    value={values[field.id] ?? ''}
+                    onChange={(e) => change(field.id, e.target.value)}
+                  />
+                ))}
+              </article>
+            ))}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { LoggerService } from '../../core/logger/logger.service.js';
 import { WebSocketService } from '../../core/websocket/websocket.service.js';
 import { LLMClientService } from '../llm/llm-client.service.js';
 import { AgentSwarmService } from './agent-swarm.service.js';
+import type { RemoteWorkspace } from '../../core/remote-workspace/remote-connections.js';
 import type {
   SubAgent,
   SubAgentTaskConfig,
@@ -36,6 +37,7 @@ export interface IsolatedAgentOptions {
 
 /** 隔离代理执行结果 */
 export interface IsolatedAgentResult {
+  remoteWorkspace?: RemoteWorkspace;
   success: boolean;
   output?: string;
   error?: string;
@@ -51,7 +53,6 @@ export interface BtwResult {
 
 @Injectable()
 export class SubagentService {
-
   constructor(
     private readonly logger: LoggerService,
     private readonly ws: WebSocketService,
@@ -60,7 +61,10 @@ export class SubagentService {
   ) {}
 
   /** 创建子代理 */
-  createSubAgent(parentId: string, config: SubAgentTaskConfig): { success: boolean; agent?: SubAgent; error?: string } {
+  createSubAgent(
+    parentId: string,
+    config: SubAgentTaskConfig,
+  ): { success: boolean; agent?: SubAgent; error?: string } {
     try {
       const created = this.swarm.createSubAgent(parentId || 'default', config || {});
       if (created.id === null) {
@@ -73,8 +77,12 @@ export class SubagentService {
   }
 
   /** 列出活跃子代理 */
-  history(){return this.swarm.listHistory();}
-  retryInterrupted(id:string,confirmReplay:boolean){return this.swarm.retryInterrupted(id,confirmReplay);}
+  history() {
+    return this.swarm.listHistory();
+  }
+  retryInterrupted(id: string, confirmReplay: boolean) {
+    return this.swarm.retryInterrupted(id, confirmReplay);
+  }
 
   listSubagents(): { agents: SubAgent[]; total: number } {
     return {
@@ -84,7 +92,11 @@ export class SubagentService {
   }
 
   /** 派发子代理任务 */
-  dispatchTask(agentId: string, task: string, background = false): { success: boolean; agentId?: string; mode?: string; error?: string } {
+  dispatchTask(
+    agentId: string,
+    task: string,
+    background = false,
+  ): { success: boolean; agentId?: string; mode?: string; error?: string } {
     return this.swarm.dispatchTask(agentId, task, background);
   }
 
@@ -134,7 +146,10 @@ export class SubagentService {
     parentId: string,
     tasks: Array<string | SubAgentTaskConfig>,
   ): Promise<SwarmResult> {
-    return this.swarm.spawnSwarm(parentId || 'main', (tasks || []) as SubAgentTaskConfig[] | string[]);
+    return this.swarm.spawnSwarm(
+      parentId || 'main',
+      (tasks || []) as SubAgentTaskConfig[] | string[],
+    );
   }
 
   /**
@@ -143,25 +158,61 @@ export class SubagentService {
    * - 不依赖会话存储，纯内存执行
    * - 完成后通过 WebSocket 广播 isolated_agent_completed 事件
    */
-  async executeIsolated(prompt: string, options: IsolatedAgentOptions = {}): Promise<IsolatedAgentResult> {
+  async executeIsolated(
+    prompt: string,
+    options: IsolatedAgentOptions = {},
+  ): Promise<IsolatedAgentResult> {
     const start = Date.now();
-    if (typeof prompt !== 'string' || !prompt.trim()) return {success:false,error:'prompt required',iterations:0,durationMs:Date.now()-start};
+    if (typeof prompt !== 'string' || !prompt.trim())
+      return {
+        success: false,
+        error: 'prompt required',
+        iterations: 0,
+        durationMs: Date.now() - start,
+      };
     const sessionId = options.sessionId || 'isolated';
     const created = this.swarm.createSubAgent(sessionId, {
-      type: 'isolated', task: prompt, prompt, workspace: 'isolated',
+      type: 'isolated',
+      task: prompt,
+      prompt,
+      workspace: 'isolated',
       model: options.model || this.llm.getDefaultModel(),
       systemPrompt: options.systemPrompt || '你是一个隔离执行的代理，负责完成给定任务。',
-      ...(options.maxIterations === undefined ? {} : {maxIterations: options.maxIterations}),
-      ...(options.tools ? {tools: options.tools} : {}),
-      inheritTools: false, allowDelegation: false,
+      ...(options.maxIterations === undefined ? {} : { maxIterations: options.maxIterations }),
+      ...(options.tools ? { tools: options.tools } : {}),
+      inheritTools: false,
+      allowDelegation: false,
     });
-    if (created.id === null) return {success:false,error:created.error,iterations:0,durationMs:Date.now()-start};
+    if (created.id === null)
+      return {
+        success: false,
+        error: created.error,
+        iterations: 0,
+        durationMs: Date.now() - start,
+      };
     const result = await this.swarm.executeSync(created.id);
-    const durationMs = Date.now()-start, iterations = result.calls || 0;
-    if (!result.success) return {success:false,error:result.error || '隔离任务失败',iterations,durationMs};
+    const durationMs = Date.now() - start,
+      iterations = result.calls || 0;
+    if (!result.success)
+      return {
+        success: false,
+        error: result.error || '隔离任务失败',
+        iterations,
+        durationMs,
+        ...(result.remoteWorkspace ? { remoteWorkspace: result.remoteWorkspace } : {}),
+      };
     const output = result.result || '';
-    this.ws.broadcast({type:'isolated_agent_completed',data:{sessionId,output,iterations,durationMs}});
-    return {success:true,output,iterations,durationMs};
+    this.ws.broadcast({
+      type: 'isolated_agent_completed',
+      data: { sessionId, output, iterations, durationMs },
+    });
+    return {
+      success: true,
+      output,
+      iterations,
+      durationMs,
+      ...(result.remoteWorkspace ? { remoteWorkspace: result.remoteWorkspace } : {}),
+    };
   }
 
   /**
@@ -209,7 +260,9 @@ export class SubagentService {
   /** 隔离代理状态（与 start.cjs IsolatedAgent.getStatus 对齐） */
   getIsolatedStatus(): { running: number; maxIterations: number | null } {
     return {
-      running: this.swarm.listActiveAgents().filter(a => a.type === 'isolated' && a.status === 'running').length,
+      running: this.swarm
+        .listActiveAgents()
+        .filter((a) => a.type === 'isolated' && a.status === 'running').length,
       maxIterations: null,
     };
   }
@@ -217,4 +270,3 @@ export class SubagentService {
 
 /** 工具调用结果类型（供 executeIsolated 内部引用） */
 export type { SubAgentExecutionResult };
-

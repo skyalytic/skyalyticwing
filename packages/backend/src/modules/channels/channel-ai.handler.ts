@@ -1,3 +1,4 @@
+import { SchedulerService } from '../core/scheduler/scheduler.service.js';
 import { replyContext } from './reply-context.js';
 import { Injectable, OnModuleInit, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
@@ -61,6 +62,7 @@ export class ChannelAiHandler implements OnModuleInit {
     private readonly config: ConfigService,
     private readonly logger: LoggerService,
     @Optional() private readonly moduleRef?: ModuleRef,
+    @Optional() private readonly scheduler?: SchedulerService,
   ) {}
 
   /** 启动即注册消息处理器（对齐旧版 initChannelSystem 中 onMessage 注册） */
@@ -94,6 +96,7 @@ export class ChannelAiHandler implements OnModuleInit {
       }
 
       const from = message.from || 'unknown';
+      message.raw = { ...message.raw, _taskSessionId: _session.sessionId };
 
       // 防自回复循环：自身回显消息跳过（命中即删，一次性消费——
       // 防止 AI 回复 "ok" 后用户 120s 内再发 "ok" 被误吞）
@@ -101,6 +104,15 @@ export class ChannelAiHandler implements OnModuleInit {
         this.logger.info('[ChannelAI] self-echo skipped', { channelType, from });
         return;
       }
+
+      const admission = this.scheduler?.channelAdmission(
+        channelType,
+        from,
+        message.id,
+        text,
+        _session.sessionId,
+      );
+      if (admission === 'off' || admission === 'observe') return;
 
       // /btw 短路（对齐旧版 start.cjs:2934-2947：渠道 /btw xxx 走旁路提问，不进主 agent 循环）
       if (text.startsWith('/btw ') || text === '/btw') {
@@ -125,12 +137,7 @@ export class ChannelAiHandler implements OnModuleInit {
       // 3. 调 AI：经 AgentLoopService 驱动（渠道场景迭代上限 500，对齐旧版）
       const agentLoop = this.resolveAgentLoop();
       if (!agentLoop) {
-        await this.sendReply(
-          channelType,
-          from,
-          '[ERROR] AI service unavailable',
-          message.raw,
-        );
+        await this.sendReply(channelType, from, '[ERROR] AI service unavailable', message.raw);
         return;
       }
 
@@ -141,7 +148,12 @@ export class ChannelAiHandler implements OnModuleInit {
         for await (const event of agentLoop.run(sessionId, text, {
           agentId,
         })) {
-          if (event.type === 'assistant_message' && event.message?.phase !== 'progress' && event.message?.phase !== 'status' && event.content) {
+          if (
+            event.type === 'assistant_message' &&
+            event.message?.phase !== 'progress' &&
+            event.message?.phase !== 'status' &&
+            event.content
+          ) {
             replyText = event.content;
           } else if (event.type === 'error') {
             failure = event.error;
@@ -165,12 +177,7 @@ export class ChannelAiHandler implements OnModuleInit {
 
       // 7. 错误处理：AI 失败时回发友好错误消息（对齐旧版 "[ERROR] " + message）
       if (failure) {
-        await this.sendReply(
-          channelType,
-          from,
-          `[ERROR] ${failure || '处理失败'}`,
-          message.raw,
-        );
+        await this.sendReply(channelType, from, `[ERROR] ${failure || '处理失败'}`, message.raw);
         return;
       }
 
@@ -272,7 +279,10 @@ export class ChannelAiHandler implements OnModuleInit {
   ): Promise<void> {
     // Enabled AI channels are remote task interfaces: return the result directly.
     // Tool execution permissions remain enforced by AgentLoopService.
-    const options=replyContext(raw);
+    const options = replyContext(raw);
+    if (typeof raw?.['_taskSessionId'] === 'string')
+      options['_taskSessionId'] = raw['_taskSessionId'];
+    if (options.msgId) options['deliveryKey'] = 'reply:' + to + ':' + options.msgId;
     try {
       const result = await this.channelsService.sendMessageToProvider(
         channelType,

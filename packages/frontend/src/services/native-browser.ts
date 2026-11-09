@@ -1,7 +1,12 @@
 import { isTauri } from './tauri-bridge';
+import { BrowserRecovery } from './browser-recovery';
 import { apiClient } from './api-client';
 import { browserSession } from './browser-api';
-import { useBrowserPanel, type BrowserElementDetail, type BrowserDownload } from '@/stores/browser-store';
+import {
+  useBrowserPanel,
+  type BrowserElementDetail,
+  type BrowserDownload,
+} from '@/stores/browser-store';
 import { useWorkspaceTabs } from '@/stores/workspace-tab-store';
 export interface NativeTab {
   id: string;
@@ -30,6 +35,11 @@ interface Command {
   args: Record<string, unknown>;
 }
 const sessions = new Set<string>();
+const touchedSessions = new Set<string>();
+const recovery = new BrowserRecovery({
+  getItem: (key) => window.localStorage.getItem(key),
+  setItem: (key, value) => window.localStorage.setItem(key, value),
+});
 export async function nativeInvoke<T>(name: string, args: Record<string, unknown>): Promise<T> {
   const runtime = (
     window as unknown as {
@@ -45,6 +55,15 @@ export async function nativeBrowser<T = unknown>(
   sessionId = browserSession() || 'default',
 ): Promise<T> {
   sessions.add(sessionId);
+  if (!['state', 'close', 'close-all', 'bounds', 'focus-shell'].includes(op)) {
+    await recovery.restore(sessionId, (restoreOp, restoreArgs) =>
+      nativeInvoke('native_browser_command', {
+        command: { op: restoreOp, args: restoreArgs, session_id: sessionId },
+      }),
+    );
+    touchedSessions.add(sessionId);
+  }
+  if (['close', 'close-all'].includes(op)) touchedSessions.add(sessionId);
   return nativeInvoke<T>('native_browser_command', {
     command: { op, args, session_id: sessionId },
   });
@@ -63,6 +82,7 @@ export function startNativeBrowserHost(): () => void {
   let bridgeErrors = 0;
   let states: Record<string, NativeState> = {};
   const owner = crypto.randomUUID();
+  let execution = Promise.resolve();
   async function execute(command: Command) {
     let result: unknown, error: string | undefined;
     try {
@@ -92,7 +112,13 @@ export function startNativeBrowserHost(): () => void {
       sessions.add(sessionId);
       const nextStates: Record<string, NativeState> = {};
       for (const id of [sessionId, ...[...sessions].filter((id) => id !== sessionId)]) {
-        nextStates[id] = await nativeBrowser<NativeState>('state', { inspect: id === sessionId }, id);
+        nextStates[id] = await nativeBrowser<NativeState>(
+          'state',
+          { inspect: id === sessionId },
+          id,
+        );
+        if (touchedSessions.has(id) || nextStates[id].tabs.length)
+          recovery.save(id, nextStates[id].tabs, nextStates[id].activePageId);
         if (id !== sessionId && !nextStates[id].tabs.length) sessions.delete(id);
       }
       if (stopped) return;
@@ -169,7 +195,8 @@ export function startNativeBrowserHost(): () => void {
         { owner, states },
       );
       if (stopped) return;
-      for (const command of response.commands) void execute(command);
+      for (const command of response.commands)
+        execution = execution.then(() => (stopped ? undefined : execute(command))).catch(() => {});
       const sessionId = browserSession() || 'default';
       const status = await apiClient.get<{ manual: boolean; agentBusy: boolean }>(
         `/builtin-browser/status?sessionId=${encodeURIComponent(sessionId)}`,

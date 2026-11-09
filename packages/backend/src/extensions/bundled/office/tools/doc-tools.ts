@@ -140,7 +140,8 @@ function loadPdfKit(): (new (opts?: Record<string, unknown>) => PdfKitDoc) | nul
     const mod = dynamicRequire('pdfkit') as unknown;
     const ctor =
       (mod as { PDFDocument?: unknown }).PDFDocument ??
-      ((mod as { default?: unknown }).default ?? mod);
+      (mod as { default?: unknown }).default ??
+      mod;
     if (typeof ctor === 'function') {
       pdfKitCtor = ctor as new (opts?: Record<string, unknown>) => PdfKitDoc;
     }
@@ -180,8 +181,14 @@ function findChineseFont(): ChineseFontCandidate | null {
     ];
   } else {
     candidates = [
-      { path: '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc', postScriptName: 'WenQuanYiMicroHei' },
-      { path: '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc', postScriptName: 'NotoSansCJKsc-Regular' },
+      {
+        path: '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc',
+        postScriptName: 'WenQuanYiMicroHei',
+      },
+      {
+        path: '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+        postScriptName: 'NotoSansCJKsc-Regular',
+      },
     ];
   }
   cachedChineseFont = candidates.find((c) => existsSync(c.path)) ?? null;
@@ -200,10 +207,7 @@ function toBlocks(a: DocGenerateArgs): DocSection[] {
 }
 
 /** 降级方案：生成 Markdown 文件并返回指引（JS 库不可用时） */
-function fallbackMarkdown(
-  a: DocGenerateArgs,
-  reason: string,
-): ToolResult {
+function fallbackMarkdown(a: DocGenerateArgs, reason: string): ToolResult {
   const blocks = toBlocks(a);
   const md: string[] = [`# ${a.title}`, ''];
   for (const s of blocks) {
@@ -215,7 +219,9 @@ function fallbackMarkdown(
         const cols = Math.max(...tableRows.map((r) => r.length));
         md.push('| ' + Array.from({ length: cols }, () => '---').join(' | ') + ' |');
         for (const r of tableRows) {
-          md.push('| ' + Array.from({ length: cols }, (_, i) => String(r[i] ?? '')).join(' | ') + ' |');
+          md.push(
+            '| ' + Array.from({ length: cols }, (_, i) => String(r[i] ?? '')).join(' | ') + ' |',
+          );
         }
         md.push('');
       }
@@ -239,7 +245,7 @@ function fallbackMarkdown(
 /**
  * 文档生成域内置工具：doc_generate。
  *
- * 移植自旧版 doc-writer 思路，真实实现基于后端已装依赖：
+ * 文档构建使用后端已安装依赖：
  *   - docx → docx 库（Document/Paragraph/Packer.toBuffer）
  *   - xlsx → xlsx 库（aoa_to_sheet + write，取 sections[].rows 或按行拆 content）
  *   - pptx → pptxgenjs（每 section 一页 slide）
@@ -248,7 +254,14 @@ function fallbackMarkdown(
  *
  * 安全：outputPath 经 PathGuard 写白名单；库经 dynamicRequire 动态加载。
  */
-export function createDocTools(security: SecurityManagerService): ToolDefinition[] {
+export interface DocumentOutput {
+  resolve(workspace: string, outputPath: string | undefined, format: string): string;
+  write(buffer: Buffer): Promise<void>;
+}
+export function createDocTools(
+  security: SecurityManagerService,
+  output?: DocumentOutput,
+): ToolDefinition[] {
   return [
     // ═══ doc_generate ═══
     {
@@ -266,7 +279,8 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
           format: {
             type: 'string',
             enum: ['docx', 'xlsx', 'pptx', 'pdf'],
-            description: '目标格式：docx=Word 文档，xlsx=Excel 表格，pptx=PowerPoint 幻灯片，pdf=PDF 文档',
+            description:
+              '目标格式：docx=Word 文档，xlsx=Excel 表格，pptx=PowerPoint 幻灯片，pdf=PDF 文档',
           },
           title: { type: 'string', description: '文档标题' },
           content: { type: 'string', description: '正文内容（与 sections 二选一）' },
@@ -275,7 +289,10 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
             items: {
               type: 'object',
               properties: {
-                heading: { type: 'string', description: '节标题（docx/pdf 二级标题 / pptx 页标题 / xlsx 工作表名）' },
+                heading: {
+                  type: 'string',
+                  description: '节标题（docx/pdf 二级标题 / pptx 页标题 / xlsx 工作表名）',
+                },
                 content: { type: 'string', description: '节正文' },
                 rows: {
                   type: 'array',
@@ -292,7 +309,8 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
       },
       async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
         const a = (args || {}) as DocGenerateArgs;
-        if (a.format !== 'docx' &&
+        if (
+          a.format !== 'docx' &&
           a.format !== 'xlsx' &&
           a.format !== 'pptx' &&
           a.format !== 'pdf'
@@ -311,30 +329,44 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
         }
 
         // 输出路径解析：PathGuard 写白名单
-        const outPath = a.outputPath
-          ? resolvePath(ctx.workspace || process.cwd(), a.outputPath)
-          : resolvePath(ctx.workspace || process.cwd(), `doc-${Date.now()}.${a.format}`);
+        const outPath = output
+          ? output.resolve(ctx.workspace || '', a.outputPath, a.format)
+          : a.outputPath
+            ? resolvePath(ctx.workspace || process.cwd(), a.outputPath)
+            : resolvePath(ctx.workspace || process.cwd(), `doc-${Date.now()}.${a.format}`);
         if (outPath.includes('\0')) return fail('路径不得包含空字节');
-        if (extname(outPath).toLowerCase() !== '.' + a.format) return fail('文件扩展名必须与 format 一致');
+        if (extname(outPath).toLowerCase() !== '.' + a.format)
+          return fail('文件扩展名必须与 format 一致');
         if (!security.isPathAllowed(outPath, 'write')) {
           return { success: false, error: `输出路径不在白名单内: ${outPath}`, blocked: true };
         }
 
         try {
-          const hash = (path: string) => existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : null;
-          const baseRevision = hash(outPath);
-          const writeOutput = (buffer: Buffer) => withFileMutation(outPath, async () => {
-            if (hash(outPath) !== baseRevision) throw new Error('生成期间文件已被其他操作修改，请换一个输出文件名');
-            const temp = outPath + '.' + randomUUID() + '.tmp';
-            try { writeFileSync(temp,buffer); renameSync(temp,outPath); } finally { rmSync(temp,{force:true}); }
-          });
+          const hash = (path: string) =>
+            existsSync(path) ? createHash('sha256').update(readFileSync(path)).digest('hex') : null;
+          const baseRevision = output ? null : hash(outPath);
+          const writeOutput = (buffer: Buffer) =>
+            output
+              ? output.write(buffer)
+              : withFileMutation(outPath, async () => {
+                  if (hash(outPath) !== baseRevision)
+                    throw new Error('生成期间文件已被其他操作修改，请换一个输出文件名');
+                  const temp = outPath + '.' + randomUUID() + '.tmp';
+                  try {
+                    writeFileSync(temp, buffer);
+                    renameSync(temp, outPath);
+                  } finally {
+                    rmSync(temp, { force: true });
+                  }
+                });
           // 确保父目录存在
           const parent = resolvePath(outPath, '..');
-          if (!existsSync(parent)) mkdirSync(parent, { recursive: true });
+          if (!output && !existsSync(parent)) mkdirSync(parent, { recursive: true });
 
           if (a.format === 'docx') {
             const docx = loadDocx();
             if (!docx) {
+              if (output) return fail('docx 库加载失败，未生成文件');
               const r = fallbackMarkdown(a, 'docx 库加载失败');
               if (!r.data || typeof r.data !== 'object') return r;
               const mdPath = outPath.replace(/\.docx$/i, '.md');
@@ -358,17 +390,40 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
                   children.push(new docx.Paragraph({ text: line }));
                 }
               }
-              if (Array.isArray(s.rows) && s.rows.length) children.push(new docx.Table({ rows: s.rows.filter(Array.isArray).map(row => new docx.TableRow({ children: row.map(cell => new docx.TableCell({ children: [new docx.Paragraph({ text: String(cell ?? '') })] })) })) }));
+              if (Array.isArray(s.rows) && s.rows.length)
+                children.push(
+                  new docx.Table({
+                    rows: s.rows
+                      .filter(Array.isArray)
+                      .map(
+                        (row) =>
+                          new docx.TableRow({
+                            children: row.map(
+                              (cell) =>
+                                new docx.TableCell({
+                                  children: [new docx.Paragraph({ text: String(cell ?? '') })],
+                                }),
+                            ),
+                          }),
+                      ),
+                  }),
+                );
             }
             const doc = new docx.Document({ sections: [{ children }] });
             const buf = await docx.Packer.toBuffer(doc);
             await writeOutput(buf);
-            return jsonOut({ format: 'docx', file: outPath, bytes: buf.length, sections: blocks.length });
+            return jsonOut({
+              format: 'docx',
+              file: outPath,
+              bytes: buf.length,
+              sections: blocks.length,
+            });
           }
 
           if (a.format === 'xlsx') {
             const xlsx = loadXlsx();
             if (!xlsx) {
+              if (output) return fail('xlsx 库加载失败，未生成文件');
               const r = fallbackMarkdown(a, 'xlsx 库加载失败');
               if (!r.data || typeof r.data !== 'object') return r;
               const mdPath = outPath.replace(/\.xlsx$/i, '.md');
@@ -389,9 +444,15 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
               if (rows.length === 0) continue;
               const ws = xlsx.utils.aoa_to_sheet(rows);
               sheetIdx++;
-              const base = (s.heading || `Sheet${sheetIdx}`).replace(/[\\/?*[\]:]/g, '_').slice(0, 31) || `Sheet${sheetIdx}`;
-              let name = base, suffix = 1;
-              while (names.has(name.toLowerCase())) { const tail = '_' + suffix++; name = base.slice(0, 31 - tail.length) + tail; }
+              const base =
+                (s.heading || `Sheet${sheetIdx}`).replace(/[\\/?*[\]:]/g, '_').slice(0, 31) ||
+                `Sheet${sheetIdx}`;
+              let name = base,
+                suffix = 1;
+              while (names.has(name.toLowerCase())) {
+                const tail = '_' + suffix++;
+                name = base.slice(0, 31 - tail.length) + tail;
+              }
               names.add(name.toLowerCase());
               xlsx.utils.book_append_sheet(wb, ws, name);
             }
@@ -404,6 +465,7 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
           if (a.format === 'pdf') {
             const PDFKitCtor = loadPdfKit();
             if (!PDFKitCtor) {
+              if (output) return fail('pdfkit 库加载失败，未生成文件');
               const r = fallbackMarkdown(a, 'pdfkit 库加载失败');
               if (!r.data || typeof r.data !== 'object') return r;
               const mdPath = outPath.replace(/\.pdf$/i, '.md');
@@ -424,7 +486,9 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
                 if (chunk) chunks.push(chunk as Buffer);
               });
               doc.on('end', () => resolveDone());
-              doc.on('error', (e: unknown) => rejectDone(e instanceof Error ? e : new Error(String(e))));
+              doc.on('error', (e: unknown) =>
+                rejectDone(e instanceof Error ? e : new Error(String(e))),
+              );
             });
             // 中文字体：注册系统字体（TTC 集合传 PostScript 名定位子字体），失败降级 Helvetica
             const zhFont = findChineseFont();
@@ -439,9 +503,15 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
               }
             }
             const boldFont = fontName === 'ChineseFont' ? 'ChineseFont' : 'Helvetica-Bold';
-            if (fontName !== 'ChineseFont' && /[\u3400-\u9fff\uf900-\ufaff]/.test(a.title + JSON.stringify(blocks))) {
-              doc.end(); await done;
-              return fail('缺少可用中文字体，未生成乱码 PDF。请安装思源黑体 / Noto Sans CJK，或先生成 Word 文档。');
+            if (
+              fontName !== 'ChineseFont' &&
+              /[\u3400-\u9fff\uf900-\ufaff]/.test(a.title + JSON.stringify(blocks))
+            ) {
+              doc.end();
+              await done;
+              return fail(
+                '缺少可用中文字体，未生成乱码 PDF。请安装思源黑体 / Noto Sans CJK，或先生成 Word 文档。',
+              );
             }
             // 文档标题：大字号加粗居中
             doc.font(boldFont).fontSize(22).text(a.title, { align: 'center', lineGap: 4 });
@@ -461,7 +531,10 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
                     doc.font(fontName).fontSize(11).text(`• ${ul[1]}`, { indent: 20, lineGap: 2 });
                   } else if (ol) {
                     // 有序列表：保留编号前缀
-                    doc.font(fontName).fontSize(11).text(`${ol[1]}. ${ol[2]}`, { indent: 20, lineGap: 2 });
+                    doc
+                      .font(fontName)
+                      .fontSize(11)
+                      .text(`${ol[1]}. ${ol[2]}`, { indent: 20, lineGap: 2 });
                   } else if (line.trim().length === 0) {
                     doc.moveDown(0.5);
                   } else {
@@ -504,6 +577,7 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
           // pptx
           const PptxGen = loadPptxGen();
           if (!PptxGen) {
+            if (output) return fail('pptxgenjs 库加载失败，未生成文件');
             const r = fallbackMarkdown(a, 'pptxgenjs 库加载失败');
             if (!r.data || typeof r.data !== 'object') return r;
             const mdPath = outPath.replace(/\.pptx$/i, '.md');
@@ -518,24 +592,48 @@ export function createDocTools(security: SecurityManagerService): ToolDefinition
           // 封面页
           const cover = pptx.addSlide();
           cover.addText(a.title, {
-            x: 0.5, y: 2.0, w: 9.0, h: 1.5,
-            fontSize: 32, bold: true, align: 'center',
+            x: 0.5,
+            y: 2.0,
+            w: 9.0,
+            h: 1.5,
+            fontSize: 32,
+            bold: true,
+            align: 'center',
           });
           for (const s of blocks) {
             const slide = pptx.addSlide();
             if (s.heading) {
               slide.addText(s.heading, {
-                x: 0.5, y: 0.4, w: 9.0, h: 0.8,
-                fontSize: 24, bold: true,
+                x: 0.5,
+                y: 0.4,
+                w: 9.0,
+                h: 0.8,
+                fontSize: 24,
+                bold: true,
               });
             }
             if (typeof s.content === 'string' && s.content.length > 0) {
               slide.addText(s.content, {
-                x: 0.5, y: 1.4, w: 9.0, h: s.rows?.length ? 1.9 : 3.8,
-                fontSize: 14, valign: 'top', fit: 'shrink',
+                x: 0.5,
+                y: 1.4,
+                w: 9.0,
+                h: s.rows?.length ? 1.9 : 3.8,
+                fontSize: 14,
+                valign: 'top',
+                fit: 'shrink',
               });
             }
-            if (Array.isArray(s.rows) && s.rows.length) slide.addTable(s.rows.filter(Array.isArray).map(row => row.map(cell => String(cell ?? ''))), { x: 0.5, y: s.content ? 3.5 : 1.4, w: 9, fontSize: 12, border: { pt: 1, color: 'CCCCCC' } });
+            if (Array.isArray(s.rows) && s.rows.length)
+              slide.addTable(
+                s.rows.filter(Array.isArray).map((row) => row.map((cell) => String(cell ?? ''))),
+                {
+                  x: 0.5,
+                  y: s.content ? 3.5 : 1.4,
+                  w: 9,
+                  fontSize: 12,
+                  border: { pt: 1, color: 'CCCCCC' },
+                },
+              );
           }
           await writeOutput(await pptx.write({ outputType: 'nodebuffer' }));
           return jsonOut({ format: 'pptx', file: outPath, slides: blocks.length + 1 });

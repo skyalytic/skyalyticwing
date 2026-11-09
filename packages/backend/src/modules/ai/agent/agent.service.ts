@@ -1,3 +1,5 @@
+import { SchedulerService } from '../../core/scheduler/scheduler.service.js';
+import { RevisionConflict } from '../../core/scheduler/scheduler-store.js';
 import { LocalResourcePolicy } from '../../core/security/local-resource-policy.service.js';
 import { getDefaultDataDir } from '../../core/utils/web-data.util.js';
 import { Injectable, OnModuleInit, Optional } from '@nestjs/common';
@@ -35,7 +37,10 @@ export const BUILTIN_AGENT_ID = 'agent';
 
 @Injectable()
 export class AgentService implements OnModuleInit {
-  constructor(@Optional() private readonly memoryPolicy?: LocalResourcePolicy) {}
+  constructor(
+    @Optional() private readonly memoryPolicy?: LocalResourcePolicy,
+    @Optional() private readonly scheduler?: SchedulerService,
+  ) {}
   private readonly agents = new Map<string, AgentInfo>();
   private readonly memories = new Map<string, AgentMemory>();
   private customAgentsFile = '';
@@ -50,7 +55,6 @@ export class AgentService implements OnModuleInit {
     const dataDir = process.env['SKYALYTICWING_DATA_DIR'] || this.getDefaultDataDir();
     this.customAgentsFile = join(dataDir, 'custom-agents.json');
     this.teamsFile = join(dataDir, 'agent-teams.json');
-
 
     // 1. 内置智能体种子：仅一个 Agent（清空旧版 6 个 .agents 预设——产品决策）
     const seed = this.buildBuiltinSeed();
@@ -67,26 +71,40 @@ export class AgentService implements OnModuleInit {
       this.agents.set(id, {
         id,
         name: typeof ca['name'] === 'string' && ca['name'] ? ca['name'] : (base?.name ?? id),
-        description: typeof ca['description'] === 'string' ? ca['description'] : (base?.description ?? ''),
+        description:
+          typeof ca['description'] === 'string' ? ca['description'] : (base?.description ?? ''),
         model: typeof ca['model'] === 'string' ? ca['model'] : (base?.model ?? ''),
-        systemPrompt: typeof ca['systemPrompt'] === 'string' ? ca['systemPrompt'] : (base?.systemPrompt ?? ''),
+        systemPrompt:
+          typeof ca['systemPrompt'] === 'string' ? ca['systemPrompt'] : (base?.systemPrompt ?? ''),
         tools: Array.isArray(ca['tools']) ? (ca['tools'] as string[]) : (base?.tools ?? []),
-        toolsMode: ca['toolsMode'] === 'none' || ca['toolsMode'] === 'selected' ? ca['toolsMode'] : 'inherit',
-        createdAt: typeof ca['createdAt'] === 'number' ? ca['createdAt'] : (base?.createdAt ?? Date.now()),
-        updatedAt: typeof ca['updatedAt'] === 'number' ? ca['updatedAt'] : (base?.updatedAt ?? Date.now()),
+        toolsMode:
+          ca['toolsMode'] === 'none' || ca['toolsMode'] === 'selected'
+            ? ca['toolsMode']
+            : 'inherit',
+        createdAt:
+          typeof ca['createdAt'] === 'number' ? ca['createdAt'] : (base?.createdAt ?? Date.now()),
+        updatedAt:
+          typeof ca['updatedAt'] === 'number' ? ca['updatedAt'] : (base?.updatedAt ?? Date.now()),
         type: typeof ca['type'] === 'string' ? ca['type'] : (base?.type ?? 'specialist'),
         emoji: typeof ca['emoji'] === 'string' ? ca['emoji'] : (base?.emoji ?? 'agent'),
-        capabilities: Array.isArray(ca['capabilities']) ? (ca['capabilities'] as string[]) : (base?.capabilities ?? []),
+        capabilities: Array.isArray(ca['capabilities'])
+          ? (ca['capabilities'] as string[])
+          : (base?.capabilities ?? []),
         status: 'idle',
         defaultModel: typeof ca['model'] === 'string' ? ca['model'] : (base?.defaultModel ?? ''),
         tasksCompleted: base?.tasksCompleted ?? 0,
         tokensUsed: base?.tokensUsed ?? '0B',
         builtin: isBuiltinOverride ? true : false,
-      slug: typeof ca['slug'] === 'string' ? ca['slug'] : (base?.slug ?? (isBuiltinOverride ? 'agent' : '')),
-      callable: typeof ca['callable'] === 'boolean' ? ca['callable'] : (base?.callable ?? true),
-      invocationHint:
-        typeof ca['invocationHint'] === 'string' ? ca['invocationHint'] : (base?.invocationHint ?? ''),
-      avatar: typeof ca['avatar'] === 'string' ? ca['avatar'] : (base?.avatar ?? ''),
+        slug:
+          typeof ca['slug'] === 'string'
+            ? ca['slug']
+            : (base?.slug ?? (isBuiltinOverride ? 'agent' : '')),
+        callable: typeof ca['callable'] === 'boolean' ? ca['callable'] : (base?.callable ?? true),
+        invocationHint:
+          typeof ca['invocationHint'] === 'string'
+            ? ca['invocationHint']
+            : (base?.invocationHint ?? ''),
+        avatar: typeof ca['avatar'] === 'string' ? ca['avatar'] : (base?.avatar ?? ''),
       });
     }
 
@@ -165,14 +183,24 @@ export class AgentService implements OnModuleInit {
 
   /** 列出全部智能体 */
   listAgents(): AgentInfo[] {
-    return Array.from(this.agents.values());
+    return Array.from(this.agents.keys()).map((id) => this.getAgent(id));
   }
 
   /** 获取单个智能体，不存在则抛错 */
   getAgent(id: string): AgentInfo {
     const agent = this.agents.get(id);
     if (!agent) throw new Error(`Agent '${id}' not found`);
-    return agent;
+    if (!this.scheduler) return agent;
+    const store = this.scheduler.store();
+    const document = store.prompt(
+      id,
+      agent.systemPrompt,
+      agent.builtin ? this.buildBuiltinSeed().systemPrompt : agent.systemPrompt,
+    );
+    const current = (
+      agent.builtin ? store.upgradePrompt(id, this.buildBuiltinSeed().systemPrompt) : document
+    ).revisions.at(-1)!;
+    return { ...agent, systemPrompt: current.text, promptRevision: current.revision };
   }
 
   /** 按英文标识名（slug）查找智能体（协作委派入口，大小写不敏感） */
@@ -226,13 +254,26 @@ export class AgentService implements OnModuleInit {
       avatar: data.avatar ?? '',
     };
     this.agents.set(id, agent);
-    try { this.writePersistedAgents(); } catch (error) { this.agents.delete(id); throw error; }
+    try {
+      this.writePersistedAgents();
+    } catch (error) {
+      this.agents.delete(id);
+      throw error;
+    }
     return agent;
   }
 
   /** 更新智能体（内置智能体可编辑，编辑以 override 持久化） */
   updateAgent(id: string, data: UpdateAgentDto): AgentInfo {
     const existing = this.getAgent(id);
+    if (
+      data.systemPrompt !== undefined &&
+      this.scheduler &&
+      data.systemPrompt !== existing.systemPrompt
+    ) {
+      if (data.promptRevision !== existing.promptRevision)
+        throw new RevisionConflict('Prompt changed; reload before saving');
+    }
     if (data.slug !== undefined && data.slug !== existing.slug) {
       this.assertSlugAvailable(data.slug, id);
     }
@@ -243,8 +284,14 @@ export class AgentService implements OnModuleInit {
       updated.model = data.model;
       updated.defaultModel = data.model;
     }
-    if (data.systemPrompt !== undefined) updated.systemPrompt = data.systemPrompt;
-    if (data.tools !== undefined) { updated.tools = data.tools; updated.toolsMode = data.toolsMode || 'selected'; }
+    if (data.systemPrompt !== undefined)
+      updated.systemPrompt = this.scheduler
+        ? (this.agents.get(id)?.systemPrompt ?? '')
+        : data.systemPrompt;
+    if (data.tools !== undefined) {
+      updated.tools = data.tools;
+      updated.toolsMode = data.toolsMode || 'selected';
+    }
     if (data.toolsMode !== undefined) updated.toolsMode = data.toolsMode;
     if (data.type !== undefined && !existing.builtin) updated.type = data.type;
     if (data.emoji !== undefined) updated.emoji = data.emoji;
@@ -254,8 +301,19 @@ export class AgentService implements OnModuleInit {
     if (data.invocationHint !== undefined) updated.invocationHint = data.invocationHint;
     if (data.avatar !== undefined) updated.avatar = data.avatar;
     this.agents.set(id, updated);
-    try { this.writePersistedAgents(); } catch (error) { this.agents.set(id, existing); throw error; }
-    return updated;
+    try {
+      this.writePersistedAgents();
+    } catch (error) {
+      this.agents.set(id, existing);
+      throw error;
+    }
+    if (
+      data.systemPrompt !== undefined &&
+      this.scheduler &&
+      data.systemPrompt !== existing.systemPrompt
+    )
+      this.scheduler.store().savePrompt(id, data.systemPrompt, existing.promptRevision!);
+    return this.getAgent(id);
   }
 
   /** 删除智能体（内置智能体不可删除——产品规则：只能编辑，不能删除） */
@@ -265,7 +323,9 @@ export class AgentService implements OnModuleInit {
     if (existing?.builtin) {
       throw new Error('内置智能体不可删除');
     }
-    const previousTeams = new Map([...this.teams].map(([key, team]) => [key, { ...team, memberIds: [...team.memberIds] }]));
+    const previousTeams = new Map(
+      [...this.teams].map(([key, team]) => [key, { ...team, memberIds: [...team.memberIds] }]),
+    );
     const previousMemory = this.memories.get(id);
     this.agents.delete(id);
     this.memories.delete(id);
@@ -330,7 +390,12 @@ export class AgentService implements OnModuleInit {
       updatedAt: now,
     };
     this.teams.set(team.id, team);
-    try { this.writeTeams(); } catch (error) { this.teams.delete(team.id); throw error; }
+    try {
+      this.writeTeams();
+    } catch (error) {
+      this.teams.delete(team.id);
+      throw error;
+    }
     return team;
   }
 
@@ -350,11 +415,17 @@ export class AgentService implements OnModuleInit {
       if (!updated.memberIds.includes(data.leadId)) throw new Error('主管人必须是团队成员');
       updated.leadId = data.leadId;
     }
-    if (updated.leadId && !updated.memberIds.includes(updated.leadId)) updated.leadId = updated.memberIds[0];
+    if (updated.leadId && !updated.memberIds.includes(updated.leadId))
+      updated.leadId = updated.memberIds[0];
     if (data.tags !== undefined) updated.tags = data.tags;
     if (data.avatar !== undefined) updated.avatar = data.avatar;
     this.teams.set(id, updated);
-    try { this.writeTeams(); } catch (error) { this.teams.set(id, existing); throw error; }
+    try {
+      this.writeTeams();
+    } catch (error) {
+      this.teams.set(id, existing);
+      throw error;
+    }
     return updated;
   }
 
@@ -362,7 +433,12 @@ export class AgentService implements OnModuleInit {
   deleteTeam(id: string): void {
     const existing = this.getTeam(id);
     this.teams.delete(id);
-    try { this.writeTeams(); } catch (error) { this.teams.set(id, existing); throw error; }
+    try {
+      this.writeTeams();
+    } catch (error) {
+      this.teams.set(id, existing);
+      throw error;
+    }
   }
 
   /** 团队可委派成员清单（callable !== false 的成员），供协作调度注入 */
@@ -379,13 +455,18 @@ export class AgentService implements OnModuleInit {
       if (!Array.isArray(raw)) throw new Error('Invalid agent-teams.json');
       for (const t of raw) {
         if (!t || typeof t['id'] !== 'string' || typeof t['name'] !== 'string') continue;
-        const memberIds = Array.isArray(t['memberIds']) ? (t['memberIds'] as string[]).filter(id => this.agents.has(id)) : [];
+        const memberIds = Array.isArray(t['memberIds'])
+          ? (t['memberIds'] as string[]).filter((id) => this.agents.has(id))
+          : [];
         this.teams.set(t['id'], {
           id: t['id'],
           name: t['name'],
           description: typeof t['description'] === 'string' ? t['description'] : '',
           memberIds,
-          leadId: typeof t['leadId'] === 'string' && memberIds.includes(t['leadId']) ? t['leadId'] : memberIds[0],
+          leadId:
+            typeof t['leadId'] === 'string' && memberIds.includes(t['leadId'])
+              ? t['leadId']
+              : memberIds[0],
           tags: Array.isArray(t['tags']) ? (t['tags'] as string[]) : [],
           avatar: typeof t['avatar'] === 'string' ? t['avatar'] : '',
           createdAt: typeof t['createdAt'] === 'number' ? t['createdAt'] : Date.now(),
@@ -404,36 +485,55 @@ export class AgentService implements OnModuleInit {
 
   private ensureMemoryScope(): void {
     if (!this.memoryInitialized) return;
-    const root=getDefaultDataDir();
-    const file=join(this.memoryPolicy?.localMemoryRoot(root) ?? root,'agent-memories.json');
-    if (file===this.memoriesFile) return;
-    const values=readJsonRecover<AgentMemory[]>(file,[]);
-    if (!Array.isArray(values) || values.some(m=>!m || typeof m.agentId!=='string' || !Array.isArray(m.facts) || m.facts.some(f=>typeof f!=='string'))) throw new Error('智能体记忆文件损坏');
+    const root = getDefaultDataDir();
+    const file = join(this.memoryPolicy?.localMemoryRoot(root) ?? root, 'agent-memories.json');
+    if (file === this.memoriesFile) return;
+    const values = readJsonRecover<AgentMemory[]>(file, []);
+    if (
+      !Array.isArray(values) ||
+      values.some(
+        (m) =>
+          !m ||
+          typeof m.agentId !== 'string' ||
+          !Array.isArray(m.facts) ||
+          m.facts.some((f) => typeof f !== 'string'),
+      )
+    )
+      throw new Error('智能体记忆文件损坏');
     this.memories.clear();
-    for (const memory of values) if(this.agents.has(memory.agentId)) this.memories.set(memory.agentId,memory);
-    this.memoriesFile=file;
+    for (const memory of values)
+      if (this.agents.has(memory.agentId)) this.memories.set(memory.agentId, memory);
+    this.memoriesFile = file;
   }
   /** 获取智能体记忆（不存在则返回空记忆） */
   getMemory(agentId: string): AgentMemory {
     this.ensureMemoryScope();
-    return structuredClone(
-      this.memories.get(agentId) ?? { agentId, facts: [], lastUpdated: 0 }
-    );
+    return structuredClone(this.memories.get(agentId) ?? { agentId, facts: [], lastUpdated: 0 });
   }
 
   /** 设置智能体记忆 */
   setMemory(agentId: string, memory: AgentMemory): void {
     this.ensureMemoryScope();
     this.getAgent(agentId);
-    if(!Array.isArray(memory.facts)||memory.facts.length>1000||memory.facts.some(f=>typeof f!=='string'||f.length>10000))throw new Error('记忆内容无效');
-    const previous=this.memories.get(agentId);
+    if (
+      !Array.isArray(memory.facts) ||
+      memory.facts.length > 1000 ||
+      memory.facts.some((f) => typeof f !== 'string' || f.length > 10000)
+    )
+      throw new Error('记忆内容无效');
+    const previous = this.memories.get(agentId);
     this.memories.set(agentId, {
       ...memory,
       agentId,
       lastUpdated: Date.now(),
     });
-    try{if(this.memoriesFile)writeJsonAtomicSync(this.memoriesFile,[...this.memories.values()]);}
-    catch(e){if(previous)this.memories.set(agentId,previous);else this.memories.delete(agentId);throw e;}
+    try {
+      if (this.memoriesFile) writeJsonAtomicSync(this.memoriesFile, [...this.memories.values()]);
+    } catch (e) {
+      if (previous) this.memories.set(agentId, previous);
+      else this.memories.delete(agentId);
+      throw e;
+    }
   }
 
   // ─── 工具 ───────────────────────────────────────────────────────────
@@ -451,4 +551,3 @@ export class AgentService implements OnModuleInit {
     return join(xdg, 'skyalyticwing');
   }
 }
-

@@ -1,6 +1,6 @@
 {
   "name": "@skyalyticwing/sdk",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "license": "PolyForm-Noncommercial-1.0.0",
   "description": "SkyalyticWing SDK - Plugin Development Kit",
   "type": "module",

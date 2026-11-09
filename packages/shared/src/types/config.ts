@@ -1,5 +1,6 @@
 /** AI 提供商配置 */
 export interface ProviderConfig {
+  apiFormat?: 'auto' | 'chat-completions' | 'responses';
   id: string;
   name: string;
   apiKey: string;

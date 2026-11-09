@@ -1,7 +1,10 @@
 import type { ToolDefinition, ToolResult, ToolContext, ChatMessage } from '@skyalyticwing/shared';
 import type { ServiceResolver } from '../../../../modules/tools/executor/built-in/service-resolver.js';
 import { AgentMessageService } from '../../../../modules/ai/agent/agent-message.service.js';
-import { AgentSwarmService, type SubAgent } from '../../../../modules/ai/agent/agent-swarm.service.js';
+import {
+  AgentSwarmService,
+  type SubAgent,
+} from '../../../../modules/ai/agent/agent-swarm.service.js';
 import { SubagentService } from '../../../../modules/ai/agent/subagent.service.js';
 import { SessionService } from '../../../../modules/session/session.service.js';
 
@@ -66,7 +69,12 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
         required: ['toAgentId', 'message'],
       },
       async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
-        const a = args as { toAgentId?: string; message?: string; type?: string; fromAgentId?: string };
+        const a = args as {
+          toAgentId?: string;
+          message?: string;
+          type?: string;
+          fromAgentId?: string;
+        };
         if (!a || typeof a.toAgentId !== 'string' || a.toAgentId.length === 0) {
           return fail('Parameter "toAgentId" is required');
         }
@@ -107,7 +115,9 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
         if (!messenger) return fail('AgentMessageService 未初始化，跨代理信箱不可用');
         const agentId = a.agentId || ctx.sessionId || 'main';
         try {
-          const msgs = a.unreadOnly ? messenger.getUnread(agentId) : messenger.getInbox(agentId).messages;
+          const msgs = a.unreadOnly
+            ? messenger.getUnread(agentId)
+            : messenger.getInbox(agentId).messages;
           let marked = 0;
           if (a.markRead && msgs.length > 0) {
             marked = messenger.markRead(agentId).marked;
@@ -148,7 +158,9 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
         const agentId = a.agentId || ctx.sessionId || 'main';
         try {
           const inbox = messenger.getInbox(agentId).messages;
-          let msg = a.msgId ? inbox.find((m) => m.id === a.msgId) : [...inbox].reverse().find((m) => !m.read);
+          let msg = a.msgId
+            ? inbox.find((m) => m.id === a.msgId)
+            : [...inbox].reverse().find((m) => !m.read);
           if (!msg && a.msgId) return fail(`消息不存在: ${a.msgId}`);
           if (!msg) return ok({ agentId, message: null, note: '收件箱为空（或无未读消息）' });
           if (a.markRead !== false) {
@@ -320,7 +332,12 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
         required: ['message'],
       },
       async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
-        const a = args as { message?: string; model?: string; systemPrompt?: string; timeout?: number };
+        const a = args as {
+          message?: string;
+          model?: string;
+          systemPrompt?: string;
+          timeout?: number;
+        };
         if (!a || typeof a.message !== 'string' || a.message.length === 0) {
           return fail('Parameter "message" is required');
         }
@@ -373,12 +390,23 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
             description: '任务类型（默认 worker）',
           },
           autoDestroy: { type: 'boolean', description: '完成后自动销毁（默认 true）' },
+          workspace: {
+            type: 'string',
+            enum: ['isolated', 'shared'],
+            description:
+              '默认 isolated；远程 Git 项目使用独立 worktree。只有明确协作同一目录时选择 shared。',
+          },
         },
         required: ['task'],
       },
       async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
         const a = (args || {}) as {
-          task?: string; prompt?: string; model?: string; type?: string; autoDestroy?: boolean;
+          task?: string;
+          prompt?: string;
+          model?: string;
+          type?: string;
+          autoDestroy?: boolean;
+          workspace?: 'isolated' | 'shared';
         };
         if (typeof a.task !== 'string' || a.task.length === 0) {
           return fail('Parameter "task" is required');
@@ -394,14 +422,23 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
             model: a.model || '',
             type: a.type || 'worker',
             autoDestroy: a.autoDestroy !== false,
+            workspace: a.workspace === 'shared' ? 'shared' : 'isolated',
             inheritTools: true,
           });
           if (created.id === null) {
             return fail(`子代理创建失败: ${created.error || '未知错误'}`);
           }
           const r = await swarm.executeSync(created.id);
-          if (!r.success) return fail(r.error || '子代理执行失败');
-          return ok({ agentId: r.agentId, output: r.result || '' });
+          if (!r.success)
+            return {
+              ...fail(r.error || '子代理执行失败'),
+              ...(r.remoteWorkspace ? { data: { remoteWorkspace: r.remoteWorkspace } } : {}),
+            };
+          return ok({
+            agentId: r.agentId,
+            output: r.result || '',
+            ...(r.remoteWorkspace ? { remoteWorkspace: r.remoteWorkspace } : {}),
+          });
         } catch (err) {
           return fail(err instanceof Error ? err.message : String(err));
         }
@@ -441,7 +478,11 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
               task: s.task,
               createdAt: s.createdAt,
             }));
-            return ok({ total: agents.length, running: swarm.getRunningCount(), subagents: agents });
+            return ok({
+              total: agents.length,
+              running: swarm.getRunningCount(),
+              subagents: agents,
+            });
           }
           if (typeof a.agentId !== 'string' || a.agentId.length === 0) {
             return fail(`action=${action} 需要 agentId 参数`);
@@ -488,7 +529,11 @@ export function createSessionAgentTools(resolve: ServiceResolver): ToolDefinitio
       },
       async execute(args: unknown, ctx: ToolContext): Promise<ToolResult> {
         const a = (args || {}) as {
-          task?: string; prompt?: string; model?: string; type?: string; autoDestroy?: boolean;
+          task?: string;
+          prompt?: string;
+          model?: string;
+          type?: string;
+          autoDestroy?: boolean;
         };
         if (typeof a.task !== 'string' || a.task.length === 0) {
           return fail('Parameter "task" is required');

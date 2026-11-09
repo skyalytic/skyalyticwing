@@ -1,4 +1,5 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { Injectable, Logger, Optional } from '@nestjs/common';
 import type { WebSocket } from 'ws';
 import type { WsEvent } from '@skyalyticwing/shared';
 
@@ -24,6 +25,7 @@ export interface WsClientState {
  */
 @Injectable()
 export class WebSocketService {
+  constructor(@Optional() private readonly events?: EventEmitter2) {}
   private readonly logger = new Logger(WebSocketService.name);
   /** clientId → 客户端状态 */
   private readonly clients = new Map<string, WsClientState>();
@@ -88,6 +90,7 @@ export class WebSocketService {
 
   /** 广播给所有已连接客户端 */
   broadcast(event: WsEvent): void {
+    this.events?.emit('runtime.observation', event);
     const payload = JSON.stringify(event);
     for (const state of this.clients.values()) {
       this.safeSend(state, payload);

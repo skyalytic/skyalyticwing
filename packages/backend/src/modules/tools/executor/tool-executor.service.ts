@@ -1,4 +1,9 @@
 import { ExtensionHostService } from '../../../extensions/extension-host.service.js';
+import {
+  RemoteWorkspaceService,
+  remoteSandboxGate,
+  usesLocalHost,
+} from '../../core/remote-workspace/remote-workspace.service.js';
 import { updateMaintenance } from '../../core/system/update-maintenance.js';
 import { CODE_VIDEO_REQUIRED } from '../../ai/agent/video-production-policy.js';
 import { toolAccess, accessMode } from './tool-access.js';
@@ -8,12 +13,7 @@ import { ToolPolicyService } from '../tool-policy.service.js';
 import { Injectable, Logger, OnModuleInit, Optional } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type {
-  ToolContext,
-  ToolDefinition,
-  ToolListItem,
-  ToolResult,
-} from '@skyalyticwing/shared';
+import type { ToolContext, ToolDefinition, ToolListItem, ToolResult } from '@skyalyticwing/shared';
 import { ConfigService } from '../../core/config/config.service.js';
 import { LoggerService } from '../../core/logger/logger.service.js';
 import { SecurityManagerService } from '../../core/security/security-manager.service.js';
@@ -67,20 +67,31 @@ export class ToolExecutorService implements OnModuleInit {
     /** 三级沙箱档位服务（read-only / workspace-write / danger-full-access） */
     @Optional() private readonly sandboxProfile?: SandboxProfileService,
     @Optional() private readonly extensions?: ExtensionHostService,
-
   ) {}
 
   async onModuleInit(): Promise<void> {
-    await this.extensions?.initialize({ security: this.security, http: this.http, ws: this.ws,
-      config: this.config, safety: this.safety, resolve: this.lazyResolve.bind(this) });
+    await this.extensions?.initialize({
+      security: this.security,
+      http: this.http,
+      ws: this.ws,
+      config: this.config,
+      safety: this.safety,
+      resolve: this.lazyResolve.bind(this),
+    });
   }
-  async refreshExtensions(): Promise<void> { await this.extensions?.refresh(); }
-  async getToolCatalog() { return this.extensions ? this.extensions.toolCatalog() : this.listTools(); }
+  async refreshExtensions(): Promise<void> {
+    await this.extensions?.refresh();
+  }
+  async getToolCatalog() {
+    return this.extensions ? this.extensions.toolCatalog() : this.listTools();
+  }
   async setToolInstalled(name: string, installed: boolean): Promise<void> {
     if (!this.extensions) throw new Error('Extension host unavailable');
     await this.extensions.setToolInstalled(name, installed);
   }
-  async getExtensionGuidance(names: string[]): Promise<string> { return this.extensions?.guidance(new Set(names)) || ''; }
+  async getExtensionGuidance(names: string[]): Promise<string> {
+    return this.extensions?.guidance(new Set(names)) || '';
+  }
 
   /**
    * 懒解析非全局模块服务（strict:false 全容器查找）。
@@ -114,40 +125,78 @@ export class ToolExecutorService implements OnModuleInit {
     await this.extensions?.refresh();
     const releaseUpdate = updateMaintenance.enter('工具执行', ctx.sessionId, true);
     try {
-    if (!['desktop', 'desktop_screenshot', 'computer_use'].includes(toolName)) return await withDocumentSession(ctx.sessionId, () => this.executeTool(toolName, args, ctx, options));
-    // One action plus its observation must be atomic across concurrent experts.
-    const previous = this.desktopQueue;
-    let release!: () => void;
-    this.desktopQueue = new Promise<void>(resolve => { release = resolve; });
-    await previous;
-    try { return await withDocumentSession(ctx.sessionId, () => this.executeTool(toolName, args, ctx, options)); }
-    finally { release(); }
-    } finally { releaseUpdate(); }
+      if (!['desktop', 'desktop_screenshot', 'computer_use'].includes(toolName))
+        return await withDocumentSession(ctx.sessionId, () =>
+          this.executeTool(toolName, args, ctx, options),
+        );
+      // One action plus its observation must be atomic across concurrent experts.
+      const previous = this.desktopQueue;
+      let release!: () => void;
+      this.desktopQueue = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await previous;
+      try {
+        return await withDocumentSession(ctx.sessionId, () =>
+          this.executeTool(toolName, args, ctx, options),
+        );
+      } finally {
+        release();
+      }
+    } finally {
+      releaseUpdate();
+    }
   }
 
-  private async executeTool(toolName: string, args: unknown, ctx: ToolContext, options?: { approvalGranted?: boolean }): Promise<ToolResult> {
-    if (ctx.signal?.aborted) return {success:false,error:'任务已取消'};
-    if (ctx.videoCodeOnly && toolName==='generate_video') return {success:false,blocked:true,error:CODE_VIDEO_REQUIRED};
+  private async executeTool(
+    toolName: string,
+    args: unknown,
+    ctx: ToolContext,
+    options?: { approvalGranted?: boolean },
+  ): Promise<ToolResult> {
+    if (ctx.signal?.aborted) return { success: false, error: '任务已取消' };
+    if (ctx.videoCodeOnly && toolName === 'generate_video')
+      return { success: false, blocked: true, error: CODE_VIDEO_REQUIRED };
     const tool = this.registry.get(toolName);
     if (!tool) {
       return { success: false, error: `Tool not found: ${toolName}` };
     }
 
-    const access = toolAccess({ config: this.config, name: toolName, args,
-      sessionId: ctx.sessionId, dangerous: !!tool.dangerous,
+    const remote = this.lazyResolve<RemoteWorkspaceService>(RemoteWorkspaceService);
+    const remoteWorkspace = remote?.binding(ctx.sessionId);
+    if (remoteWorkspace && !usesLocalHost(toolName))
+      ctx = { ...ctx, workspace: remoteWorkspace.root };
+    const access = toolAccess({
+      config: this.config,
+      name: toolName,
+      args,
+      sessionId: ctx.sessionId,
+      dangerous: !!tool.dangerous,
       commandGuard: this.security.getCommandGuard?.(),
-      classify: cmd => new YoloClassifierService().classify(cmd),
+      classify: (cmd) => new YoloClassifierService().classify(cmd),
       policy: this.lazyResolve<ToolPolicyService>(ToolPolicyService)?.checkTool(toolName),
     });
     if (access.action === 'reject' || (access.action === 'ask' && !options?.approvalGranted)) {
-      return { success: false, ...(access.action === 'ask' ? { approvalRequired: true } : { blocked: true }), error: access.reason || '需要审批' };
+      return {
+        success: false,
+        ...(access.action === 'ask' ? { approvalRequired: true } : { blocked: true }),
+        error: access.reason || '需要审批',
+      };
     }
 
     // 三级沙箱档位检查与单次操作授权：
     // 拦截时复用审批管道——上游（AgentLoop/ChatGateway）弹出审批，用户批准后以
     // approvalGranted 重新执行本调用（审批按调用请求发放，天然 once 语义）。
     if (this.sandboxProfile && accessMode(this.config) !== 'yolo' && !options?.approvalGranted) {
-      const gate = this.sandboxProfile.check({ toolName, args, ctx });
+      const gate =
+        remoteWorkspace && !usesLocalHost(toolName)
+          ? remoteSandboxGate(
+              this.sandboxProfile.effectiveMode(ctx.sessionId),
+              toolName,
+              remoteWorkspace.root,
+              args,
+            )
+          : this.sandboxProfile.check({ toolName, args, ctx });
       if (
         !this.registry.isBuiltin(toolName) &&
         this.sandboxProfile.effectiveMode(ctx.sessionId) !== 'danger-full-access'
@@ -176,8 +225,13 @@ export class ToolExecutorService implements OnModuleInit {
     const startedAt = Date.now();
     try {
       const plugins = this.lazyResolve<PluginService>(PluginService);
-      const decision = await plugins?.runHook('beforeToolCall', { toolName, args, sessionId: ctx.sessionId }) as { blocked?: boolean; reason?: string } | undefined;
-      if (decision?.blocked) return { success: false, blocked: true, error: decision.reason || '插件策略拒绝执行' };
+      const decision = (await plugins?.runHook('beforeToolCall', {
+        toolName,
+        args,
+        sessionId: ctx.sessionId,
+      })) as { blocked?: boolean; reason?: string } | undefined;
+      if (decision?.blocked)
+        return { success: false, blocked: true, error: decision.reason || '插件策略拒绝执行' };
       await this.eventEmitter?.emitAsync('tool.decision', {
         tool: toolName,
         sessionId: ctx.sessionId,
@@ -185,36 +239,98 @@ export class ToolExecutorService implements OnModuleInit {
         policyVersion: 'workspace-policy-v2',
       });
       let result: ToolResult;
-      if (
-        toolName === 'bash' && accessMode(this.config) !== 'yolo' &&
+      if (remoteWorkspace && toolName === 'repo_verify') {
+        const a = args as { command?: unknown; args?: unknown };
+        if (
+          typeof a?.command !== 'string' ||
+          !Array.isArray(a.args) ||
+          !a.args.every((v) => typeof v === 'string')
+        )
+          return { success: false, error: 'command and string args required' };
+        if (!this.security.isCommandAllowed([a.command, ...a.args].join(' ')))
+          return { success: false, blocked: true, error: 'Command blocked by security policy' };
+      }
+      const remoteResult = remoteWorkspace
+        ? await remote!.tool(ctx.sessionId!, toolName, args, ctx.signal)
+        : undefined;
+      if (remoteResult) result = remoteResult;
+      else if (
+        toolName === 'bash' &&
+        accessMode(this.config) !== 'yolo' &&
         this.sandboxProfile?.effectiveMode(ctx.sessionId) === 'workspace-write'
       ) {
         const sandbox = this.lazyResolve<SandboxSystemService>(SandboxSystemService);
         const command = (args as { command?: unknown })?.command;
         result =
           sandbox && typeof command === 'string'
-            ? await sandbox.executeSafe(command, { cwd: ctx.workspace, sessionId:ctx.sessionId, ...(ctx.signal ? {signal:ctx.signal} : {}), ...(Number.isSafeInteger((args as {timeout?:number}).timeout) && (args as {timeout:number}).timeout > 0 ? {timeout:(args as {timeout:number}).timeout} : {}) })
+            ? await sandbox.executeSafe(command, {
+                cwd: ctx.workspace,
+                sessionId: ctx.sessionId,
+                ...(ctx.signal ? { signal: ctx.signal } : {}),
+                ...(Number.isSafeInteger((args as { timeout?: number }).timeout) &&
+                (args as { timeout: number }).timeout > 0
+                  ? { timeout: (args as { timeout: number }).timeout }
+                  : {}),
+              })
             : { success: false, blocked: true, error: '隔离执行服务不可用，未在宿主机运行命令' };
       } else result = await tool.execute(args, ctx);
       const action = (args as { action?: string })?.action;
-      const observeDesktop = toolName === 'desktop_screenshot' ||
-        (toolName === 'desktop' && ['screenshot', 'click', 'type', 'press', 'scroll', 'drag'].includes(action || '')) ||
-        (toolName === 'computer_use' && !(result.data as Record<string, unknown> | undefined)?.['desktopWorkflow'] && ['look', 'screenshot', 'act', 'act_batch'].includes(action || ''));
+      const observeDesktop =
+        toolName === 'desktop_screenshot' ||
+        (toolName === 'desktop' &&
+          ['screenshot', 'click', 'type', 'press', 'scroll', 'drag'].includes(action || '')) ||
+        (toolName === 'computer_use' &&
+          !(result.data as Record<string, unknown> | undefined)?.['desktopWorkflow'] &&
+          ['look', 'screenshot', 'act', 'act_batch'].includes(action || ''));
       if (observeDesktop && result.success) {
         try {
-          const data = (result.data && typeof result.data === 'object' ? result.data : {}) as Record<string, unknown>;
-          const capture = (toolName === 'desktop_screenshot' || action === 'screenshot') && typeof data['path'] === 'string'
-            ? { success: true, path: data['path'] } : this.lazyResolve<DesktopService>(DesktopService)?.screenCapture({});
+          const data = (
+            result.data && typeof result.data === 'object' ? result.data : {}
+          ) as Record<string, unknown>;
+          const capture =
+            (toolName === 'desktop_screenshot' || action === 'screenshot') &&
+            typeof data['path'] === 'string'
+              ? { success: true, path: data['path'] }
+              : this.lazyResolve<DesktopService>(DesktopService)?.screenCapture({});
           if (capture?.success && capture.path) {
             const source = sharp(capture.path, { limitInputPixels: 100_000_000 });
             const metadata = await source.metadata();
-            const rendered = await source.resize({ width: 1600, height: 1200, fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 75 }).toBuffer({ resolveWithObject: true });
-            result = { ...result, data: { ...data, visualObservation: { base64: rendered.data.toString('base64'), width: rendered.info.width, height: rendered.info.height, originalWidth: metadata.width, originalHeight: metadata.height } } };
-          } else result = { ...result, output: (result.output || '') + '\n未取得操作后截图；请使用观察工具重新确认。' };
-        } catch { result = { ...result, output: (result.output || '') + '\n截图处理失败，动作结果尚需重新观察。' }; }
+            const rendered = await source
+              .resize({ width: 1600, height: 1200, fit: 'inside', withoutEnlargement: true })
+              .jpeg({ quality: 75 })
+              .toBuffer({ resolveWithObject: true });
+            result = {
+              ...result,
+              data: {
+                ...data,
+                visualObservation: {
+                  base64: rendered.data.toString('base64'),
+                  width: rendered.info.width,
+                  height: rendered.info.height,
+                  originalWidth: metadata.width,
+                  originalHeight: metadata.height,
+                },
+              },
+            };
+          } else
+            result = {
+              ...result,
+              output: (result.output || '') + '\n未取得操作后截图；请使用观察工具重新确认。',
+            };
+        } catch {
+          result = {
+            ...result,
+            output: (result.output || '') + '\n截图处理失败，动作结果尚需重新观察。',
+          };
+        }
       }
       await plugins?.runHook(result.success ? 'afterToolCall' : 'afterToolFailure', {
-        toolName, args, result, error: result.error, sessionId: ctx.sessionId, durationMs: Date.now() - startedAt,
+        toolName,
+        args,
+        result,
+        error: result.error,
+        sessionId: ctx.sessionId,
+        durationMs: Date.now() - startedAt,
       });
       this.emitToolExecuted(
         toolName,
@@ -279,5 +395,4 @@ export class ToolExecutorService implements OnModuleInit {
   }
 
   /** 读取 YOLO 模式：auto / ask / yolo，默认 ask */
-
 }

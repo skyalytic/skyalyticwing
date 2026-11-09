@@ -23,8 +23,9 @@ const files=definitions.map(([file,platform,label,target])=>{
 });
 fs.writeFileSync(path.join(root,'SHA256SUMS.txt'),files.map(f=>f.sha256+'  '+f.file).join('\n')+'\n');
 fs.writeFileSync(path.join(root,'release-manifest.json'),JSON.stringify({version,publishedAt,status:'release',files},null,2));
-const changelog=fs.readFileSync(path.join(__dirname,'../更新日志.txt'),'utf8');
-const section=changelog.split(/\r?\n\s*\r?\n/).find(block=>block.trim().startsWith(version+'\n')||block.trim().startsWith(version+'\r\n'));
+const readme=fs.readFileSync(path.join(__dirname,'../README.zh-CN.md'),'utf8');
+const block=readme.split(/^## /m).find(part=>part.split(/\r?\n/,1)[0].trim()===version+' 更新');
+const section=block ? version+'\n'+block.slice(block.indexOf('\n')+1).trim() : '';
 if(!section)throw Error('Release changelog section missing');
 fs.writeFileSync(path.join(root,'CHANGELOG.txt'),section.trim()+'\n');
 fs.writeFileSync(path.join(root,'wing-release.json'),JSON.stringify({version,publishedAt,files:files.filter(f=>!f.file.endsWith('.app.tar.gz')),checksumsUrl:base+'SHA256SUMS.txt',notesUrl:base+'CHANGELOG.txt'},null,2));

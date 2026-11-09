@@ -1,4 +1,6 @@
 import { renderDesignPng } from './design-export.js';
+import { Optional } from '@nestjs/common';
+import { RemoteWorkspaceService } from '../../core/remote-workspace/remote-workspace.service.js';
 import type { TextPatch } from './large-text.store.js';
 import {
   Body,
@@ -68,7 +70,10 @@ interface DesignFrameDto {
  */
 @Controller()
 export class FilesController {
-  constructor(private readonly files: FilesService) {}
+  constructor(
+    private readonly files: FilesService,
+    @Optional() private readonly remote?: RemoteWorkspaceService,
+  ) {}
 
   @Post('files/create-entry')
   createEntry(@Body() body: { directory: string; name: string; type: 'file' | 'dir' }) {
@@ -81,7 +86,9 @@ export class FilesController {
     return this.files.localAction(body?.path, body?.action);
   }
 
-  @Get('files/projects') projects() { return this.files.listProjects(); }
+  @Get('files/projects') projects() {
+    return this.files.listProjects();
+  }
   @Delete('files/projects') removeProject(@Query('path') path: string) {
     return this.files.removeProject(path);
   }
@@ -102,12 +109,15 @@ export class FilesController {
   @Post('files/project')
   @HttpCode(HttpStatus.OK)
   setProject(@Body() dto: SetProjectDto): { path: string } {
-    return this.files.setProjectDir(dto?.path || '', dto?.sessionId || undefined);
+    const result = this.files.setProjectDir(dto?.path || '', dto?.sessionId || undefined);
+    this.remote?.unbind(dto?.sessionId);
+    return result;
   }
 
   /** DELETE /files/project — 清除工程目录（sessionId=仅解绑该会话，否则清全局） */
   @Delete('files/project')
   clearProject(@Query('sessionId') sessionId?: string): { cleared: boolean } {
+    this.remote?.unbind(sessionId);
     return this.files.clearProjectDir(sessionId || undefined);
   }
 
@@ -126,38 +136,53 @@ export class FilesController {
 
   /** POST /files/write — 写入文本文件（编辑器保存） */
   @Post('files/design-export')
-  async exportDesign(@Body() dto: {html:string;width:number;height:number}, @Res({passthrough:true}) res:Response) {
-    const png=await renderDesignPng(dto.html,dto.width,dto.height);
-    res.setHeader('Content-Type','image/png');res.setHeader('Content-Disposition','attachment; filename="design.png"');res.setHeader('Cache-Control','no-store');
+  async exportDesign(
+    @Body() dto: { html: string; width: number; height: number },
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const png = await renderDesignPng(dto.html, dto.width, dto.height);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Content-Disposition', 'attachment; filename="design.png"');
+    res.setHeader('Cache-Control', 'no-store');
     return new StreamableFile(png);
   }
 
   @Post('files/design-create')
-  createDesign(@Body() dto: {directory:string;name:string;content:string}) {
+  createDesign(@Body() dto: { directory: string; name: string; content: string }) {
     return this.files.createDesign(dto?.directory, dto?.name, dto?.content);
   }
 
   @Post('files/design-save')
-  saveDesign(@Body() dto: FileWriteDto & {expectedContent?: string;expectedRevision?:string}) {
-    return this.files.saveDesign(dto?.path, dto?.content, dto?.expectedContent,dto?.expectedRevision);
+  saveDesign(@Body() dto: FileWriteDto & { expectedContent?: string; expectedRevision?: string }) {
+    return this.files.saveDesign(
+      dto?.path,
+      dto?.content,
+      dto?.expectedContent,
+      dto?.expectedRevision,
+    );
   }
 
   @Post('files/write')
   @HttpCode(HttpStatus.OK)
   write(@Body() dto: FileWriteDto & { revision?: string }) {
-    if (dto?.revision !== undefined) return this.files.saveText(dto.path, dto.content, dto.revision);
+    if (dto?.revision !== undefined)
+      return this.files.saveText(dto.path, dto.content, dto.revision);
     return this.files.write(dto?.path || '', typeof dto?.content === 'string' ? dto.content : '');
   }
 
   /** POST /files/rollback — 回滚 AI 文件更改（恢复该会话 sinceTs 之后写过的文件到写入前内容） */
   @Post('files/rollback')
   @HttpCode(HttpStatus.OK)
-  async rollback(@Body() dto: RollbackDto): Promise<{ success: boolean; restored: string[]; data: { restored: string[] } }> {
+  async rollback(
+    @Body() dto: RollbackDto,
+  ): Promise<{ success: boolean; restored: string[]; data: { restored: string[] } }> {
     const sinceTs = Number(dto?.sinceTs) || 0;
     try {
       const sessionId = dto?.sessionId || '__global__';
-      const documents = await this.files.rollbackConversation?.(sessionId, sinceTs) || [];
-      const restored = [...new Set([...documents, ...await rollbackFileCheckpoints(sessionId, sinceTs)])];
+      const documents = (await this.files.rollbackConversation?.(sessionId, sinceTs)) || [];
+      const restored = [
+        ...new Set([...documents, ...(await rollbackFileCheckpoints(sessionId, sinceTs))]),
+      ];
       return { success: true, restored, data: { restored } };
     } catch (err) {
       if (err instanceof FileRollbackError) {
@@ -203,16 +228,24 @@ export class FilesController {
   }
 
   @Get('files/text-page')
-  textPage(@Query('path') path: string, @Query('offset') offset?: string) { return this.files.largeText.page(path, offset === undefined ? 0 : Number(offset)); }
+  textPage(@Query('path') path: string, @Query('offset') offset?: string) {
+    return this.files.largeText.page(path, offset === undefined ? 0 : Number(offset));
+  }
 
   @Get('files/text-draft')
-  textDraft(@Query('path') path: string) { return this.files.largeText.draft(path); }
+  textDraft(@Query('path') path: string) {
+    return this.files.largeText.draft(path);
+  }
 
   @Post('files/text-autosave')
-  textAutosave(@Body() patch: TextPatch) { return this.files.largeText.start(patch); }
+  textAutosave(@Body() patch: TextPatch) {
+    return this.files.largeText.start(patch);
+  }
 
   @Get('files/text-save/:id')
-  textSaveStatus(@Param('id') id: string) { return this.files.largeText.status(id); }
+  textSaveStatus(@Param('id') id: string) {
+    return this.files.largeText.status(id);
+  }
 
   /** POST /files/read — 读取文件（旧版为 POST body，保持兼容） */
   @Post('files/read')

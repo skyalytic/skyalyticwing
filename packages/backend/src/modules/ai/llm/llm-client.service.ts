@@ -145,7 +145,6 @@ export class LLMClientService {
     private readonly security: SecurityManagerService,
     private readonly openai: OpenAIAdapter,
     private readonly anthropic: AnthropicAdapter,
-
   ) {}
 
   /** 流式聊天 */
@@ -168,7 +167,10 @@ export class LLMClientService {
     if (!LOCAL_PROVIDER_IDS.has(providerId)) {
       const ssrfCheck = await this.security.checkUrl(cfg.baseUrl);
       if (!ssrfCheck.safe) {
-        yield { type: 'error', error: `Provider baseUrl blocked by SSRF guard (${ssrfCheck.reason}): ${cfg.baseUrl}` };
+        yield {
+          type: 'error',
+          error: `Provider baseUrl blocked by SSRF guard (${ssrfCheck.reason}): ${cfg.baseUrl}`,
+        };
         return;
       }
     }
@@ -178,34 +180,69 @@ export class LLMClientService {
     yield* adapter.chat(params, cfg);
   }
 
-  private routeRequiredCapability(params:ChatParams):ChatParams {
-    const entries=this.getProvidersConfig() as Record<string,Record<string,any>>;
-    const parts=params.model.split('::'),raw=parts.length>1?parts.slice(1).join('::'):params.model;
-    const selectedId=params.providerId || (parts.length>1?parts[0]:Object.keys(entries).find(id=>['models','visionModels','imageModels','videoModels'].some(k=>entries[id]?.[k]?.includes(raw))));
-    if(parts.length>1 && selectedId)params={...params,providerId:selectedId,model:raw};
-    const selected=selectedId?entries[selectedId]:undefined;
-    const visual=params.messages.some(m=>Array.isArray(m.content)&&m.content.some(p=>p.type==='image_url'));
-    const generation=['imageModels','videoModels'].some(k=>selected?.[k]?.includes(raw));
-    const supportsVision=(id:string,p:Record<string,any>,model:string)=>Array.isArray(p['visionModels'])?p['visionModels'].includes(model):!!PROVIDERS_REGISTRY.find(r=>r.id===(p['baseProvider'] || id))?.visionModels?.includes(model);
-    const missingTools=!!params.tools?.length && selected?.['supportsTools']===false;
-    if(!generation && !missingTools && (!visual || (selectedId && selected && supportsVision(selectedId,selected,raw))))return params;
-    const ordered=Object.entries(entries).sort(([a],[b])=>Number(b===selectedId)-Number(a===selectedId));
-    for(const [id,p] of ordered) {
-      if(!p['apiKey'] && !LOCAL_PROVIDER_IDS.has(id))continue;
-      if(params.tools?.length && p['supportsTools']===false)continue;
-      const choices: string[] = visual ? p['visionModels'] || (p['models'] || []).filter((m:string)=>supportsVision(id,p,m)) : p['models'] || [];
-      const model=choices.find(m=>!p['imageModels']?.includes(m)&&!p['videoModels']?.includes(m));
-      if(model)return {...params,providerId:id,model};
+  private routeRequiredCapability(params: ChatParams): ChatParams {
+    const entries = this.getProvidersConfig() as Record<string, Record<string, any>>;
+    const parts = params.model.split('::'),
+      raw = parts.length > 1 ? parts.slice(1).join('::') : params.model;
+    const selectedId =
+      params.providerId ||
+      (parts.length > 1
+        ? parts[0]
+        : Object.keys(entries).find((id) =>
+            ['models', 'visionModels', 'imageModels', 'videoModels'].some((k) =>
+              entries[id]?.[k]?.includes(raw),
+            ),
+          ));
+    if (parts.length > 1 && selectedId) params = { ...params, providerId: selectedId, model: raw };
+    const selected = selectedId ? entries[selectedId] : undefined;
+    const visual = params.messages.some(
+      (m) => Array.isArray(m.content) && m.content.some((p) => p.type === 'image_url'),
+    );
+    const generation = ['imageModels', 'videoModels'].some((k) => selected?.[k]?.includes(raw));
+    const supportsVision = (id: string, p: Record<string, any>, model: string) =>
+      Array.isArray(p['visionModels'])
+        ? p['visionModels'].includes(model)
+        : !!PROVIDERS_REGISTRY.find(
+            (r) => r.id === (p['baseProvider'] || id),
+          )?.visionModels?.includes(model);
+    const missingTools = !!params.tools?.length && selected?.['supportsTools'] === false;
+    if (
+      !generation &&
+      !missingTools &&
+      (!visual || (selectedId && selected && supportsVision(selectedId, selected, raw)))
+    )
+      return params;
+    const ordered = Object.entries(entries).sort(
+      ([a], [b]) => Number(b === selectedId) - Number(a === selectedId),
+    );
+    for (const [id, p] of ordered) {
+      if (!p['apiKey'] && !LOCAL_PROVIDER_IDS.has(id)) continue;
+      if (params.tools?.length && p['supportsTools'] === false) continue;
+      const choices: string[] = visual
+        ? p['visionModels'] || (p['models'] || []).filter((m: string) => supportsVision(id, p, m))
+        : p['models'] || [];
+      const model = choices.find(
+        (m) => !p['imageModels']?.includes(m) && !p['videoModels']?.includes(m),
+      );
+      if (model) return { ...params, providerId: id, model };
     }
-    throw new Error('The selected model does not support this task. Configure a model with the required capability.');
+    throw new Error(
+      'The selected model does not support this task. Configure a model with the required capability.',
+    );
   }
-
 
   /** 非流式聊天：聚合流式响应为最终结果 */
   async chatSync(
     params: ChatParams,
-  ): Promise<{ content: string; reasoningContent?: string; toolCalls?: ToolCallInfo[]; usage?: TokenUsage }> {
+  ): Promise<{
+    content: string;
+    responseState?: LlmMessage['responseState'];
+    reasoningContent?: string;
+    toolCalls?: ToolCallInfo[];
+    usage?: TokenUsage;
+  }> {
     let content = '';
+    let responseState: LlmMessage['responseState'];
     let reasoningContent: string | undefined;
     const toolCalls: ToolCallInfo[] = [];
     let usage: TokenUsage | undefined;
@@ -220,6 +257,7 @@ export class LLMClientService {
           arguments: chunk.toolCall.arguments,
         });
       } else if (chunk.type === 'done') {
+        if (chunk.responseState) responseState = chunk.responseState;
         if (chunk.usage) usage = chunk.usage;
         if (chunk.reasoningContent !== undefined) reasoningContent = chunk.reasoningContent;
       } else if (chunk.type === 'error' && chunk.error) {
@@ -227,7 +265,14 @@ export class LLMClientService {
       }
     }
 
-    const result: { content: string; reasoningContent?: string; toolCalls?: ToolCallInfo[]; usage?: TokenUsage } = { content };
+    const result: {
+      content: string;
+      responseState?: LlmMessage['responseState'];
+      reasoningContent?: string;
+      toolCalls?: ToolCallInfo[];
+      usage?: TokenUsage;
+    } = { content };
+    if (responseState) result.responseState = responseState;
     if (reasoningContent !== undefined) result.reasoningContent = reasoningContent;
     if (toolCalls.length > 0) result.toolCalls = toolCalls;
     if (usage) result.usage = usage;
@@ -308,9 +353,13 @@ export class LLMClientService {
 
     const isAnthropic = raw['type'] === 'anthropic' || pid === 'anthropic';
     const type: 'openai' | 'anthropic' = isAnthropic ? 'anthropic' : 'openai';
-    const models = Array.isArray(raw['models']) ? (raw['models'] as unknown[]).map(String) : undefined;
+    const models = Array.isArray(raw['models'])
+      ? (raw['models'] as unknown[]).map(String)
+      : undefined;
 
     const config: ProviderConfig = { id: pid, apiKey, baseUrl, type };
+    if (['auto', 'chat-completions', 'responses'].includes(String(raw['apiFormat'])))
+      config.apiFormat = raw['apiFormat'] as 'auto' | 'chat-completions' | 'responses';
     if (models) config.models = models;
     return { providerId: pid, config };
   }
@@ -344,7 +393,8 @@ export class LLMClientService {
 
   /** Compatibility entry point: share tool-safe, data-role compaction with the agent. */
   compactMessages(messages: LlmMessage[], sessionId: string): LlmMessage[] {
-    if (this.estimateTokens(messages) < this.getMaxContextTokens() * COMPACTION_THRESHOLD) return messages;
+    if (this.estimateTokens(messages) < this.getMaxContextTokens() * COMPACTION_THRESHOLD)
+      return messages;
     this.logger.info('Compacting model context', { sessionId });
     return compactContext(messages, COMPACTION_KEEP_RECENT);
   }

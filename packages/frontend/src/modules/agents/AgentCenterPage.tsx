@@ -20,6 +20,7 @@ import { useSessionStore } from '@/stores/session-store';
 import { formatRelativeTime } from '@/utils/format';
 
 interface Agent {
+  promptRevision?: number;
   id: string;
   name: string;
   type?: string;
@@ -79,6 +80,7 @@ interface AgentMessageListResult {
 }
 
 interface AgentForm {
+  promptRevision?: number;
   name: string;
   type: string;
   description: string;
@@ -186,10 +188,27 @@ function AvatarImg({ src, size }: { src: string; size: number }) {
 export function AgentCenterPage() {
   useWorkbenchLanguage();
   const [resources, setResources] = useState(false);
-  return <div className="h-full overflow-y-auto"><div className="sky-resource-tabs">
-    <button className="btn-secondary" aria-pressed={!resources} onClick={() => setResources(false)}>{wt('我的智能体')}</button>
-    <button className="btn-secondary" aria-pressed={resources} onClick={() => setResources(true)}>{wt('智能体资源')}</button>
-  </div>{resources ? <EcosystemPage resourceKind="agent" /> : <LocalAgentCenterPage />}</div>;
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="sky-resource-tabs">
+        <button
+          className="btn-secondary"
+          aria-pressed={!resources}
+          onClick={() => setResources(false)}
+        >
+          {wt('我的智能体')}
+        </button>
+        <button
+          className="btn-secondary"
+          aria-pressed={resources}
+          onClick={() => setResources(true)}
+        >
+          {wt('智能体资源')}
+        </button>
+      </div>
+      {resources ? <EcosystemPage resourceKind="agent" /> : <LocalAgentCenterPage />}
+    </div>
+  );
 }
 function LocalAgentCenterPage() {
   useWorkbenchLanguage();
@@ -369,6 +388,7 @@ function LocalAgentCenterPage() {
       type: a.type || 'specialist',
       description: a.description || '',
       model: a.model || '',
+      promptRevision: a.promptRevision,
       systemPrompt: a.systemPrompt || '',
       slug: a.slug || '',
       callable: a.callable !== false,
@@ -467,6 +487,7 @@ function LocalAgentCenterPage() {
         model: form.model.trim() || 'default',
         type: form.type,
         systemPrompt: form.systemPrompt,
+        ...(editingId ? { promptRevision: form.promptRevision } : {}),
         slug: form.slug.trim(),
         callable: form.callable,
         invocationHint: form.invocationHint,
@@ -747,7 +768,9 @@ function LocalAgentCenterPage() {
         {/* ══ 页头（对齐参考形态：标题 + 右上创建） ══ */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h1 className="text-xl font-bold text-primary flex items-center gap-2">{wt('智能体')}</h1>
+            <h1 className="text-xl font-bold text-primary flex items-center gap-2">
+              {wt('智能体')}
+            </h1>
             <p className="text-xs text-gray-500 mt-0.5">
               {wt('创建智能体，或把它们拉进智能体团组成多智能体协作')}
             </p>
@@ -1563,7 +1586,8 @@ function LocalAgentCenterPage() {
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h2 className="flex items-center gap-2">
-                <Icon name="users" size={18} /> {teamEditingId ? wt('编辑智能体团') : wt('创建智能体团')}
+                <Icon name="users" size={18} />{' '}
+                {teamEditingId ? wt('编辑智能体团') : wt('创建智能体团')}
               </h2>
               <button className="modal-close" onClick={() => setTeamModalOpen(false)}>
                 <Icon name="x" size={18} />
@@ -1614,7 +1638,9 @@ function LocalAgentCenterPage() {
                   <span className="text-red-400">*</span>
                 </label>
                 <p className="text-xs text-gray-500 mb-1">
-                  {wt('将智能体拉进智能体团组成多智能体协作单元；对话时召唤该智能体团即进入协作模式')}
+                  {wt(
+                    '将智能体拉进智能体团组成多智能体协作单元；对话时召唤该智能体团即进入协作模式',
+                  )}
                 </p>
                 <button
                   className="btn-secondary text-sm"

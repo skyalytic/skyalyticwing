@@ -1,3 +1,4 @@
+import { TaskCenterLink } from '@/modules/tasks/TaskCenterLink';
 import { shortcutText } from '@/utils/shortcuts';
 import { wt, useWorkbenchLanguage } from '@/i18n/workbench-text';
 import { authenticatedFetch } from '@/services/authenticated-fetch';
@@ -72,7 +73,7 @@ export function Layout() {
   useEffect(() => {
     localStorage.setItem('wing-chat-width', String(chatWidth));
   }, [chatWidth]);
-  const [appVersion, setAppVersion] = useState('2.1.0');
+  const [appVersion, setAppVersion] = useState('2.1.1');
   // Q 模块状态：启动后随时可见的后端模块健康（/api/status/full 宽松渲染）
   const [statusOpen, setStatusOpen] = useState(false);
   const [statusRows, setStatusRows] = useState<Array<[string, unknown]>>([]);
@@ -166,6 +167,7 @@ export function Layout() {
               <span>{t('workbench.search')}</span>
               <kbd>{shortcutText('Ctrl+K')}</kbd>
             </button>
+            <TaskCenterLink />
             <LanguageSwitcher />
             {location.pathname === '/' && !chatsOpen && (
               <button className="btn-primary text-sm py-1 px-3" onClick={handleNewSession}>
@@ -364,7 +366,6 @@ export function Layout() {
         )}
         {/* 主内容区 */}
         <main className="flex-1 flex flex-col overflow-hidden min-w-0 w-full">
-
           {/* 页面内容（min-h-0：防止页面被内容撑高导致整页滚动；各页面自行内部滚动） */}
           <div className="flex-1 overflow-y-auto min-h-0">
             <Outlet />

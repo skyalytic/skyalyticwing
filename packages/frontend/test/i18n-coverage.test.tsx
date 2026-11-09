@@ -141,23 +141,31 @@ describe('English workbench coverage', () => {
   });
 
   it('keeps the selected plugin filter working across language changes', async () => {
-    get.mockImplementation(async (url) => url === '/plugins' ? [
+    get.mockResolvedValue([
       { id: 'on', name: 'Loaded test plugin', version: '1', enabled: true, loaded: true },
       { id: 'off', name: 'Disabled test plugin', version: '1', enabled: false, loaded: false },
-    ] : []);
+    ]);
     render(
       <MemoryRouter>
         <PluginsPage />
       </MemoryRouter>,
     );
     fireEvent.click(screen.getByRole('button', { name: '本地插件' }));
-    await screen.findByText('Loaded test plugin');
+    await screen.findByText('Loaded test plugin', { selector: 'span.text-primary' });
     fireEvent.click(screen.getByRole('button', { name: '已禁用', exact: true }));
-    expect(screen.queryByText('Loaded test plugin')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Loaded test plugin', { selector: 'span.text-primary' }),
+    ).not.toBeInTheDocument();
     await switchLanguage('en');
-    expect(screen.getByText('Disabled test plugin')).toBeInTheDocument();
-    expect(screen.queryByText('Loaded test plugin')).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Disabled test plugin', { selector: 'span.text-primary' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText('Loaded test plugin', { selector: 'span.text-primary' }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'All', exact: true }));
-    expect(screen.getByText('Loaded test plugin')).toBeInTheDocument();
+    expect(
+      screen.getByText('Loaded test plugin', { selector: 'span.text-primary' }),
+    ).toBeInTheDocument();
   });
 });

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { selectCanvasElement } from './canvas-pointer';
 
 test('AI design file appears, edits undo/redo, survives tab changes, saves and exports clean HTML', async ({
   page,
@@ -46,7 +47,7 @@ test('AI design file appears, edits undo/redo, survives tab changes, saves and e
   exists = true;
   const frame = page.frameLocator('iframe[title="设计画布"]');
   await expect(frame.locator('#headline')).toHaveText('AI 生成的海报');
-  await frame.locator('#headline').click({ modifiers: ['Control'] });
+  await selectCanvasElement(page, '#headline');
   await page.getByLabel('元素文字', { exact: true }).fill('用户修改后的标题');
   await page.getByRole('button', { name: '应用文字', exact: true }).click();
   await expect(frame.locator('#headline')).toHaveText('用户修改后的标题');
@@ -54,7 +55,10 @@ test('AI design file appears, edits undo/redo, survives tab changes, saves and e
   await expect(frame.locator('#headline')).toHaveText('AI 生成的海报');
   await page.getByRole('button', { name: '重做', exact: true }).click();
   await expect(frame.locator('#headline')).toHaveText('用户修改后的标题');
-  await page.getByRole('complementary', {name:'图层列表'}).getByRole('button',{name:'h1 用户修改后的标题'}).click();
+  await page
+    .getByRole('complementary', { name: '图层列表' })
+    .getByRole('button', { name: 'h1 用户修改后的标题' })
+    .click();
   await page.getByLabel('文字颜色', { exact: true }).fill('#123456');
   await expect(frame.locator('#headline')).toHaveCSS('color', 'rgb(18, 52, 86)');
   await page.getByLabel('字号', { exact: true }).fill('42');
@@ -64,6 +68,9 @@ test('AI design file appears, edits undo/redo, survives tab changes, saves and e
   await page.getByTitle('编辑器', { exact: true }).click();
   await page.getByTitle('画布', { exact: true }).click();
   await expect(frame.locator('#headline')).toHaveText('用户修改后的标题');
+  await expect(page.getByLabel('宽度', { exact: true })).not.toHaveValue('0');
+  await expect(page.getByLabel('高度', { exact: true })).not.toHaveValue('0');
+  await expect(page.getByLabel('文字颜色', { exact: true })).toHaveValue('#123456');
   await expect(frame.locator('#headline')).toHaveCSS('color', 'rgb(18, 52, 86)');
   await page.getByRole('button', { name: '专注画布', exact: true }).click();
   const downloadPromise = page.waitForEvent('download');

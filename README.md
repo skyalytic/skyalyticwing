@@ -8,15 +8,24 @@ English | [简体中文](README.zh-CN.md)
 
 SkyalyticWing is Skyalytic's AI workspace for model conversations, tool execution, project files, and desktop workflows. It uses React for the interface, NestJS for the local backend, and Tauri for the desktop shell. This repository provides the community source without Wing sign-in, available for use, modification and sharing under a noncommercial license.
 
+## What's new in 2.1.1
+
+- Task center with progress, results, approvals, answers, notifications and prompt revisions.
+- Durable task scheduling, proactive rules, delivery queues and interrupted-task recovery.
+- SSH, WSL and Docker workspaces with remote files, terminals, Git, Office editing and isolated child worktrees.
+- Responses API support, context checkpoints and browser recovery.
+
+This repository keeps its account-free design. See [task and remote workspace usage](docs/tasks-and-remote-workspaces.md) for setup, recovery and verification boundaries.
+
 ## Companion enterprise edition
 
 SkyalyticWing Enterprise is a separate product with enterprise accounts, organizations, seats, departments, organizational budgets and resource approvals. Employees control their own API keys without spending organizational credits; organization-issued keys follow organization permissions and quotas.
 
-| Edition | Usage | Availability |
-| --- | --- | --- |
-| This community source | No Wing account; own API keys or local models; noncommercial license | Build from this repository |
-| Official personal edition | Official installer; features and service terms are specified on the website | [Download](https://skyalytic.com/download) |
-| Enterprise edition | Separate enterprise identity and team administration; scope defined by the commercial agreement | [Contact Skyalytic](https://skyalytic.com/contact) for paid licensing and delivery; enterprise source and public installers are not provided here |
+| Edition                   | Usage                                                                                           | Availability                                                                                                                                      |
+| ------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| This community source     | No Wing account; own API keys or local models; noncommercial license                            | Build from this repository                                                                                                                        |
+| Official personal edition | Official installer; features and service terms are specified on the website                     | [Download](https://skyalytic.com/download)                                                                                                        |
+| Enterprise edition        | Separate enterprise identity and team administration; scope defined by the commercial agreement | [Contact Skyalytic](https://skyalytic.com/contact) for paid licensing and delivery; enterprise source and public installers are not provided here |
 
 Contact Skyalytic for commercial use, team deployment or the enterprise edition. This repository's license does not grant commercial-use rights.
 
@@ -89,16 +98,16 @@ The Windows UIA bridge is included as a prebuilt packaging input at `packages/we
 
 ## Repository layout
 
-| Path | Purpose |
-| --- | --- |
-| `packages/frontend` | Conversation UI, settings, and project workspace |
-| `packages/backend` | Sessions, models, tools, extensions, and local services |
-| `packages/cli` | Command-line entry points |
-| `packages/shared`, `sdk`, `tools`, `providers` | Shared workspace packages |
-| `src-tauri` | Native windows, platform integration, and installer configuration |
-| `scripts`, `tests` | Build tooling and verification |
-| `config` | Edition identity, release policy, and packaging manifests |
-| `deploy` | Optional runtime and service deployment configuration |
+| Path                                           | Purpose                                                           |
+| ---------------------------------------------- | ----------------------------------------------------------------- |
+| `packages/frontend`                            | Conversation UI, settings, and project workspace                  |
+| `packages/backend`                             | Sessions, models, tools, extensions, and local services           |
+| `packages/cli`                                 | Command-line entry points                                         |
+| `packages/shared`, `sdk`, `tools`, `providers` | Shared workspace packages                                         |
+| `src-tauri`                                    | Native windows, platform integration, and installer configuration |
+| `scripts`, `tests`                             | Build tooling and verification                                    |
+| `config`                                       | Edition identity, release policy, and packaging manifests         |
+| `deploy`                                       | Optional runtime and service deployment configuration             |
 
 ## Contributing
 

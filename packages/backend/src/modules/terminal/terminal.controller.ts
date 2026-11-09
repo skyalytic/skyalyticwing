@@ -1,14 +1,20 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 import { TerminalService } from './terminal.service.js';
+import { Optional } from '@nestjs/common';
+import { RemoteWorkspaceService } from '../core/remote-workspace/remote-workspace.service.js';
 
 /** 打开终端 DTO */
 interface TerminalOpenDto {
-  cwd?: string; cols?: number; rows?: number;
+  cwd?: string;
+  cols?: number;
+  rows?: number;
+  sessionId?: string;
 }
 
 /** 输入 DTO */
 interface TerminalInputDto {
-  text: string; raw?: boolean;
+  text: string;
+  raw?: boolean;
 }
 
 /**
@@ -22,7 +28,10 @@ interface TerminalInputDto {
  */
 @Controller('terminal')
 export class TerminalController {
-  constructor(private readonly terminal: TerminalService) {}
+  constructor(
+    private readonly terminal: TerminalService,
+    @Optional() private readonly remote?: RemoteWorkspaceService,
+  ) {}
 
   @Get('status')
   status() {
@@ -32,13 +41,20 @@ export class TerminalController {
   @Post('open')
   @HttpCode(HttpStatus.OK)
   open(@Body() dto: TerminalOpenDto) {
-    return this.terminal.open(dto?.cwd, dto?.cols, dto?.rows);
+    const launch = this.remote?.binding(dto?.sessionId)
+      ? this.remote.terminal(dto.sessionId!)
+      : undefined;
+    return this.terminal.open(dto?.cwd, dto?.cols, dto?.rows, launch);
   }
 
   @Post(':id/input')
   @HttpCode(HttpStatus.OK)
   input(@Param('id') id: string, @Body() dto: TerminalInputDto) {
-    return this.terminal.input(id, typeof dto?.text === 'string' ? dto.text : '', dto?.raw === true);
+    return this.terminal.input(
+      id,
+      typeof dto?.text === 'string' ? dto.text : '',
+      dto?.raw === true,
+    );
   }
 
   @Post(':id/resize')

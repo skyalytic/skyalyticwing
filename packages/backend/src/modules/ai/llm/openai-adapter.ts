@@ -9,13 +9,25 @@ import type {
   ProviderConfig,
 } from '../types.js';
 import { parseSse } from './stream-parser.js';
+import { chatResponses } from './responses-adapter.js';
 
 /** Default connection/stream inactivity timeout; active generation renews it. */
 const REQUEST_TIMEOUT_MS = 30_000;
 interface OpenAIStreamEvent {
-  error?: {message?: string};
-  usage?: {prompt_tokens?: number; completion_tokens?: number};
-  choices?: Array<{finish_reason?: string; delta?: {content?: string; reasoning_content?: string; tool_calls?: Array<{index?: number; id?: string; function?: {name?: string; arguments?: string}}>}}>;
+  error?: { message?: string };
+  usage?: { prompt_tokens?: number; completion_tokens?: number };
+  choices?: Array<{
+    finish_reason?: string;
+    delta?: {
+      content?: string;
+      reasoning_content?: string;
+      tool_calls?: Array<{
+        index?: number;
+        id?: string;
+        function?: { name?: string; arguments?: string };
+      }>;
+    };
+  }>;
 }
 
 /**
@@ -33,6 +45,15 @@ interface OpenAIStreamEvent {
 @Injectable()
 export class OpenAIAdapter {
   async *chat(params: ChatParams, config: ProviderConfig): AsyncGenerator<ChatChunk> {
+    if (
+      config.apiFormat === 'responses' ||
+      ((!config.apiFormat || config.apiFormat === 'auto') &&
+        new URL(config.baseUrl).hostname === 'api.openai.com' &&
+        /^(gpt-[56]|o[134])/.test(params.model))
+    ) {
+      yield* chatResponses(params, config);
+      return;
+    }
     const url = `${config.baseUrl.replace(/\/$/, '')}/chat/completions`;
 
     const body: Record<string, unknown> = {
@@ -43,18 +64,30 @@ export class OpenAIAdapter {
     };
     // OpenAI reasoning models reject legacy max_tokens and custom sampling.
     // Do not apply vendor-specific fields to unrelated compatible gateways.
-    const nativeReasoning = config.baseUrl.startsWith("https://api.openai.com/") && /^(gpt-[56]|o[134])/.test(params.model);
-    const kimiReasoning = ['api.moonshot.cn', 'api.moonshot.ai'].includes(new URL(config.baseUrl).hostname) && /^kimi-k3(?:\.|$)/.test(params.model);
-    const minimaxReasoning = ['api.minimax.cn', 'api.minimax.io'].includes(new URL(config.baseUrl).hostname) && params.model === 'MiniMax-M3.1-Flash';
-    if (params.temperature !== undefined && !nativeReasoning && !kimiReasoning && !minimaxReasoning) body['temperature'] = params.temperature;
-    if (params.maxTokens !== undefined) body[nativeReasoning || kimiReasoning || minimaxReasoning ? 'max_completion_tokens' : 'max_tokens'] = params.maxTokens;
+    const nativeReasoning =
+      config.baseUrl.startsWith('https://api.openai.com/') &&
+      /^(gpt-[56]|o[134])/.test(params.model);
+    const kimiReasoning =
+      ['api.moonshot.cn', 'api.moonshot.ai'].includes(new URL(config.baseUrl).hostname) &&
+      /^kimi-k3(?:\.|$)/.test(params.model);
+    const minimaxReasoning =
+      ['api.minimax.cn', 'api.minimax.io'].includes(new URL(config.baseUrl).hostname) &&
+      params.model === 'MiniMax-M3.1-Flash';
+    if (params.temperature !== undefined && !nativeReasoning && !kimiReasoning && !minimaxReasoning)
+      body['temperature'] = params.temperature;
+    if (params.maxTokens !== undefined)
+      body[
+        nativeReasoning || kimiReasoning || minimaxReasoning
+          ? 'max_completion_tokens'
+          : 'max_tokens'
+      ] = params.maxTokens;
     if (minimaxReasoning) body['reasoning_split'] = true;
     if (params.tools && params.tools.length > 0) {
       body['tools'] = params.tools.map(toOpenaiTool);
     }
 
     const controller = new AbortController();
-    const timeoutMs=kimiReasoning||minimaxReasoning?130000:REQUEST_TIMEOUT_MS;
+    const timeoutMs = kimiReasoning || minimaxReasoning ? 130000 : REQUEST_TIMEOUT_MS;
     let timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
       const res = await fetch(url, {
@@ -66,7 +99,9 @@ export class OpenAIAdapter {
         },
         body: JSON.stringify(body),
         redirect: 'error',
-        signal: params.signal ? AbortSignal.any([controller.signal, params.signal]) : controller.signal,
+        signal: params.signal
+          ? AbortSignal.any([controller.signal, params.signal])
+          : controller.signal,
       });
       if (!res.ok) {
         const text = await res.text();
@@ -89,19 +124,29 @@ export class OpenAIAdapter {
         clearTimeout(timer);
         timer = setTimeout(() => controller.abort(), timeoutMs);
         if (!data) continue;
-        if (data === '[DONE]') { streamDone = true; break; }
+        if (data === '[DONE]') {
+          streamDone = true;
+          break;
+        }
         let json: OpenAIStreamEvent;
         try {
           json = JSON.parse(data);
         } catch {
           continue;
         }
-        if(json?.error){yield {type:'error',error:typeof json.error.message==='string'?json.error.message:'模型流中断'};return;}
+        if (json?.error) {
+          yield {
+            type: 'error',
+            error: typeof json.error.message === 'string' ? json.error.message : '模型流中断',
+          };
+          return;
+        }
 
         // usage 通常在最后一个 chunk（stream_options.include_usage）
         if (json?.usage) {
           const p = typeof json.usage.prompt_tokens === 'number' ? json.usage.prompt_tokens : 0;
-          const c = typeof json.usage.completion_tokens === 'number' ? json.usage.completion_tokens : 0;
+          const c =
+            typeof json.usage.completion_tokens === 'number' ? json.usage.completion_tokens : 0;
           usage = { promptTokens: p, completionTokens: c, totalTokens: p + c };
         }
 
@@ -110,7 +155,8 @@ export class OpenAIAdapter {
           const choice = choices[0];
           const delta = choice?.delta;
           if (delta) {
-            if (typeof delta.reasoning_content === 'string') reasoningContent += delta.reasoning_content;
+            if (typeof delta.reasoning_content === 'string')
+              reasoningContent += delta.reasoning_content;
             if (typeof delta.content === 'string' && delta.content.length > 0) {
               yield { type: 'content', content: delta.content };
             }
@@ -135,22 +181,33 @@ export class OpenAIAdapter {
         }
       }
 
-      if(!streamDone && !finishReason){yield {type:'error',error:'模型连接中断，未收到完成标记'};return;}
+      if (!streamDone && !finishReason) {
+        yield { type: 'error', error: '模型连接中断，未收到完成标记' };
+        return;
+      }
       if (toolBuffers.size && ['length', 'content_filter'].includes(finishReason || '')) {
-        yield {type:'error',error:'模型工具调用被截断，未执行不完整的操作'}; return;
+        yield { type: 'error', error: '模型工具调用被截断，未执行不完整的操作' };
+        return;
       }
       for (const buf of toolBuffers.values()) {
         try {
           const args: unknown = JSON.parse(buf.args);
-          if (!buf.id || !buf.name || !args || typeof args !== 'object' || Array.isArray(args)) throw new Error('invalid tool');
-        } catch { yield {type:'error',error:'模型返回了不完整或无效的工具调用'}; return; }
+          if (!buf.id || !buf.name || !args || typeof args !== 'object' || Array.isArray(args))
+            throw new Error('invalid tool');
+        } catch {
+          yield { type: 'error', error: '模型返回了不完整或无效的工具调用' };
+          return;
+        }
       }
       // 派发累积的完整工具调用（按 index 排序）
       const indices = Array.from(toolBuffers.keys()).sort((a, b) => a - b);
       for (const idx of indices) {
         const buf = toolBuffers.get(idx);
         if (buf) {
-          yield { type: 'tool_call', toolCall: { id: buf.id, name: buf.name, arguments: buf.args } };
+          yield {
+            type: 'tool_call',
+            toolCall: { id: buf.id, name: buf.name, arguments: buf.args },
+          };
         }
       }
 
@@ -161,7 +218,12 @@ export class OpenAIAdapter {
       yield done;
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
-        yield { type: 'error', error: params.signal?.aborted ? 'Request cancelled' : `OpenAI API request timeout (${timeoutMs}ms)` };
+        yield {
+          type: 'error',
+          error: params.signal?.aborted
+            ? 'Request cancelled'
+            : `OpenAI API request timeout (${timeoutMs}ms)`,
+        };
       } else {
         yield { type: 'error', error: err instanceof Error ? err.message : String(err) };
       }
@@ -204,7 +266,13 @@ function toOpenaiMessage(m: LlmMessage): Record<string, unknown> {
       })),
     };
   }
-  return { role: m.role, content: m.content, ...(m.role === 'assistant' && m.reasoningContent !== undefined ? { reasoning_content: m.reasoningContent } : {}) };
+  return {
+    role: m.role,
+    content: m.content,
+    ...(m.role === 'assistant' && m.reasoningContent !== undefined
+      ? { reasoning_content: m.reasoningContent }
+      : {}),
+  };
 }
 
 /** 将 LlmToolDefinition 映射为 OpenAI tools 项 */

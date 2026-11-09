@@ -51,6 +51,7 @@ interface Provider {
   maskedApiKey?: string;
   hasApiKey?: boolean;
   baseUrl?: string;
+  apiFormat?: 'auto' | 'chat-completions' | 'responses';
   models: string[];
   configured?: boolean;
   type?: string;
@@ -71,7 +72,18 @@ interface Provider {
   imageBaseUrl?: string;
   videoBaseUrl?: string;
   catalog?: ProviderCatalogInfo;
-  preset?: Pick<Provider, 'baseUrl' | 'models' | 'visionModels' | 'imageModels' | 'videoModels' | 'imageProtocol' | 'videoProtocol' | 'imageBaseUrl' | 'videoBaseUrl'>;
+  preset?: Pick<
+    Provider,
+    | 'baseUrl'
+    | 'models'
+    | 'visionModels'
+    | 'imageModels'
+    | 'videoModels'
+    | 'imageProtocol'
+    | 'videoProtocol'
+    | 'imageBaseUrl'
+    | 'videoBaseUrl'
+  >;
 }
 
 interface Msg {
@@ -322,7 +334,8 @@ export function SettingsPage() {
             onClick={() => switchTab(tabItem.id)}
           >
             <span className="inline-flex items-center gap-1">
-              <Icon name={tabItem.icon} size={14} /> {tabItem.labelKey ? t(tabItem.labelKey) : wt(tabItem.label!)}
+              <Icon name={tabItem.icon} size={14} />{' '}
+              {tabItem.labelKey ? t(tabItem.labelKey) : wt(tabItem.label!)}
             </span>
           </button>
         ))}
@@ -334,8 +347,7 @@ export function SettingsPage() {
         {tab === 'models' && <ModelsTab />}
         {tab === 'tools' && <ToolsPage />}
         {tab === 'protocols' && <ProtocolsPage />}
-        {tab === 'advanced' && (<DaemonPage embedded />
-        )}
+        {tab === 'advanced' && <DaemonPage embedded />}
       </div>
     </div>
   );
@@ -363,8 +375,14 @@ function RuntimeStatusTab() {
           <span className="font-bold">{wt('详细监控与日志')}</span>
           <span aria-hidden="true">{expanded ? '−' : '+'}</span>
         </button>
-        <p className="text-sm text-muted mt-2">{wt('查看实时指标、工具调用、词元用量与最近日志。')}</p>
-        {expanded && <div id="runtime-monitor-details" className="mt-4"><MonitorPage embedded /></div>}
+        <p className="text-sm text-muted mt-2">
+          {wt('查看实时指标、工具调用、词元用量与最近日志。')}
+        </p>
+        {expanded && (
+          <div id="runtime-monitor-details" className="mt-4">
+            <MonitorPage embedded />
+          </div>
+        )}
       </section>
     </div>
   );
@@ -446,7 +464,12 @@ function PersonalizeTab() {
         tabIndex={0}
         aria-checked={value}
         onClick={() => onChange(!value)}
-        onKeyDown={e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();onChange(!value);}}}
+        onKeyDown={(e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            onChange(!value);
+          }
+        }}
       />
     </div>
   );
@@ -519,7 +542,11 @@ function PersonalizeTab() {
         <h3 className="text-sm font-medium mb-2 flex items-center gap-1.5">
           <Icon name="agent" size={16} /> {t('settings.chatCard')}
         </h3>
-        <div className="mb-3">{toggleRow(wt('任务先规划，确认后执行'), settings.planMode, (v) => update({planMode:v}))}</div>
+        <div className="mb-3">
+          {toggleRow(wt('任务先规划，确认后执行'), settings.planMode, (v) =>
+            update({ planMode: v }),
+          )}
+        </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-400">{t('settings.maxIterations')}</span>
           <div className="flex items-center gap-2">
@@ -822,7 +849,17 @@ function DashboardTab() {
 
       <div className="card mt-4">
         <h3 className="font-bold mb-2 flex items-center gap-1.5">
-          <Icon name="monitor" size={16} /> {wt('版本信息')} {isTauri() && <button className="btn" onClick={() => { void nativeInvoke('check_for_updates', {}).catch(() => {}); }}>{wt('检查更新')}</button>}
+          <Icon name="monitor" size={16} /> {wt('版本信息')}{' '}
+          {isTauri() && (
+            <button
+              className="btn"
+              onClick={() => {
+                void nativeInvoke('check_for_updates', {}).catch(() => {});
+              }}
+            >
+              {wt('检查更新')}
+            </button>
+          )}
         </h3>
         <div className="text-sm text-gray-400">
           {health?.version ? (
@@ -891,7 +928,11 @@ const SECURITY_SUBTABS: Array<{ id: string; label: string }> = [
 ];
 
 /** 安全模式（写 security.yolo，与后端 AgentLoop 安全闸门同源实时生效） */
-const PERMISSION_MODES = PERMISSION_CHOICES.map(c => ({ id: c.id, label: wt(c.label), desc: wt(c.desc) }));
+const PERMISSION_MODES = PERMISSION_CHOICES.map((c) => ({
+  id: c.id,
+  label: wt(c.label),
+  desc: wt(c.desc),
+}));
 
 function SecurityTab() {
   useWorkbenchLanguage();
@@ -1132,7 +1173,9 @@ function SecurityCommand() {
   }, [load]);
 
   useEffect(() => {
-    const refresh = () => { void load(); };
+    const refresh = () => {
+      void load();
+    };
     window.addEventListener('sky-permissions-changed', refresh);
     return () => window.removeEventListener('sky-permissions-changed', refresh);
   }, [load]);
@@ -1146,7 +1189,9 @@ function SecurityCommand() {
       toast.success(wt('权限模式已切换'));
     } catch (e) {
       toast.error(wt('切换失败'), e instanceof Error ? e.message : undefined);
-    } finally { setModeSaving(false); }
+    } finally {
+      setModeSaving(false);
+    }
   };
 
   const classify = async () => {
@@ -2345,7 +2390,18 @@ function ModelsTab() {
   useWorkbenchLanguage();
   const [providerSearch, setProviderSearch] = useState('');
   const [capabilities, setCapabilities] = useState<CapabilityForm>(emptyCapabilities);
-  const capabilitiesFor = (p: Pick<Provider, 'visionModels' | 'imageModels' | 'videoModels' | 'imageProtocol' | 'videoProtocol' | 'imageBaseUrl' | 'videoBaseUrl'>): CapabilityForm => ({
+  const capabilitiesFor = (
+    p: Pick<
+      Provider,
+      | 'visionModels'
+      | 'imageModels'
+      | 'videoModels'
+      | 'imageProtocol'
+      | 'videoProtocol'
+      | 'imageBaseUrl'
+      | 'videoBaseUrl'
+    >,
+  ): CapabilityForm => ({
     visionIds: (p.visionModels || []).join(','),
     imageIds: (p.imageModels || []).join(','),
     videoIds: (p.videoModels || []).join(','),
@@ -2373,6 +2429,7 @@ function ModelsTab() {
     name: '',
     apiKey: '',
     baseUrl: '',
+    apiFormat: 'auto',
     modelIds: '',
     maxTokens: 8192,
     temperature: 0.7,
@@ -2426,10 +2483,12 @@ function ModelsTab() {
       name: '',
       apiKey: '',
       baseUrl: template.baseUrl || '',
+      apiFormat: 'auto',
       modelIds: (template.models || []).join(','),
       maxTokens: p.maxTokens || 8192,
       temperature: p.temperature ?? 0.7,
-      isDefault: !!template.models.length && defaultModelProviderId(providers, general.defaultModel) === id,
+      isDefault:
+        !!template.models.length && defaultModelProviderId(providers, general.defaultModel) === id,
     });
   };
 
@@ -2442,6 +2501,7 @@ function ModelsTab() {
       name: p.displayName || p.name || '',
       apiKey: '',
       baseUrl: p.baseUrl || '',
+      apiFormat: p.apiFormat || 'auto',
       modelIds: (p.models || []).join(','),
       maxTokens: p.maxTokens || 8192,
       temperature: p.temperature ?? 0.7,
@@ -2465,7 +2525,10 @@ function ModelsTab() {
       toast.warn(wt('该厂商原生协议尚未适配，请查看官方文档。'));
       return;
     }
-    if (!form.baseUrl.trim() || (!form.modelIds.trim() && !capabilities.imageIds.trim() && !capabilities.videoIds.trim())) {
+    if (
+      !form.baseUrl.trim() ||
+      (!form.modelIds.trim() && !capabilities.imageIds.trim() && !capabilities.videoIds.trim())
+    ) {
       toast.warn(wt('请填写接口地址和至少一个可用模型。'));
       return;
     }
@@ -2508,6 +2571,7 @@ function ModelsTab() {
         videoProtocol: capabilities.videoProtocol,
         videoBaseUrl: capabilities.videoBaseUrl,
         baseUrl: form.baseUrl,
+        apiFormat: form.apiFormat,
         displayName: form.name,
         models: form.modelIds
           .split(',')
@@ -2526,7 +2590,11 @@ function ModelsTab() {
         body: JSON.stringify(body),
       });
       // 默认模型存"模型 ID"（ChatInput / 后端 resolveModel 均按模型 ID 消费）
-      if (form.isDefault && form.modelIds.trim() && defaultModelProviderId(providers, general.defaultModel) !== targetId) {
+      if (
+        form.isDefault &&
+        form.modelIds.trim() &&
+        defaultModelProviderId(providers, general.defaultModel) !== targetId
+      ) {
         const firstModel =
           form.modelIds
             .split(',')
@@ -2644,7 +2712,6 @@ function ModelsTab() {
 
   return (
     <div className="model-settings">
-
       {/* 子标签：已配置 / 添加新模型（对齐旧版） */}
       <div className="model-config-tabs">
         <button
@@ -2667,6 +2734,7 @@ function ModelsTab() {
               name: '',
               apiKey: '',
               baseUrl: '',
+              apiFormat: 'auto',
               modelIds: '',
               maxTokens: 8192,
               temperature: 0.7,
@@ -2816,10 +2884,29 @@ function ModelsTab() {
                 count: providers.length,
               })}
             </h3>
-            <input className="form-input model-provider-search" aria-label={wt('搜索厂商或模型')} placeholder={wt('搜索厂商或模型')} value={providerSearch} onChange={e => setProviderSearch(e.target.value)} />
+            <input
+              className="form-input model-provider-search"
+              aria-label={wt('搜索厂商或模型')}
+              placeholder={wt('搜索厂商或模型')}
+              value={providerSearch}
+              onChange={(e) => setProviderSearch(e.target.value)}
+            />
             <div className="space-y-1">
               {providers
-                .filter((p) => [p.id, p.name, providerName(p), ...p.models, ...(p.imageModels || []), ...(p.videoModels || []), ...(p.catalog?.references || []).map(m=>m.id)].join(' ').toLowerCase().includes(providerSearch.trim().toLowerCase()))
+                .filter((p) =>
+                  [
+                    p.id,
+                    p.name,
+                    providerName(p),
+                    ...p.models,
+                    ...(p.imageModels || []),
+                    ...(p.videoModels || []),
+                    ...(p.catalog?.references || []).map((m) => m.id),
+                  ]
+                    .join(' ')
+                    .toLowerCase()
+                    .includes(providerSearch.trim().toLowerCase()),
+                )
                 .map((p) => {
                   const done = p.configured;
                   const isInst = !!p.baseProvider;
@@ -2844,8 +2931,15 @@ function ModelsTab() {
                             ? wt('已配置实例 · 点击编辑')
                             : done
                               ? wt('已配置')
-                              : (p.models?.length || 0) + (p.imageModels?.length || 0) + (p.videoModels?.length || 0)
-                                ? wt('{{v0}}个模型', { v0: p.models.length + (p.imageModels?.length || 0) + (p.videoModels?.length || 0) })
+                              : (p.models?.length || 0) +
+                                  (p.imageModels?.length || 0) +
+                                  (p.videoModels?.length || 0)
+                                ? wt('{{v0}}个模型', {
+                                    v0:
+                                      p.models.length +
+                                      (p.imageModels?.length || 0) +
+                                      (p.videoModels?.length || 0),
+                                  })
                                 : p.catalog?.setup === 'reference'
                                   ? wt('目录参考 · 暂未适配')
                                   : p.catalog?.setup === 'deployment'
@@ -2871,13 +2965,27 @@ function ModelsTab() {
               <Icon name="edit" size={14} /> {isEditing ? wt('编辑模型配置') : wt('模型详细配置')}
             </h3>
             <ProviderTemplateInfo
-              catalog={providers.find(p => p.id === form.provider)?.catalog}
-              counts={[form.modelIds.split(',').filter(s=>s.trim()).length, capabilities.visionIds.split(',').filter(s=>s.trim()).length, capabilities.imageProtocol === 'none' ? 0 : capabilities.imageIds.split(',').filter(s=>s.trim()).length, capabilities.videoProtocol === 'none' ? 0 : capabilities.videoIds.split(',').filter(s=>s.trim()).length]}
+              catalog={providers.find((p) => p.id === form.provider)?.catalog}
+              counts={[
+                form.modelIds.split(',').filter((s) => s.trim()).length,
+                capabilities.visionIds.split(',').filter((s) => s.trim()).length,
+                capabilities.imageProtocol === 'none'
+                  ? 0
+                  : capabilities.imageIds.split(',').filter((s) => s.trim()).length,
+                capabilities.videoProtocol === 'none'
+                  ? 0
+                  : capabilities.videoIds.split(',').filter((s) => s.trim()).length,
+              ]}
               onApply={() => {
-                const preset = providers.find(p => p.id === form.provider)?.preset;
+                const preset = providers.find((p) => p.id === form.provider)?.preset;
                 if (!preset) return;
                 setCapabilities(capabilitiesFor(preset));
-                setForm(f => ({ ...f, baseUrl: preset.baseUrl || '', modelIds: preset.models.join(','), isDefault: !!preset.models.length && f.isDefault }));
+                setForm((f) => ({
+                  ...f,
+                  baseUrl: preset.baseUrl || '',
+                  modelIds: preset.models.join(','),
+                  isDefault: !!preset.models.length && f.isDefault,
+                }));
               }}
             />
             {/* Only claim an existing configuration when one actually exists. */}
@@ -2951,6 +3059,16 @@ function ModelsTab() {
                     value={form.baseUrl}
                     onChange={(e) => setForm((f) => ({ ...f, baseUrl: e.target.value }))}
                   />
+                  <label className="form-label">{wt('API 协议')}</label>
+                  <select
+                    className="form-input"
+                    value={form.apiFormat}
+                    onChange={(e) => setForm((f) => ({ ...f, apiFormat: e.target.value }))}
+                  >
+                    <option value="auto">{wt('自动')}</option>
+                    <option value="chat-completions">Chat Completions</option>
+                    <option value="responses">Responses</option>
+                  </select>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -3004,7 +3122,10 @@ function ModelsTab() {
               <button
                 onClick={saveProvider}
                 className="btn-primary w-full py-2.5 mt-2 text-base font-medium"
-                disabled={saving || providers.find(p => p.id === form.provider)?.catalog?.setup === 'reference'}
+                disabled={
+                  saving ||
+                  providers.find((p) => p.id === form.provider)?.catalog?.setup === 'reference'
+                }
               >
                 <span className="inline-flex items-center gap-1">
                   <Icon name="save" size={14} />{' '}

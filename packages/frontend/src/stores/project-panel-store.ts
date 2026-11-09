@@ -1,7 +1,8 @@
 import { wt } from '@/i18n/workbench-text';
+import type { RemoteWorkspace } from '@/components/workspace/RemoteWorkspaceView';
 // 工程面板状态（IDE 工程模式）：右侧可收缩面板的展开态、当前预览文件、
 // 项目目录（会话绑定优先，回退全局默认）与目录选择器开关。
-// 规则（对齐 Trae）：一个项目文件夹可被多个会话使用；一个会话同时只绑定一个项目文件夹。
+// 规则：一个项目文件夹可被多个会话使用；一个会话同时只绑定一个项目文件夹。
 // 会话切换时自动重新加载当前会话的生效目录。
 import { create } from 'zustand';
 import { apiClient } from '@/services/api-client';
@@ -18,6 +19,7 @@ function fileIdentity(path: string) {
 }
 
 interface ProjectPanelState {
+  remoteWorkspace: RemoteWorkspace | null;
   /** 面板展开态 */
   open: boolean;
   /** 当前预览文件绝对路径（空 = 显示文件树） */
@@ -55,6 +57,7 @@ interface ProjectPanelState {
 }
 
 export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
+  remoteWorkspace: null,
   open: false,
   currentFile: '',
   openFiles: [],
@@ -69,17 +72,28 @@ export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
 
   openFile: (path) => {
     if (!path) return;
-    set(s => {
-      const existing = s.openFiles.find(p => fileIdentity(p) === fileIdentity(path));
-      return { open: true, currentFile: existing || path, openFiles: existing ? s.openFiles : [...s.openFiles, path] };
+    set((s) => {
+      const existing = s.openFiles.find((p) => fileIdentity(p) === fileIdentity(path));
+      return {
+        open: true,
+        currentFile: existing || path,
+        openFiles: existing ? s.openFiles : [...s.openFiles, path],
+      };
     });
   },
 
-  closeFile: (path) => set(s => {
-    const index = s.openFiles.indexOf(path);
-    const openFiles = s.openFiles.filter(p => p !== path);
-    return { openFiles, currentFile: s.currentFile === path ? openFiles[Math.min(index, openFiles.length - 1)] || '' : s.currentFile };
-  }),
+  closeFile: (path) =>
+    set((s) => {
+      const index = s.openFiles.indexOf(path);
+      const openFiles = s.openFiles.filter((p) => p !== path);
+      return {
+        openFiles,
+        currentFile:
+          s.currentFile === path
+            ? openFiles[Math.min(index, openFiles.length - 1)] || ''
+            : s.currentFile,
+      };
+    }),
 
   showTree: () => set({ currentFile: '' }),
 
@@ -90,6 +104,13 @@ export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
   initProjectDir: async (force = false) => {
     if (get().initialized && !force) return;
     const sid = currentSessionId();
+    set({
+      initialized: false,
+      projectDir: '',
+      remoteWorkspace: null,
+      currentFile: '',
+      openFiles: [],
+    });
     try {
       const d = await apiClient.get<{ path?: string; source?: 'session' | 'global' | '' }>(
         `/files/project${sid ? `?sessionId=${encodeURIComponent(sid)}` : ''}`,
@@ -98,15 +119,20 @@ export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
       // 一个对话对应一个选定文件夹，新建对话须重新选择（产物落盘仍走后端原逻辑）。
       // 目录切换（切会话/换绑）后旧预览文件失效：回到文件树视图。
       const sessionDir = d?.source === 'session' ? d?.path || '' : '';
+      const remote = await apiClient.get<{ workspaces: RemoteWorkspace[]; bound: string | null }>(
+        `/remote-workspaces?sessionId=${encodeURIComponent(sid || '')}`,
+      );
       if (sid !== currentSessionId()) return;
       set({
+        remoteWorkspace: remote.workspaces.find((w) => w.id === remote.bound) || null,
         projectDir: sessionDir,
         dirSource: d?.source ?? '',
         initialized: true,
         currentFile: '',
       });
     } catch {
-      set({ initialized: true });
+      if (sid === currentSessionId())
+        set({ initialized: true, projectDir: '', remoteWorkspace: null });
     }
   },
 
@@ -122,7 +148,12 @@ export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
         path: dir,
         sessionId: sid,
       });
-      set({ projectDir: d?.path || dir, dirSource: sid ? 'session' : 'global', pickerOpen: false });
+      set({
+        projectDir: d?.path || dir,
+        dirSource: sid ? 'session' : 'global',
+        pickerOpen: false,
+        remoteWorkspace: null,
+      });
       await useSessionStore.getState().loadSessions();
       window.dispatchEvent(new Event('wing-projects-changed'));
       toast.success(
@@ -139,8 +170,10 @@ export const useProjectPanel = create<ProjectPanelState>((set, get) => ({
   clearProjectDir: async () => {
     try {
       const sid = currentSessionId();
+      if (sid && get().remoteWorkspace)
+        await apiClient.post('/remote-workspaces/bind', { sessionId: sid, id: null });
       await apiClient.delete(`/files/project${sid ? `?sessionId=${encodeURIComponent(sid)}` : ''}`);
-      set({ projectDir: '', dirSource: '', currentFile: '' });
+      set({ projectDir: '', dirSource: '', currentFile: '', openFiles: [], remoteWorkspace: null });
       await useSessionStore.getState().loadSessions();
       toast.success(
         wt('已清除项目文件夹'),

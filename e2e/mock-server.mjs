@@ -106,9 +106,10 @@ const server = createServer(async (req, res) => {
     if (path === '/api/chat/send' && req.method === 'POST') {
       const sessionId = body?.session || 'api';
       const history = transcripts.get(sessionId) || [];
-      const message = { id: `msg-assistant-e2e-${history.length}`, sessionId, role: 'assistant',
+      const turnId = body.turnId || `turn-e2e-${history.length}`;
+      const message = { id: `${turnId}:assistant`, sessionId, turnId, turnSequence: 1, role: 'assistant',
         content: '收到！这是 E2E-MOCK 后端的自动回复内容。', timestamp: Date.now() };
-      history.push({ id: `msg-user-e2e-${history.length}`, sessionId, role: 'user', content: body.message, timestamp: Date.now() }, message);
+      history.push({ id: `${turnId}:user`, sessionId, turnId, turnSequence: 0, role: 'user', content: body.message, timestamp: Date.now() }, message);
       transcripts.set(sessionId, history);
       if (sessions.has(sessionId)) sessions.get(sessionId).messageCount = history.length;
       broadcast({
@@ -157,6 +158,7 @@ const server = createServer(async (req, res) => {
     if (req.method === 'GET' && (path.startsWith('/api/chat/history/') || /\/messages$/.test(path))) {
       return sendJson(200, { success: true, data: [] });
     }
+    if (path === '/api/remote-workspaces' && req.method === 'GET') return sendJson(200, { success: true, data: { workspaces: [], bound: null } });
     if (path === '/api/models') return sendJson(200, { success: true, data: { models: [] } });
     if (path === '/api/sessions/recovery') return sendJson(200, {success:true,data:null});
     if (path === '/api/providers') return sendJson(200, { success: true, data: { providers: [] } });

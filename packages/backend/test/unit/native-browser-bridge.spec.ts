@@ -23,6 +23,9 @@ describe('native browser bridge', () => {
     expect(commands[0]).toMatchObject({ sessionId: 's1', op: 'navigate' });
     expect(b.poll(owner).commands).toHaveLength(0);
     expect(b.state('s2').activePageId).toBe('p2');
+    expect(b.finish(owner, commands[0].id, {}).accepted).toBe(false);
+    expect(b.claim(owner, commands[0].id).allowed).toBe(true);
+    expect(b.claim(owner, commands[0].id).allowed).toBe(false);
     b.finish(owner, commands[0].id, { pageId: 'p1' });
     await expect(task).resolves.toEqual({ pageId: 'p1' });
     expect(b.finish(owner, commands[0].id, {}).accepted).toBe(false);
@@ -50,11 +53,13 @@ describe('native browser bridge', () => {
   });
   it('bounds a short read wait and refuses its late command result', async () => {
     jest.useFakeTimers();
-    const bridge = new NativeBrowserBridge(); bridge.connect(owner);
+    const bridge = new NativeBrowserBridge();
+    bridge.connect(owner);
     const task = bridge.request('s', 'snapshot', { screenshot: false }, 100);
     const check = expect(task).rejects.toThrow('响应超时');
     const command = bridge.poll(owner).commands[0];
-    jest.advanceTimersByTime(101); await check;
+    jest.advanceTimersByTime(101);
+    await check;
     expect(bridge.claim(owner, command.id).allowed).toBe(false);
     expect(bridge.finish(owner, command.id, {}).accepted).toBe(false);
   });

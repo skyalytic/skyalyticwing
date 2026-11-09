@@ -35,10 +35,12 @@ export interface LlmToolDefinition {
  * 图片以 DataURL（data:image/xxx;base64,yyy）形式内联于 image_url.url。
  */
 export type LlmContentPart =
-  { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string; detail?: 'auto' | 'low' | 'high' } };
+  | { type: 'text'; text: string }
+  | { type: 'image_url'; image_url: { url: string; detail?: 'auto' | 'low' | 'high' } };
 
 /** LLM 消息（与 SDK 描述的 ChatParams.messages 形状对齐；content 支持多模态数组） */
 export interface LlmMessage {
+  responseState?: { provider: string; model: string; items: Record<string, unknown>[] };
   /** Provider reasoning payload, retained for tool continuation; not answer text. */
   reasoningContent?: string;
   contextSummary?: boolean;
@@ -67,6 +69,7 @@ export interface ChatParams {
 
 /** LLM 流式响应块 */
 export interface ChatChunk {
+  responseState?: LlmMessage['responseState'];
   reasoningContent?: string;
   type: 'content' | 'tool_call' | 'done' | 'error';
   content?: string;
@@ -80,6 +83,7 @@ export interface ChatChunk {
 
 /** Provider 配置（apiKey 已完成环境变量替换） */
 export interface ProviderConfig {
+  apiFormat?: 'auto' | 'chat-completions' | 'responses';
   id: string;
   apiKey: string;
   baseUrl: string;
@@ -102,14 +106,29 @@ export type AgentLoopEvent =
       /** 工具生成的内联媒体附件（图片/视频/音频），随最终助手消息返回对话流 */
       attachments?: Attachment[];
     }
-  | { type: 'tool_call'; toolName: string; args: unknown; callId: string; turnId?: string; turnSequence?: number }
-  | { type: 'tool_result'; toolName: string; result: ToolResult; callId: string; turnId?: string; turnSequence?: number }
+  | {
+      type: 'tool_call';
+      toolName: string;
+      args: unknown;
+      callId: string;
+      turnId?: string;
+      turnSequence?: number;
+    }
+  | {
+      type: 'tool_result';
+      toolName: string;
+      result: ToolResult;
+      callId: string;
+      turnId?: string;
+      turnSequence?: number;
+    }
   | { type: 'approval_request'; request: ToolApprovalRequest }
   | { type: 'done'; usage?: TokenUsage }
   | { type: 'error'; error: string };
 
 /** Agent 信息 */
 export interface AgentInfo {
+  promptRevision?: number;
   id: string;
   name: string;
   description: string;
@@ -214,6 +233,7 @@ export interface CreateAgentDto {
 
 /** 更新 Agent DTO */
 export interface UpdateAgentDto {
+  promptRevision?: number;
   name?: string;
   description?: string;
   model?: string;
@@ -276,7 +296,11 @@ export interface ISessionService {
   flush?(): Promise<void>;
   getMessages(sessionId: string): ChatMessage[];
   getContextMessages?(sessionId: string): ChatMessage[];
-  setContextMessages?(sessionId: string, expectedHistory: ChatMessage[], messages: ChatMessage[]): boolean;
+  setContextMessages?(
+    sessionId: string,
+    expectedHistory: ChatMessage[],
+    messages: ChatMessage[],
+  ): boolean;
   addMessage(sessionId: string, message: ChatMessage): void;
   replaceMessages(sessionId: string, messages: ChatMessage[]): boolean;
   getSession(

@@ -1,4 +1,5 @@
 import { ChatControlRegistry } from '../chat/chat-control.registry.js';
+import { ProgressGuard } from './progress-guard.js';
 import { SkillService } from './skill.service.js';
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { TaskVerification, TASK_VERIFY, VERIFICATION_PROMPT } from './task-verification.js';
@@ -8,11 +9,7 @@ import { resolveEffectiveWorkspace } from '../../core/config/effective-workspace
 import { WebSocketService } from '../../core/websocket/websocket.service.js';
 import { LLMClientService } from '../llm/llm-client.service.js';
 import { AgentService } from './agent.service.js';
-import {
-  TOOL_EXECUTOR_SERVICE,
-  type IToolExecutorService,
-  type LlmMessage,
-} from '../types.js';
+import { TOOL_EXECUTOR_SERVICE, type IToolExecutorService, type LlmMessage } from '../types.js';
 
 /**
  * AgentMessenger (代理间消息传递) - NestJS TypeScript 重写
@@ -37,7 +34,6 @@ const MAILBOX_TRIM_TO = 150;
 /** 自动回复会话消息上限 */
 const REPLY_SESSION_MAX_MSGS = 500;
 /** 自动回复最大迭代轮数 */
-
 
 /** 代理间消息 */
 export interface AgentMessage {
@@ -90,12 +86,7 @@ export class AgentMessengerService {
    * - 目标代理无活跃会话时触发自动回复
    * - 通过 WebSocket 广播消息事件
    */
-  send(
-    fromAgentId: string,
-    toAgentId: string,
-    message: string,
-    msgType = 'text',
-  ): SendResult {
+  send(fromAgentId: string, toAgentId: string, message: string, msgType = 'text'): SendResult {
     const fromAgent = this.tryGetAgent(fromAgentId);
     const toAgent = this.tryGetAgent(toAgentId);
     if (!fromAgent) return { success: false, error: `发送方代理不存在: ${fromAgentId}` };
@@ -175,17 +166,26 @@ export class AgentMessengerService {
       '请处理以上来自其他代理的消息，给出你的回复。回复将自动发送给对方。';
 
     const messages: LlmMessage[] = [
-      { role: 'system', content: (toAgent.systemPrompt || '你是一个协作代理，负责处理来自其他代理的消息。') + '\n' + VERIFICATION_PROMPT },
+      {
+        role: 'system',
+        content:
+          (toAgent.systemPrompt || '你是一个协作代理，负责处理来自其他代理的消息。') +
+          '\n' +
+          VERIFICATION_PROMPT,
+      },
       { role: 'user', content: initialPrompt },
     ];
     const skillPrompt = await this.skills?.buildPrompt(tools);
     if (skillPrompt) messages[0].content += '\n\n' + skillPrompt;
 
     let replyContent = '';
+    const progress = new ProgressGuard();
     let toolResultsSummary = '';
 
     const loopAbort = new AbortController();
-    const unsubscribeAbort = ChatControlRegistry.onAbort(id => { if (!id || id === toAgentId) loopAbort.abort(); });
+    const unsubscribeAbort = ChatControlRegistry.onAbort((id) => {
+      if (!id || id === toAgentId) loopAbort.abort();
+    });
     try {
       for (;;) {
         if (loopAbort.signal.aborted) throw new Error('任务已由用户停止');
@@ -200,10 +200,14 @@ export class AgentMessengerService {
         const aiResult = await this.llm.chatSync(chatParams);
 
         if (aiResult.toolCalls && aiResult.toolCalls.length > 0) {
+          for (const call of aiResult.toolCalls) progress.before(call.id);
           messages.push({
             role: 'assistant',
             content: aiResult.content || '',
-            ...(aiResult.reasoningContent !== undefined ? { reasoningContent: aiResult.reasoningContent } : {}),
+            ...(aiResult.responseState ? { responseState: aiResult.responseState } : {}),
+            ...(aiResult.reasoningContent !== undefined
+              ? { reasoningContent: aiResult.reasoningContent }
+              : {}),
             toolCalls: aiResult.toolCalls.map((tc) => ({
               id: tc.id,
               type: 'function' as const,
@@ -217,14 +221,17 @@ export class AgentMessengerService {
             if (loopAbort.signal.aborted) throw new Error('任务已由用户停止');
             let tr: unknown;
             if (tc.name === TASK_VERIFY) {
-              try { tr = verification.submit(JSON.parse(tc.arguments)); }
-              catch { tr = {success: false, error: '验收参数必须是有效 JSON'}; }
+              try {
+                tr = verification.submit(JSON.parse(tc.arguments));
+              } catch {
+                tr = { success: false, error: '验收参数必须是有效 JSON' };
+              }
             } else {
               tr = await this.executeTool(tc.name, tc.arguments, toAgentId, loopAbort.signal);
               verification.record(tc.id, tc.name, tc.arguments, tr);
             }
-            const content =
-              typeof tr === 'string' ? tr : JSON.stringify(tr, null, 2);
+            progress.after(tc.name, tc.arguments, tr);
+            const content = typeof tr === 'string' ? tr : JSON.stringify(tr, null, 2);
             toolResults.push({
               name: tc.name,
               content: content || '',
@@ -380,7 +387,9 @@ export class AgentMessengerService {
   // ─── 内部方法 ──────────────────────────────────────────────
 
   /** 安全获取代理（不存在返回 undefined） */
-  private tryGetAgent(agentId: string): { id: string; name: string; model: string; systemPrompt: string } | undefined {
+  private tryGetAgent(
+    agentId: string,
+  ): { id: string; name: string; model: string; systemPrompt: string } | undefined {
     try {
       const a = this.agentService.getAgent(agentId);
       return {
@@ -395,15 +404,20 @@ export class AgentMessengerService {
   }
 
   /** 获取工具定义 */
-  private getToolDefinitions(agentId: string): Parameters<LLMClientService['chatSync']>[0]['tools'] {
+  private getToolDefinitions(
+    agentId: string,
+  ): Parameters<LLMClientService['chatSync']>[0]['tools'] {
     if (!this.toolExecutor) return undefined;
     try {
       const allowed = this.agentService.getAgent(agentId).tools;
-      const all = this.toolExecutor.getToolDefinitions().filter(t => !allowed?.length || allowed.includes(t.name)).map((t) => ({
-        name: t.name,
-        description: t.description,
-        parameters: t.parameters,
-      }));
+      const all = this.toolExecutor
+        .getToolDefinitions()
+        .filter((t) => !allowed?.length || allowed.includes(t.name))
+        .map((t) => ({
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters,
+        }));
       return all.length > 0 ? all : undefined;
     } catch {
       return undefined;
@@ -420,7 +434,7 @@ export class AgentMessengerService {
     if (!this.toolExecutor) {
       return { success: false, error: 'Tool executor not available' };
     }
-    if (!this.getToolDefinitions(agentId)?.some(tool => tool.name === toolName)) {
+    if (!this.getToolDefinitions(agentId)?.some((tool) => tool.name === toolName)) {
       return { success: false, blocked: true, error: `工具未授权: ${toolName}` };
     }
     let args: Record<string, unknown> = {};
@@ -432,11 +446,10 @@ export class AgentMessengerService {
     try {
       const ctx = {
         sessionId: agentId,
-        ...(signal ? {signal} : {}),
+        ...(signal ? { signal } : {}),
         workspace: resolveEffectiveWorkspace(agentId),
         config: {},
-        log: (level: string, msg: string) =>
-          this.logger.debug(`[messenger-tool:${level}] ${msg}`),
+        log: (level: string, msg: string) => this.logger.debug(`[messenger-tool:${level}] ${msg}`),
         broadcast: (event: string, _data: unknown) =>
           this.logger.debug(`[messenger-tool broadcast] ${event}`),
       };

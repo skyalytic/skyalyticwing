@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Injectable,
+  Optional,
   Param,
   Post,
 } from '@nestjs/common';
@@ -28,6 +29,8 @@ import { documentSession, withDocumentSession } from './document-history.js';
 import { OfficeService } from './office.service.js';
 import { createWorkfile } from './create-workfile.js';
 import { localOfficeFonts, type OfficeFont } from './office-fonts.js';
+import { RemoteWorkspaceService } from '../../core/remote-workspace/remote-workspace.service.js';
+import type { RemoteOfficeSource } from '../../core/remote-workspace/remote-office-source.js';
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 const LIMIT = 50 * 1024 * 1024;
 interface OfficeSession {
@@ -45,6 +48,8 @@ interface OfficeSession {
   commands: Array<{ id: string; action: string; args: Record<string, unknown> }>;
   results: Map<string, unknown>;
   fonts?: OfficeFont[];
+  source?: RemoteOfficeSource;
+  saving?: Promise<unknown>;
 }
 @Injectable()
 export class NativeOfficeService {
@@ -53,7 +58,10 @@ export class NativeOfficeService {
   private starting: Promise<void> | undefined;
   private sessions = new Map<string, OfficeSession>();
   private assetsDirectory = '';
-  constructor(private readonly security: SecurityManagerService) {}
+  constructor(
+    private readonly security: SecurityManagerService,
+    @Optional() private readonly remote?: RemoteWorkspaceService,
+  ) {}
   private assets() {
     if (this.assetsDirectory) return this.assetsDirectory;
     let directory = __dirname;
@@ -104,27 +112,38 @@ export class NativeOfficeService {
   private session(id: string) {
     const s = this.sessions.get(id);
     if (!s || s.expires < Date.now()) throw new BadRequestException('Office 会话已过期');
-    this.checked(s.path);
+    if (s.source) s.source.check();
+    else this.checked(s.path);
     s.expires = Date.now() + 86400000;
     return s;
   }
-  async open(raw: string) {
-    const path = this.checked(raw);
-    const bytes = readFileSync(path);
+  async open(raw: string, remoteWorkspaceId?: string) {
+    if (remoteWorkspaceId && !this.remote)
+      throw new BadRequestException('Remote workspace service unavailable');
+    const source = remoteWorkspaceId
+      ? this.remote!.officeSource(remoteWorkspaceId, raw)
+      : undefined;
+    const path = source ? source.path : this.checked(raw);
+    source?.check();
+    for (const [id, s] of this.sessions) if (s.expires < Date.now()) this.sessions.delete(id);
+    let s = [...this.sessions.values()].find(
+      (item) => item.path === path && item.source?.scope === source?.scope,
+    );
+    // Reconnect to the existing editor without replacing its unsaved in-memory document.
+    const bytes = source ? (s ? undefined : await source.read()) : readFileSync(path);
     // Windows shell templates can be zero-byte placeholders. The local editor opens
     // a blank document and writes a valid Office container on the first save.
-    if (bytes.length) await this.validateDocument(bytes, extname(path).toLowerCase());
+    if (bytes?.length) await this.validateDocument(bytes, extname(path).toLowerCase());
     if (!this.assets()) throw new BadRequestException('当前预览版缺少内置 Office 组件');
     await this.listen();
-    for (const [id, s] of this.sessions) if (s.expires < Date.now()) this.sessions.delete(id);
-    let s = [...this.sessions.values()].find((item) => item.path === path);
     if (!s) {
       if (this.sessions.size >= 12) throw new BadRequestException('请先关闭不使用的 Office 文档');
       s = {
         id: randomBytes(20).toString('hex'),
         key: randomBytes(32).toString('hex'),
         path,
-        revision: hash(bytes),
+        revision: hash(bytes!),
+        ...(source ? { source } : {}),
         expires: Date.now() + 86400000,
         ready: false,
         dirty: false,
@@ -154,13 +173,16 @@ export class NativeOfficeService {
     };
   }
   release(id: string) {
-    this.session(id);
+    const s = this.session(id);
+    if (s.source && (s.dirty || s.saving))
+      throw new BadRequestException('修改尚未保存，请先保存文档');
     this.sessions.delete(id);
     return { closed: true };
   }
   command(id: string, action: string, args: Record<string, unknown> = {}) {
     const s = this.session(id);
-    if (!['read_selection', 'download'].includes(action) && documentSession()) s.historySessionId = documentSession()!;
+    if (!['read_selection', 'download'].includes(action) && documentSession())
+      s.historySessionId = documentSession()!;
     if (
       ![
         'save',
@@ -196,16 +218,32 @@ export class NativeOfficeService {
     return { id: command.id, queued: true };
   }
   selection(id: string) {
-    return this.live(this.session(id).path, 'read_selection');
+    return this.liveSession(this.session(id), 'read_selection');
   }
   result(id: string, commandId: string) {
     const s = this.session(id);
     return s.results.get(commandId) || { pending: true };
   }
-  async live(path: string, action: string, args: Record<string, unknown> = {}) {
-    const full = this.checked(path),
-      s = [...this.sessions.values()].find((s) => s.path === full && s.ready);
+  async live(
+    path: string,
+    action: string,
+    args: Record<string, unknown> = {},
+    remoteWorkspaceId?: string,
+  ) {
+    if (remoteWorkspaceId && !this.remote)
+      throw new BadRequestException('Remote workspace service unavailable');
+    const source = remoteWorkspaceId
+      ? this.remote!.officeSource(remoteWorkspaceId, path)
+      : undefined;
+    source?.check();
+    const full = source ? source.path : this.checked(path),
+      s = [...this.sessions.values()].find(
+        (s) => s.path === full && s.source?.scope === source?.scope && s.ready,
+      );
     if (!s) throw new BadRequestException('请先在内置 Office 中打开此文档');
+    return this.liveSession(this.session(s.id), action, args);
+  }
+  private async liveSession(s: OfficeSession, action: string, args: Record<string, unknown> = {}) {
     const command = this.command(s.id, action, args);
     if (['save', 'download'].includes(action)) return command;
     const end = Date.now() + 12000;
@@ -315,15 +353,18 @@ export class NativeOfficeService {
         s.fonts ||= localOfficeFonts();
         res.end(JSON.stringify(s.fonts.map(({ path: _path, ...font }) => font)));
       } else if (req.method === 'GET' && action === 'font') {
-        const font = s.fonts?.find(f => f.id === url.searchParams.get('id'));
+        const font = s.fonts?.find((f) => f.id === url.searchParams.get('id'));
         if (!font) throw new BadRequestException('字体不可用');
-        if (statSync(font.path).size !== font.bytes) throw new BadRequestException('字体已变化，请重新打开文档');
+        if (statSync(font.path).size !== font.bytes)
+          throw new BadRequestException('字体已变化，请重新打开文档');
         res.setHeader('Content-Type', 'application/octet-stream');
         createReadStream(font.path).pipe(res);
-      }
-      else if (req.method === 'GET' && action === 'file') {
+      } else if (req.method === 'GET' && action === 'file') {
         res.setHeader('Content-Type', 'application/octet-stream');
-        res.end(readFileSync(s.path));
+        const bytes = s.source ? await s.source.read() : readFileSync(s.path);
+        if (s.source && hash(bytes) !== s.revision)
+          throw new BadRequestException('文档已被其他程序修改，请重新打开');
+        res.end(bytes);
       } else if (req.method === 'GET' && action === 'commands') {
         const commands = s.commands.splice(0);
         res.end(JSON.stringify({ commands }));
@@ -331,11 +372,9 @@ export class NativeOfficeService {
         res.end(JSON.stringify(await this.save(s.id, await this.body(req))));
       else if (req.method === 'POST' && action === 'create') {
         const data = JSON.parse((await this.body(req, 4096)).toString());
-        const created = await new OfficeService(this.security).create(
-          dirname(s.path),
-          data.name,
-          data.format,
-        );
+        const created = s.source
+          ? await s.source.create(data.name, data.format)
+          : await new OfficeService(this.security).create(dirname(s.path), data.name, data.format);
         s.navigation = created.path;
         res.end(JSON.stringify(created));
       } else if (req.method === 'POST' && (action === 'import' || action === 'copy')) {
@@ -345,13 +384,15 @@ export class NativeOfficeService {
           throw new BadRequestException('不支持此文件格式');
         const bytes = await this.body(req);
         await this.validateDocument(bytes, '.' + ext);
-        const created = createWorkfile(
-          dirname(s.path),
-          basename(name).slice(0, -ext.length - 1),
-          ext,
-          bytes,
-          (p) => this.security.isPathAllowed(p, 'write'),
-        );
+        const created = s.source
+          ? await s.source.create(basename(name).slice(0, -ext.length - 1), ext, bytes)
+          : createWorkfile(
+              dirname(s.path),
+              basename(name).slice(0, -ext.length - 1),
+              ext,
+              bytes,
+              (p) => this.security.isPathAllowed(p, 'write'),
+            );
         if (action === 'import') s.navigation = created.path;
         res.end(JSON.stringify(created));
       } else if (req.method === 'POST' && action === 'status') {
@@ -465,35 +506,63 @@ export class NativeOfficeService {
     const s = this.session(id),
       ext = extname(s.path).toLowerCase();
     await this.validateDocument(bytes, ext);
+    if (s.source) {
+      const previous = s.saving;
+      const saving = (async () => {
+        await previous?.catch(() => {});
+        this.session(id);
+        try {
+          const saved = await s.source!.write(bytes, s.revision);
+          this.session(id);
+          s.revision = saved.revision;
+          s.savedAt = Date.now();
+          s.dirty = false;
+          s.error = '';
+          return { savedAt: s.savedAt, revision: s.revision };
+        } catch (error) {
+          s.dirty = true;
+          s.error = error instanceof Error ? error.message : String(error);
+          throw error;
+        }
+      })();
+      s.saving = saving;
+      try {
+        return await saving;
+      } finally {
+        if (s.saving === saving) delete s.saving;
+      }
+    }
     const sessionId = s.historySessionId;
-    return withDocumentSession(sessionId, () => withFileMutation(s.path, async () => {
-      this.checked(s.path);
-      const previous = readFileSync(s.path);
-      if (hash(previous) !== s.revision) {
-        const folder = join(getDefaultDataDir(), 'office-conflicts');
-        mkdirSync(folder, { recursive: true });
-        writeFileSync(join(folder, s.id + ext), bytes);
-        s.error =
-          '原文件已被 AI 或其他程序修改，编辑副本已保存在 office-conflicts 中；请保留当前窗口并合并修改。';
-        throw new BadRequestException(s.error);
-      }
-      const revision = hash(bytes);
-      if (revision !== s.revision) {
-        const folder = join(getDefaultDataDir(), 'office-backups');
-        mkdirSync(folder, { recursive: true });
-        const backup = join(folder, s.id + '-' + s.revision + ext);
-        if (!existsSync(backup)) writeFileSync(backup, previous, { flag: 'wx' });
-        const tmp = s.path + '.wing-' + randomBytes(8).toString('hex') + '.tmp';
-        writeFileSync(tmp, bytes, { flag: 'wx' });
-        renameSync(tmp, s.path);
-        s.revision = revision;
-      }
-      s.savedAt = Date.now();
-      s.dirty = false;
-      s.error = '';
-      delete s.historySessionId;
-      return { savedAt: s.savedAt, revision: s.revision };
-    }));
+    return withDocumentSession(sessionId, () =>
+      withFileMutation(s.path, async () => {
+        this.checked(s.path);
+        const previous = readFileSync(s.path);
+        if (hash(previous) !== s.revision) {
+          const folder = join(getDefaultDataDir(), 'office-conflicts');
+          mkdirSync(folder, { recursive: true });
+          writeFileSync(join(folder, s.id + ext), bytes);
+          s.error =
+            '原文件已被 AI 或其他程序修改，编辑副本已保存在 office-conflicts 中；请保留当前窗口并合并修改。';
+          throw new BadRequestException(s.error);
+        }
+        const revision = hash(bytes);
+        if (revision !== s.revision) {
+          const folder = join(getDefaultDataDir(), 'office-backups');
+          mkdirSync(folder, { recursive: true });
+          const backup = join(folder, s.id + '-' + s.revision + ext);
+          if (!existsSync(backup)) writeFileSync(backup, previous, { flag: 'wx' });
+          const tmp = s.path + '.wing-' + randomBytes(8).toString('hex') + '.tmp';
+          writeFileSync(tmp, bytes, { flag: 'wx' });
+          renameSync(tmp, s.path);
+          s.revision = revision;
+        }
+        s.savedAt = Date.now();
+        s.dirty = false;
+        s.error = '';
+        delete s.historySessionId;
+        return { savedAt: s.savedAt, revision: s.revision };
+      }),
+    );
   }
   onModuleDestroy() {
     this.server?.closeAllConnections();
@@ -506,8 +575,8 @@ export class NativeOfficeController {
   @Get('status') status() {
     return this.office.status();
   }
-  @Post('open') open(@Body() body: { path: string }) {
-    return this.office.open(body.path);
+  @Post('open') open(@Body() body: { path: string; remoteWorkspaceId?: string }) {
+    return this.office.open(body.path, body.remoteWorkspaceId);
   }
   @Post('sessions/:id/selection') selection(@Param('id') id: string) {
     return this.office.selection(id);

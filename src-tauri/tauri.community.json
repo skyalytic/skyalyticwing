@@ -8,7 +8,7 @@
   "app": {
     "windows": [
       {
-        "title": "skyalyticwing v2.1.0",
+        "title": "skyalyticwing v2.1.1",
         "width": 1280,
         "height": 800,
         "minWidth": 900,
@@ -27,9 +27,7 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": [
-        "https://claw.skyalytic.com/downloads/community/latest.json"
-      ]
+      "endpoints": ["https://claw.skyalytic.com/downloads/community/latest.json"]
     }
   }
 }

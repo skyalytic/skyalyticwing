@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve as resolvePath } from 'node:path';
 
 /** 版本回退值（与根 package.json / tauri.conf.json 保持同步） */
-export const APP_VERSION_FALLBACK = '2.1.0';
+export const APP_VERSION_FALLBACK = '2.1.1';
 
 /** 向上查找 monorepo 根 package.json（根包名 skyalyticwing）并读取版本 */
 export function resolveAppVersion(): string {
@@ -13,7 +13,8 @@ export function resolveAppVersion(): string {
     const manifest = resolvePath(__dirname, '../../../../app-version.json');
     if (existsSync(manifest)) {
       const value = JSON.parse(readFileSync(manifest, 'utf8')) as { version?: string };
-      if (value.version && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(value.version)) return value.version;
+      if (value.version && /^\d+\.\d+\.\d+(?:[-+][\w.-]+)?$/.test(value.version))
+        return value.version;
     }
     let cur = __dirname;
     for (let i = 0; i < 9; i++) {
@@ -24,7 +25,11 @@ export function resolveAppVersion(): string {
           version?: string;
         };
         // 根包无 workspace 子包名（backend/frontend 等子包版本不是应用版本）
-        if (['skyalyticwing', 'skyalyticwing-community', 'skyalyticwing-enterprise'].includes(pkg.name || '')) {
+        if (
+          ['skyalyticwing', 'skyalyticwing-community', 'skyalyticwing-enterprise'].includes(
+            pkg.name || '',
+          )
+        ) {
           if (typeof pkg.version === 'string' && pkg.version.length > 0) {
             return pkg.version;
           }

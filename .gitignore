@@ -83,3 +83,6 @@ src-tauri/tauri.edition-runtime.json
 
 # Local repository instructions are not published.
 AGENTS.md
+
+# Local product release notes are not published in this repository.
+/更新日志.txt
